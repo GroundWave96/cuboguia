@@ -11,6 +11,9 @@ const CAMERA_REFS: Record<string, RGB> = {
   azul: [25, 75, 175],
 };
 
+/** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
+const GRID_FRACTION = 0.66;
+
 export class CameraScanner {
   readonly root: HTMLElement;
   private video!: HTMLVideoElement;
@@ -62,27 +65,35 @@ export class CameraScanner {
     const face = this.impl.scan[this.current];
     const done = this.captured.filter(Boolean).length;
     this.onFace?.(face.grid.flat());
+    const name = (k: string) => this.impl.colors.find((c) => c.key === k)?.name ?? k;
+    const upKey = face.neighbors.up;
+    this.lastWarn = ''; // o aviso é recriado junto com o HTML
     this.root.innerHTML = `
       <div class="scan-head">
         <div class="scan-progress"><span style="width:${(done / this.captured.length) * 100}%"></span></div>
-        <div class="scan-step">Face ${this.current + 1} de ${this.impl.scan.length}</div>
-        <h3><i class="dot" style="background:${this.hex(face.centerColor)}"></i>${face.title}</h3>
-        <p>${face.instruction}</p>
+        <div class="scan-title">
+          <span class="scan-step">${this.current + 1}/${this.impl.scan.length}</span>
+          <h3><i class="dot" style="background:${this.hex(face.centerColor)}"></i>${face.title}</h3>
+          <span class="scan-up-hint"><i class="dot" style="background:${this.hex(upKey)}"></i>${name(upKey)} em cima</span>
+        </div>
       </div>
       <div class="scan-stage">
-        <div class="scan-warn" aria-live="polite"></div>
         <div class="video-wrap ${this.running ? '' : 'off'}"><video playsinline muted autoplay></video><canvas class="overlay"></canvas></div>
+        <div class="up-label ${this.running ? '' : 'hidden'}" style="--up:${this.hex(upKey)}">
+          <span class="arrow">▲</span>${name(upKey).toUpperCase()} EM CIMA
+        </div>
+        <div class="scan-warn" aria-live="polite"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
           <div class="cam-icon">📷</div>
-          <p>Aponte a câmera para o cubo. Cada face aparece com uma grade; encaixe os adesivos nela e toque em <b>Capturar</b>.</p>
+          <p>Segure o cubo com o <b>${name('U')}</b> em cima e o <b>${name('F')}</b> de frente. Em cada face, as barras coloridas ao redor da grade mostram que cor fica de cada lado.</p>
           <button class="btn primary" data-act="start">Ativar câmera</button>
           <p class="scan-info"></p>
           <p class="scan-error"></p>
         </div>
       </div>
       <div class="scan-actions">
-        <button class="btn ghost" data-act="switch" ${this.running ? '' : 'disabled'}>Trocar câmera</button>
-        <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>Capturar</button>
+        <button class="btn ghost icon-only" data-act="switch" title="Trocar câmera" aria-label="Trocar câmera" ${this.running ? '' : 'disabled'}>🔄</button>
+        <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>Capturar ${face.title.toLowerCase()}</button>
       </div>
       <div class="scan-thumbs">
         ${this.impl.scan
@@ -201,7 +212,7 @@ export class CameraScanner {
   }
 
   private gridRect(vw: number, vh: number) {
-    const side = Math.min(vw, vh) * 0.62;
+    const side = Math.min(vw, vh) * GRID_FRACTION;
     return { x: (vw - side) / 2, y: (vh - side) / 2, side };
   }
 
@@ -273,11 +284,28 @@ export class CameraScanner {
     ctx.rect(0, 0, dw, dh);
     ctx.roundRect(g.x, g.y, g.side, g.side, 14);
     ctx.fill('evenodd');
+    // barras com a cor de cada face vizinha: mostram como segurar o cubo
+    const nb = this.impl.scan[this.current].neighbors;
+    const bar = (key: string, x: number, y: number, w: number, h: number) => {
+      ctx.fillStyle = this.hex(key);
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, Math.min(w, h) / 2);
+      ctx.fill();
+      ctx.stroke();
+    };
+    const gap = 6, thick = 12, thin = 7, inset = cell * 0.2;
+    bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
+    bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
+    bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
+    bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
+    const centerIdx = this.n % 2 === 1 ? Math.floor(this.n / 2) * (this.n + 1) : -1;
     this.live.forEach((rgb, i) => {
       const r = Math.floor(i / this.n), c = i % this.n;
       const x = g.x + c * cell, y = g.y + r * cell;
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = i === centerIdx ? this.hex(this.impl.scan[this.current].centerColor) : 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = i === centerIdx ? 3.5 : 2;
       ctx.beginPath();
       ctx.roundRect(x + 4, y + 4, cell - 8, cell - 8, 10);
       ctx.stroke();

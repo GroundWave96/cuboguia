@@ -68,6 +68,8 @@ export interface ScanFace {
   instruction: string;
   centerColor: string; // chave de cor
   upColor: string; // cor que deve ficar para cima
+  /** cores vizinhas como a câmera vê a face (para desenhar a orientação na grade) */
+  neighbors: { up: string; down: string; left: string; right: string };
 }
 
 export interface PuzzleView {

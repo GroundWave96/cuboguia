@@ -203,6 +203,8 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       b.setAttribute('aria-selected', String(b.dataset.tab === t));
     });
     view.setInteractive(t === 'paint');
+    app.querySelector('.workspace')?.classList.toggle('scanning', t === 'camera');
+    if (t === 'camera' && matchMedia('(max-width: 900px)').matches) window.scrollTo(0, 0);
     if (t === 'paint') {
       view.setHighlight([]);
       view.resetCamera();

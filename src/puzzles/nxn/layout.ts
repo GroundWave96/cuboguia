@@ -1,5 +1,5 @@
 import type { ColorInfo, NetFace, ScanFace } from '../../core/types';
-import { FACE_ORDER, type FaceId } from './geometry';
+import { FACE_FRAME, FACE_ORDER, type FaceId, type Vec3 } from './geometry';
 
 const FACE_LABEL: Record<FaceId, string> = {
   U: 'Cima',
@@ -23,6 +23,16 @@ export function buildNet(n: number): NetFace[] {
   return FACE_ORDER.map((face) => ({ face, label: FACE_LABEL[face], col: pos[face][0], row: pos[face][1], grid: faceGrid(n, face) }));
 }
 
+const faceByNormal = (v: Vec3): FaceId =>
+  FACE_ORDER.find((f) => FACE_FRAME[f].n.every((x, i) => x === v[i]))!;
+const neg = (v: Vec3): Vec3 => [-v[0], -v[1], -v[2]];
+
+/** Faces vizinhas de cada lado, como a face aparece de frente (cima/baixo/esquerda/direita). */
+export function faceNeighbors(face: FaceId) {
+  const { r, d } = FACE_FRAME[face];
+  return { up: faceByNormal(neg(d)), down: faceByNormal(d), left: faceByNormal(neg(r)), right: faceByNormal(r) };
+}
+
 /** Ordem de captura pela câmera e instruções de como segurar o cubo. */
 export function buildScan(n: number, colors: ColorInfo[]): ScanFace[] {
   const name = (k: string) => colors.find((c) => c.key === k)!.name;
@@ -35,6 +45,7 @@ export function buildScan(n: number, colors: ColorInfo[]): ScanFace[] {
     instruction: `${intro} Mostre a face <b>${name(face)}</b> para a câmera, com o <b>${up}</b> para cima.`,
     centerColor: face,
     upColor: 'U',
+    neighbors: faceNeighbors(face),
   });
   return [
     side('F', `Segure o cubo com o ${up} em cima e o ${front} de frente.`),
@@ -48,6 +59,7 @@ export function buildScan(n: number, colors: ColorInfo[]): ScanFace[] {
       instruction: `Volte o ${front} para a frente e incline o cubo: mostre a face <b>${up}</b> para a câmera, com o <b>${front}</b> na parte de baixo da imagem.`,
       centerColor: 'U',
       upColor: 'B',
+      neighbors: faceNeighbors('U'),
     },
     {
       face: 'D',
@@ -56,6 +68,7 @@ export function buildScan(n: number, colors: ColorInfo[]): ScanFace[] {
       instruction: `Agora mostre a face <b>${name('D')}</b> para a câmera, com o <b>${front}</b> na parte de cima da imagem.`,
       centerColor: 'D',
       upColor: 'F',
+      neighbors: faceNeighbors('D'),
     },
   ];
 }

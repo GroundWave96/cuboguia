@@ -202,38 +202,51 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .method-switch a.on small { color: var(--accent-2); }
 
 /* scanner */
-.scan-head h3 { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; margin: 4px 0 6px; }
-.scan-head p { margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; }
-.scan-step { font-size: 0.8rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-.scan-progress { height: 4px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-bottom: 12px; }
+.scan-head { margin-bottom: 10px; }
+.scan-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.scan-title h3 { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; margin: 0; }
+.scan-step { font-size: 0.78rem; color: var(--faint); font-weight: 700; background: var(--surface-2); border-radius: 8px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.scan-up-hint { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); }
+.scan-up-hint .dot { width: 12px; height: 12px; }
+.scan-progress { height: 4px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
 .scan-progress span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.3s; }
 .dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3); flex: none; }
-.scan-stage { position: relative; border-radius: 14px; overflow: hidden; background: #05070c; min-height: 240px; display: grid; }
-.video-wrap { position: relative; grid-area: 1 / 1; }
-.video-wrap video { width: 100%; height: auto; display: block; }
+/* vídeo quadrado: a grade fica sempre do mesmo tamanho e tudo cabe na tela */
+.scan-stage { position: relative; width: min(100%, calc(100dvh - 300px)); min-width: min(100%, 240px); aspect-ratio: 1; margin: 0 auto; border-radius: 16px; overflow: hidden; background: #05070c; }
+.video-wrap { position: absolute; inset: 0; }
+.video-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .video-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .video-wrap.off { visibility: hidden; }
 .video-wrap.mirrored { transform: scaleX(-1); }
 .video-wrap.flash::after { content: ''; position: absolute; inset: 0; background: #fff; animation: flash 0.35s ease-out forwards; }
 @keyframes flash { from { opacity: 0.7; } to { opacity: 0; } }
-.scan-placeholder { grid-area: 1 / 1; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 6px; background: #05070c; }
+/* 17% = (1 - 0.66) / 2: topo da grade */
+.up-label { position: absolute; z-index: 2; left: 50%; top: 17%; transform: translate(-50%, calc(-100% - 24px)); display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 8px; border-radius: 999px; background: rgba(5,8,18,0.82); border: 2px solid var(--up); color: #fff; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.04em; white-space: nowrap; pointer-events: none; }
+.up-label .arrow { color: var(--up); font-size: 0.9rem; }
+.up-label.hidden { display: none; }
+.scan-placeholder { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; gap: 6px; background: #05070c; }
 .scan-placeholder.hidden { display: none; }
-.scan-placeholder p { color: var(--muted); font-size: 0.92rem; max-width: 28em; }
-.cam-icon { font-size: 2.2rem; }
+.scan-placeholder p { color: var(--muted); font-size: 0.9rem; max-width: 28em; margin: 4px 0; }
+.cam-icon { font-size: 2rem; }
 .scan-error { color: var(--danger) !important; }
 .scan-info:empty, .scan-error:empty, .scan-warn:empty { display: none; }
-.scan-warn { position: absolute; z-index: 3; left: 10px; right: 10px; top: 10px; background: rgba(40,24,6,0.88); border: 1px solid rgba(255,181,71,0.5); color: #ffd79a; font-size: 0.85rem; padding: 7px 10px; border-radius: 10px; }
 .scan-info { font-size: 0.85rem !important; }
-.scan-actions { display: flex; gap: 10px; margin: 12px 0; }
+.scan-warn { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 8px; background: rgba(40,24,6,0.9); border: 1px solid rgba(255,181,71,0.5); color: #ffd79a; font-size: 0.82rem; padding: 6px 10px; border-radius: 10px; text-align: center; }
+.scan-actions { display: flex; gap: 8px; margin: 10px 0; }
 .scan-actions .big { flex: 1; }
+.btn.icon-only { padding: 0; width: 54px; font-size: 1.2rem; flex: none; }
 .scan-thumbs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-.thumb { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.thumb { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .thumb.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.thumb.ok span::after { content: ' ✓'; color: var(--ok); font-size: 0.75rem; }
+.thumb.ok span::after { content: ' ✓'; color: var(--ok); font-size: 0.72rem; }
 .thumb span { display: flex; align-items: center; }
-.thumb .dot { width: 10px; height: 10px; }
-.mini { display: grid; gap: 1px; width: 100%; aspect-ratio: 1; background: #05070c; border-radius: 4px; padding: 1px; }
+.thumb .dot { width: 9px; height: 9px; }
+.mini { display: grid; gap: 1px; width: 100%; max-width: 40px; aspect-ratio: 1; background: #05070c; border-radius: 4px; padding: 1px; }
 .mini i { border-radius: 2px; background: #1b2030; }
+
+/* durante a leitura pela câmera, tudo precisa caber na tela sem rolar */
+.workspace.scanning .ws-header p { display: none; }
+.workspace.scanning .scan-stage { width: min(100%, calc(100dvh - 390px)); }
 
 /* ---------- Tutorial ---------- */
 .stages { list-style: none; padding: 0; margin: 0 0 16px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
@@ -311,6 +324,13 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
   .ws-grid { grid-template-columns: minmax(0, 1fr); }
   .ws-view { height: 52vh; min-height: 300px; }
   .solve .ws-view { height: 44vh; position: sticky; top: 62px; z-index: 5; }
+}
+@media (max-width: 900px) {
+  .workspace.scanning { padding-top: 10px; }
+  .workspace.scanning .ws-view, .workspace.scanning .ws-header { display: none; }
+  .workspace.scanning .ws-panel { padding: 10px; }
+  .workspace.scanning .tabs { margin-bottom: 10px; }
+  .workspace.scanning .scan-stage { width: min(100%, calc(100dvh - 320px)); }
 }
 @media (max-width: 520px) {
   .page { padding: 20px 16px; }
