@@ -1,5 +1,5 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
-import { encodeState, loadState, saveState } from '../core/store';
+import { encodeState, loadMethod, loadState, saveMethod, saveState } from '../core/store';
 import { UNKNOWN, type PuzzleImpl, type PuzzleState, type PuzzleView } from '../core/types';
 import { CameraScanner } from './scanner';
 import { toast } from './toast';
@@ -18,6 +18,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   if (state.length !== impl.stickerCount) state = blank();
   let selected = impl.colors[0].key;
   let tab: 'paint' | 'camera' = 'paint';
+  let method = loadMethod(impl.methods.map((m) => m.id));
   let scanner: CameraScanner | null = null;
 
   app.innerHTML = `
@@ -101,6 +102,19 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
         <button class="btn ghost sm" data-act="random">Exemplo embaralhado</button>
       </div>
       <div class="errors" aria-live="polite"></div>
+      <fieldset class="methods">
+        <legend>Como você quer aprender?</legend>
+        ${impl.methods
+          .map(
+            (m) => `<label class="method ${m.id === method ? 'sel' : ''}">
+              <input type="radio" name="method" value="${m.id}" ${m.id === method ? 'checked' : ''}>
+              <span class="m-name">${m.name}</span>
+              <span class="m-tag">${m.tagline}</span>
+              <span class="m-desc">${m.description}</span>
+            </label>`,
+          )
+          .join('')}
+      </fieldset>
       <button class="btn primary big full" data-act="solve">Ver a solução →</button>`;
 
     body.querySelectorAll<HTMLButtonElement>('.swatch').forEach((b) =>
@@ -123,6 +137,13 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       commit();
     });
     body.querySelector('[data-act="solve"]')!.addEventListener('click', goSolve);
+    body.querySelectorAll<HTMLInputElement>('input[name="method"]').forEach((r) =>
+      r.addEventListener('change', () => {
+        method = r.value;
+        saveMethod(method);
+        body.querySelectorAll('.method').forEach((l) => l.classList.toggle('sel', l.contains(r)));
+      }),
+    );
     updatePaintUI();
   }
 
@@ -156,7 +177,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       return;
     }
     saveState(puzzleId, state);
-    location.hash = `/p/${puzzleId}/solve?s=${encodeState(state)}`;
+    location.hash = `/p/${puzzleId}/solve?m=${method}&s=${encodeState(state)}`;
   }
 
   function renderCamera() {

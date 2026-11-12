@@ -16,6 +16,14 @@ describe('geometria 3x3', () => {
     }
   });
 
+  it('movimento de duas camadas (r) gira a face e o meio', () => {
+    expect(applyAll(solved, ['r', 'r', 'r', 'r'])).toEqual(solved);
+    expect(applyAll(solved, ['r', "r'"])).toEqual(solved);
+    const s = geo.apply(solved, 'r');
+    expect(s[4]).toBe('F'); // centro de cima recebe a cor da frente
+    expect(applyAll(solved, ['r'])).toEqual(applyAll(solved, ['Rw']));
+  });
+
   it('sexy move tem ordem 6', () => {
     const six = Array.from({ length: 6 }, () => ['R', 'U', "R'", "U'"]).flat();
     expect(applyAll(solved, six)).toEqual(solved);

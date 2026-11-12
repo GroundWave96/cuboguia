@@ -180,6 +180,27 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .alert { background: rgba(255,107,122,0.1); border: 1px solid rgba(255,107,122,0.35); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.92rem; }
 .alert p { margin: 4px 0; }
 
+/* escolha do método */
+.methods { border: 0; padding: 0; margin: 0 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.methods legend { font-weight: 600; font-size: 0.92rem; margin-bottom: 8px; padding: 0; }
+.method { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 12px 12px 12px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.method:hover { background: var(--surface-2); }
+.method input { position: absolute; opacity: 0; pointer-events: none; }
+.method.sel { border-color: var(--accent); background: rgba(124,140,255,0.12); box-shadow: 0 0 0 1px var(--accent); }
+.method:has(input:focus-visible) { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.m-name { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.m-tag { font-size: 0.78rem; color: var(--accent-2); font-weight: 600; }
+.m-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+@media (max-width: 420px) { .methods { grid-template-columns: 1fr; } }
+
+/* troca de método no tutorial */
+.method-switch { display: inline-flex; gap: 4px; margin-top: 12px; padding: 4px; border-radius: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--border); flex-wrap: wrap; }
+.method-switch a { display: flex; flex-direction: column; text-decoration: none; padding: 7px 14px; border-radius: 10px; color: var(--muted); font-weight: 600; font-size: 0.9rem; line-height: 1.25; }
+.method-switch a small { font-weight: 500; font-size: 0.74rem; color: var(--faint); }
+.method-switch a:hover { color: var(--text); }
+.method-switch a.on { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.method-switch a.on small { color: var(--accent-2); }
+
 /* scanner */
 .scan-head h3 { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; margin: 4px 0 6px; }
 .scan-head p { margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; }
@@ -249,6 +270,7 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .chip.next { border-color: var(--accent); background: rgba(124,140,255,0.2); box-shadow: 0 0 0 3px rgba(124,140,255,0.2); transform: translateY(-1px); }
 .step-ok { background: rgba(61,220,132,0.1); border: 1px solid rgba(61,220,132,0.3); color: var(--ok); padding: 8px 12px; border-radius: 10px; font-weight: 600; font-size: 0.92rem; }
 .controls { display: flex; justify-content: center; gap: 8px; margin-top: 4px; }
+.controls .ctl { flex: 0 1 auto; min-width: 0; }
 .ctl { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-size: 1.1rem; cursor: pointer; transition: background 0.15s, transform 0.1s; }
 .ctl:hover { background: var(--surface-2); }
 .ctl:active { transform: scale(0.96); }
@@ -286,7 +308,7 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
   .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 20px; }
   .hero-cube { height: 340px; min-height: 0; order: -1; }
   .how { grid-template-columns: 1fr; }
-  .ws-grid { grid-template-columns: 1fr; }
+  .ws-grid { grid-template-columns: minmax(0, 1fr); }
   .ws-view { height: 52vh; min-height: 300px; }
   .solve .ws-view { height: 44vh; position: sticky; top: 62px; z-index: 5; }
 }
@@ -294,6 +316,7 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
   .page { padding: 20px 16px; }
   .palette { grid-template-columns: repeat(2, 1fr); }
   .ctl { width: 46px; height: 46px; }
+  .controls { gap: 5px; }
   .ctl.main { width: 58px; }
   .topbar nav { display: none; }
   .move-badge strong { font-size: 1.3rem; min-width: 38px; height: 38px; }

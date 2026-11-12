@@ -27,3 +27,22 @@ export function loadState(puzzleId: string): string[] | null {
 /** Estado compacto para a URL (permite recarregar/compartilhar o tutorial). */
 export const encodeState = (s: string[]) => s.join('');
 export const decodeState = (s: string, len: number) => (s && s.length === len ? s.split('') : null);
+
+/** Método de solução preferido (conveniência por navegador). */
+export function loadMethod(valid: string[]): string {
+  try {
+    const m = localStorage.getItem('cubo:method');
+    if (m && valid.includes(m)) return m;
+  } catch {
+    /* ignore */
+  }
+  return valid[0];
+}
+
+export function saveMethod(id: string) {
+  try {
+    localStorage.setItem('cubo:method', id);
+  } catch {
+    /* ignore */
+  }
+}

@@ -61,10 +61,11 @@ export interface ParsedMove {
 }
 
 export function parseMove(move: string): ParsedMove {
-  const m = /^(\d*)([URFDLB])(w?)(['2]?)$/.exec(move.trim());
+  // aceita "Rw" e a forma minúscula "r" (duas camadas)
+  const m = /^(\d*)([URFDLBurfdlb])(w?)(['2]?)$/.exec(move.trim());
   if (!m) throw new Error(`Movimento inválido: ${move}`);
-  const face = m[2] as FaceId;
-  const wide = m[3] === 'w';
+  const face = m[2].toUpperCase() as FaceId;
+  const wide = m[3] === 'w' || m[2] !== m[2].toUpperCase();
   const depth = m[1] ? parseInt(m[1], 10) : wide ? 2 : 1;
   const turns = m[4] === "'" ? 3 : m[4] === '2' ? 2 : 1;
   return { face, turns, depth };

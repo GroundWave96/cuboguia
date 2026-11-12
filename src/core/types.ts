@@ -84,6 +84,14 @@ export interface PuzzleView {
   dispose(): void;
 }
 
+export interface SolveMethod {
+  id: string;
+  name: string;
+  /** frase curta: nível e média de movimentos */
+  tagline: string;
+  description: string;
+}
+
 export interface PuzzleImpl {
   colors: ColorInfo[];
   stickerCount: number;
@@ -96,7 +104,8 @@ export interface PuzzleImpl {
   locationMap(move: string): Int32Array;
   scramble(length?: number): string[];
   validate(state: PuzzleState): ValidationResult;
-  solve(state: PuzzleState): Solution;
+  methods: SolveMethod[];
+  solve(state: PuzzleState, methodId?: string): Solution;
   createView(container: HTMLElement): PuzzleView;
   net: NetFace[];
   scan: ScanFace[];

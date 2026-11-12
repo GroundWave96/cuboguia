@@ -1,5 +1,5 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
-import { decodeState, loadState } from '../core/store';
+import { decodeState, encodeState, loadState, saveMethod } from '../core/store';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 
 interface FlatMove {
@@ -21,7 +21,9 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const valid = impl.validate(initial);
   if (!valid.ok) throw new Error('O cubo informado não é válido: ' + valid.errors.join(' '));
 
-  const sol: Solution = impl.solve(initial);
+  const methodId = impl.methods.some((m) => m.id === params.get('m')) ? params.get('m')! : impl.methods[0].id;
+  const sol: Solution = impl.solve(initial, methodId);
+  saveMethod(methodId);
   const steps = sol.steps;
   const flat: FlatMove[] = [];
   const stepStart: number[] = [];
@@ -41,7 +43,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
   const faceText = Object.fromEntries(impl.notationHelp.map((h) => [h.move, h.text]));
   const describeMove = (m: string) => {
-    const f = faceText[m[0]] ?? m[0];
+    const wide = m[0] !== m[0].toUpperCase() || m.includes('w');
+    const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? ' + meio (2 camadas)' : '');
     const dir = m.endsWith("'") ? 'anti-horário ↺' : m.endsWith('2') ? 'meia volta (180°)' : 'horário ↻';
     return `${f} · ${dir}`;
   };
@@ -59,6 +62,14 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <a class="back" href="#/p/${puzzleId}">← Editar cores</a>
       <h1>Tutorial: resolvendo seu ${def.name.replace('Cubo ', '')}</h1>
       <p>${sol.method} · <b>${steps.length}</b> passos · <b>${flat.length}</b> movimentos. Mantenha o cubo com o amarelo em cima e o verde de frente o tempo todo.</p>
+      <div class="method-switch" role="group" aria-label="Método">
+        ${impl.methods
+          .map(
+            (m) =>
+              `<a class="${m.id === methodId ? 'on' : ''}" href="#/p/${puzzleId}/solve?m=${m.id}&s=${encodeState(initial)}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
+          )
+          .join('')}
+      </div>
     </div>
     <ol class="stages">
       ${sol.stages
@@ -256,6 +267,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         <p>Cada letra é uma face. Gire-a olhando <b>de frente para ela</b>:</p>
         <ul>${impl.notationHelp.map((h) => `<li><code>${h.move}</code> ${h.text}</li>`).join('')}</ul>
         <p><code>R</code> = sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = meia volta.</p>
+        <p>Letra minúscula (<code>r</code>) = a face <b>e</b> a camada do meio juntas (duas camadas).</p>
       </details>`;
 
     const on = (act: string, fn: () => void) => panel.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);
