@@ -74,6 +74,40 @@ export function balancedAssign(
   return result;
 }
 
+export function rgbToHsv([r, g, b]: RGB): { h: number; s: number; v: number } {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d > 0) {
+    if (max === r) h = 60 * (((g - b) / d) % 6);
+    else if (max === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+  }
+  if (h < 0) h += 360;
+  return { h, s: max === 0 ? 0 : d / max, v: max };
+}
+
+/**
+ * Classifica a cor de um adesivo de cubo padrão pelo MATIZ (hue), que varia pouco
+ * com a iluminação, ao contrário do brilho. Retorna o nome da cor.
+ *
+ * Vermelho × laranja é o caso difícil (matizes vizinhos): combinamos o matiz com o
+ * brilho, já que o laranja costuma aparecer bem mais claro que o vermelho.
+ */
+export function classifyCubeColor(rgb: RGB): string {
+  const { h, s, v } = rgbToHsv(rgb);
+  if (s < 0.24 || (s < 0.32 && v > 0.8 && (h > 180 || h < 40))) return 'branco';
+  const hw = h > 300 ? h - 360 : h; // vermelho perto de 0 fica contínuo (ex.: 355 → -5)
+  if (hw < 40) {
+    const orangeness = hw + (v - 0.6) * 15;
+    return orangeness > 7 ? 'laranja' : 'vermelho';
+  }
+  if (h < 75) return 'amarelo';
+  if (h < 170) return 'verde';
+  if (h < 270) return 'azul';
+  return 'vermelho';
+}
+
 export function nearest(sample: Lab, refs: { key: string; lab: Lab }[]): string {
   let best = refs[0].key;
   let bd = Infinity;

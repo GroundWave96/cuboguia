@@ -200,7 +200,8 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .scan-placeholder p { color: var(--muted); font-size: 0.92rem; max-width: 28em; }
 .cam-icon { font-size: 2.2rem; }
 .scan-error { color: var(--danger) !important; }
-.scan-info:empty, .scan-error:empty { display: none; }
+.scan-info:empty, .scan-error:empty, .scan-warn:empty { display: none; }
+.scan-warn { position: absolute; z-index: 3; left: 10px; right: 10px; top: 10px; background: rgba(40,24,6,0.88); border: 1px solid rgba(255,181,71,0.5); color: #ffd79a; font-size: 0.85rem; padding: 7px 10px; border-radius: 10px; }
 .scan-info { font-size: 0.85rem !important; }
 .scan-actions { display: flex; gap: 10px; margin: 12px 0; }
 .scan-actions .big { flex: 1; }

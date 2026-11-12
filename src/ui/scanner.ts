@@ -1,5 +1,5 @@
 import type { PuzzleImpl } from '../core/types';
-import { balancedAssign, hexToRgb, nearest, rgbCss, rgbToLab, type Lab, type RGB } from '../core/color';
+import { balancedAssign, classifyCubeColor, hexToRgb, nearest, rgbToHsv, rgbToLab, type Lab, type RGB } from '../core/color';
 
 /** Cores típicas vistas por uma câmera (mais escuras/menos saturadas que a cor "ideal"). */
 const CAMERA_REFS: Record<string, RGB> = {
@@ -22,6 +22,10 @@ export class CameraScanner {
   private current = 0;
   private captured: (RGB[] | null)[];
   private live: RGB[] = [];
+  /** últimos quadros, para capturar a mediana (menos borrão/ruído) */
+  private history: RGB[][] = [];
+  private debug = /[?&]debug/.test(location.hash) || /[?&]debug/.test(location.search);
+  private lastWarn = '';
   private timer = 0;
   private running = false;
   private n: number;
@@ -33,6 +37,7 @@ export class CameraScanner {
     private onFace?: (stickers: number[]) => void,
   ) {
     this.n = impl.scan[0].grid.length;
+    this.defaultRefs = impl.colors.map((c) => ({ key: c.key, lab: rgbToLab(CAMERA_REFS[c.name] ?? hexToRgb(c.hex)) }));
     this.captured = impl.scan.map(() => null);
     this.root = document.createElement('div');
     this.root.className = 'scanner';
@@ -44,15 +49,13 @@ export class CameraScanner {
     return this.impl.colors.find((c) => c.key === key)!.hex;
   }
 
-  private refs(): { key: string; lab: Lab }[] {
-    // usa os centros já capturados como referência; senão, cores típicas de câmera
-    return this.impl.colors.map((c) => {
-      const si = this.impl.scan.findIndex((s) => s.centerColor === c.key);
-      const cap = si >= 0 ? this.captured[si] : null;
-      const mid = Math.floor(this.n / 2);
-      const rgb = cap && this.n % 2 === 1 ? cap[mid * this.n + mid] : CAMERA_REFS[c.name] ?? hexToRgb(c.hex);
-      return { key: c.key, lab: rgbToLab(rgb) };
-    });
+  private defaultRefs: { key: string; lab: Lab }[];
+
+  /** Cor (chave) de uma amostra: pelo matiz quando o puzzle usa as cores padrão; senão, a mais próxima. */
+  private classify(rgb: RGB): string {
+    const name = classifyCubeColor(rgb);
+    const c = this.impl.colors.find((x) => x.name === name);
+    return c ? c.key : nearest(rgbToLab(rgb), this.defaultRefs);
   }
 
   private render() {
@@ -67,6 +70,7 @@ export class CameraScanner {
         <p>${face.instruction}</p>
       </div>
       <div class="scan-stage">
+        <div class="scan-warn" aria-live="polite"></div>
         <div class="video-wrap ${this.running ? '' : 'off'}"><video playsinline muted autoplay></video><canvas class="overlay"></canvas></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
           <div class="cam-icon">📷</div>
@@ -86,7 +90,7 @@ export class CameraScanner {
             (s, i) => `<button class="thumb ${i === this.current ? 'active' : ''} ${this.captured[i] ? 'ok' : ''}" data-face="${i}" title="${s.title}">
               <div class="mini" style="grid-template-columns:repeat(${this.n},1fr)">${Array.from({ length: this.n * this.n }, (_, k) => {
                 const c = this.captured[i]?.[k];
-                return `<i style="background:${c ? rgbCss(c) : 'transparent'}"></i>`;
+                return `<i style="background:${c ? this.hex(this.classify(c)) : 'transparent'}"></i>`;
               }).join('')}</div>
               <span><i class="dot" style="background:${this.hex(s.centerColor)}"></i></span>
             </button>`,
@@ -230,7 +234,23 @@ export class CameraScanner {
         live.push([med(R), med(G), med(B)]);
       }
     this.live = live;
+    this.history.push(live);
+    if (this.history.length > 7) this.history.shift();
     this.drawOverlay();
+    this.updateWarning();
+  }
+
+  private updateWarning() {
+    const mid = Math.floor(this.n / 2);
+    if (this.n % 2 === 0 || !this.live.length) return;
+    const face = this.impl.scan[this.current];
+    const got = this.classify(this.live[mid * this.n + mid]);
+    const name = (k: string) => this.impl.colors.find((c) => c.key === k)?.name ?? k;
+    const msg = got === face.centerColor ? '' : `O centro está sendo lido como <b>${name(got)}</b>, mas esta etapa pede a face <b>${name(face.centerColor)}</b>.`;
+    if (msg === this.lastWarn) return;
+    this.lastWarn = msg;
+    const el = this.root.querySelector('.scan-warn');
+    if (el) el.innerHTML = msg;
   }
 
   private drawOverlay() {
@@ -253,7 +273,6 @@ export class CameraScanner {
     ctx.rect(0, 0, dw, dh);
     ctx.roundRect(g.x, g.y, g.side, g.side, 14);
     ctx.fill('evenodd');
-    const refs = this.refs();
     this.live.forEach((rgb, i) => {
       const r = Math.floor(i / this.n), c = i % this.n;
       const x = g.x + c * cell, y = g.y + r * cell;
@@ -262,7 +281,7 @@ export class CameraScanner {
       ctx.beginPath();
       ctx.roundRect(x + 4, y + 4, cell - 8, cell - 8, 10);
       ctx.stroke();
-      const key = nearest(rgbToLab(rgb), refs);
+      const key = this.classify(rgb);
       const dot = cell * 0.26;
       ctx.fillStyle = this.hex(key);
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
@@ -270,12 +289,38 @@ export class CameraScanner {
       ctx.roundRect(x + cell / 2 - dot / 2, y + cell / 2 - dot / 2, dot, dot, 6);
       ctx.fill();
       ctx.stroke();
+      if (this.debug) {
+        const { h, s, v } = rgbToHsv(rgb);
+        ctx.font = '600 11px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = 3;
+        const lines = [`h${h.toFixed(0)} s${s.toFixed(2)} v${v.toFixed(2)}`, rgb.join(',')];
+        lines.forEach((t, li) => {
+          ctx.strokeText(t, x + cell / 2, y + cell * 0.82 + li * 12);
+          ctx.fillText(t, x + cell / 2, y + cell * 0.82 + li * 12);
+        });
+      }
     });
+  }
+
+  /** Mediana, por adesivo e canal, dos últimos quadros. */
+  private stableSample(): RGB[] {
+    const frames = this.history.length ? this.history : [this.live];
+    return this.live.map((_, i) =>
+      [0, 1, 2].map((ch) => {
+        const vals = frames.map((f) => f[i][ch]).sort((a, b) => a - b);
+        return vals[vals.length >> 1];
+      }) as RGB,
+    );
   }
 
   private capture() {
     if (this.live.length !== this.n * this.n) return;
-    this.captured[this.current] = this.live.map((c) => [...c] as RGB);
+    this.captured[this.current] = this.stableSample();
+    this.history = [];
+    this.lastWarn = '';
     this.root.querySelector('.video-wrap')?.classList.add('flash');
     const next = this.captured.findIndex((c, i) => !c && i > this.current);
     const anyMissing = this.captured.findIndex((c) => !c);
@@ -295,7 +340,18 @@ export class CameraScanner {
     });
     const fixed = new Map<number, string>();
     for (const i of this.impl.fixedStickers) fixed.set(i, this.impl.solvedState()[i]);
-    const keys = balancedAssign(samples, this.refs(), this.n * this.n, fixed);
+    // 1º palpite pelo matiz; depois cada cor vira a média das amostras dela
+    // e a atribuição é refeita garantindo exatamente N×N adesivos de cada cor.
+    const rgbs: RGB[] = new Array(this.impl.stickerCount);
+    this.impl.scan.forEach((face, fi) => face.grid.flat().forEach((idx, k) => (rgbs[idx] = this.captured[fi]![k])));
+    const guess = rgbs.map((c) => this.classify(c));
+    const refs = this.impl.colors.map((c) => {
+      const members = samples.filter((_, i) => guess[i] === c.key);
+      if (!members.length) return this.defaultRefs.find((r) => r.key === c.key)!;
+      const m = members.reduce((a, l) => [a[0] + l[0], a[1] + l[1], a[2] + l[2]] as Lab, [0, 0, 0] as Lab);
+      return { key: c.key, lab: [m[0] / members.length, m[1] / members.length, m[2] / members.length] as Lab };
+    });
+    const keys = balancedAssign(samples, refs, this.n * this.n, fixed);
     keys.forEach((k, i) => (state[i] = k || '?'));
     this.stop();
     this.onDone(state);

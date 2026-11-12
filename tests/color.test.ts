@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { balancedAssign, rgbToLab, type RGB } from '../src/core/color';
+import { balancedAssign, classifyCubeColor, rgbToLab, type RGB } from '../src/core/color';
 import { NxNGeometry } from '../src/puzzles/nxn/geometry';
 
 const geo = new NxNGeometry(3);
@@ -12,6 +12,32 @@ const BASE: Record<string, RGB> = {
 function seeded(seed: number) {
   return () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 }
+
+describe('classificador por matiz', () => {
+  const cases: [RGB, string][] = [
+    // valores parecidos com os da foto do celular (laranja bem avermelhado)
+    [[232, 80, 50], 'laranja'],
+    [[240, 95, 60], 'laranja'],
+    [[190, 70, 40], 'laranja'], // laranja na sombra
+    [[250, 140, 40], 'laranja'],
+    [[150, 22, 25], 'vermelho'],
+    [[185, 30, 45], 'vermelho'],
+    [[215, 35, 45], 'vermelho'],
+    [[120, 15, 25], 'vermelho'],
+    [[70, 175, 70], 'verde'],
+    [[30, 140, 90], 'verde'],
+    [[215, 220, 40], 'amarelo'],
+    [[230, 200, 50], 'amarelo'],
+    [[20, 80, 180], 'azul'],
+    [[40, 110, 200], 'azul'],
+    [[215, 220, 225], 'branco'],
+    [[225, 205, 175], 'branco'], // branco sob luz amarelada
+    [[180, 190, 210], 'branco'], // branco sob luz fria
+  ];
+  it.each(cases)('%j → %s', (rgb, expected) => {
+    expect(classifyCubeColor(rgb)).toBe(expected);
+  });
+});
 
 describe('classificação de cores da câmera', () => {
   it('recupera o estado com ruído e variação de brilho', () => {
