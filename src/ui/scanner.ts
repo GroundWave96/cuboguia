@@ -67,11 +67,12 @@ export class CameraScanner {
         <p>${face.instruction}</p>
       </div>
       <div class="scan-stage">
-        <div class="video-wrap"><video playsinline muted autoplay></video><canvas class="overlay"></canvas></div>
+        <div class="video-wrap ${this.running ? '' : 'off'}"><video playsinline muted autoplay></video><canvas class="overlay"></canvas></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
           <div class="cam-icon">📷</div>
           <p>Aponte a câmera para o cubo. Cada face aparece com uma grade; encaixe os adesivos nela e toque em <b>Capturar</b>.</p>
           <button class="btn primary" data-act="start">Ativar câmera</button>
+          <p class="scan-info"></p>
           <p class="scan-error"></p>
         </div>
       </div>
@@ -96,6 +97,7 @@ export class CameraScanner {
     this.overlay = this.root.querySelector('canvas')!;
     if (this.stream) {
       this.video.srcObject = this.stream;
+      this.video.play().catch(() => {});
       this.applyMirror();
     }
     this.root.querySelector('[data-act="start"]')?.addEventListener('click', () => this.start());
@@ -119,6 +121,22 @@ export class CameraScanner {
       this.showError('Este navegador não liberou a câmera. Ela só funciona em sites com <b>HTTPS</b> (ou localhost).');
       return;
     }
+    const btn = this.root.querySelector<HTMLButtonElement>('[data-act="start"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Aguardando a câmera…';
+    }
+    this.showError('');
+    this.setInfo('Se o navegador perguntar, clique em <b>Permitir</b> para usar a câmera.');
+    // alguns navegadores embutidos nunca respondem ao pedido de câmera
+    const slow = window.setTimeout(
+      () =>
+        this.setInfo(
+          'A câmera não respondeu. Verifique se apareceu um pedido de permissão na barra de endereço. ' +
+            'Navegadores embutidos em aplicativos costumam bloquear a câmera — abra o site no <b>Chrome</b>, <b>Edge</b> ou <b>Safari</b>.',
+        ),
+      6000,
+    );
     try {
       this.stopStream();
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -135,14 +153,29 @@ export class CameraScanner {
       this.loop();
     } catch (e) {
       const name = (e as DOMException).name;
+      this.setInfo('');
       this.showError(
         name === 'NotAllowedError'
-          ? 'Permissão negada. Libere o acesso à câmera nas configurações do navegador e tente de novo.'
+          ? 'A câmera foi bloqueada. Clique no ícone de cadeado/câmera na barra de endereço, permita a câmera e tente de novo. ' +
+              'Se você está num navegador embutido em outro aplicativo, abra o site no Chrome, Edge ou Safari.'
           : name === 'NotFoundError'
             ? 'Nenhuma câmera encontrada neste dispositivo.'
-            : `Não foi possível abrir a câmera (${name}).`,
+            : name === 'NotReadableError'
+              ? 'A câmera está sendo usada por outro programa (Zoom, Teams, OBS…). Feche-o e tente de novo.'
+              : `Não foi possível abrir a câmera (${name}).`,
       );
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Tentar de novo';
+      }
+    } finally {
+      clearTimeout(slow);
     }
+  }
+
+  private setInfo(msg: string) {
+    const el = this.root.querySelector('.scan-info');
+    if (el) el.innerHTML = msg;
   }
 
   private applyMirror() {
