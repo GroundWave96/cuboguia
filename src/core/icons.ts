@@ -7,9 +7,27 @@ type P = [number, number];
 const BODY = '#0d1018';
 const fmt = (pts: P[]) => pts.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
 
-/** adesivo arredondado: polígono com contorno da mesma cor e cantos redondos */
-const sticker = (pts: P[], fill: string, round: number) =>
-  `<polygon points="${fmt(pts)}" fill="${fill}" stroke="${fill}" stroke-width="${round}" stroke-linejoin="round"/>`;
+/**
+ * adesivo com cantos arredondados de verdade (curva em cada canto, sem contorno),
+ * assim o vão preto entre os adesivos fica do tamanho certo
+ */
+function sticker(pts: P[], fill: string, radius: number) {
+  const n = pts.length;
+  const cut = (v: P, to: P, r: number): P => {
+    const dx = to[0] - v[0], dy = to[1] - v[1];
+    const l = Math.hypot(dx, dy);
+    return [v[0] + (dx / l) * r, v[1] + (dy / l) * r];
+  };
+  const f = (q: P) => `${q[0].toFixed(2)},${q[1].toFixed(2)}`;
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const v = pts[i], prev = pts[(i + n - 1) % n], next = pts[(i + 1) % n];
+    const r = Math.min(radius, Math.hypot(prev[0] - v[0], prev[1] - v[1]) / 2.2, Math.hypot(next[0] - v[0], next[1] - v[1]) / 2.2);
+    const a = cut(v, prev, r), b = cut(v, next, r);
+    d += `${i ? 'L' : 'M'}${f(a)}Q${f(v)} ${f(b)}`;
+  }
+  return `<path d="${d}Z" fill="${fill}"/>`;
+}
 const shade = (pts: P[], fill: string, opacity: number) => `<polygon points="${fmt(pts)}" fill="${fill}" opacity="${opacity}"/>`;
 const body = (pts: P[], w: number) => `<polygon points="${fmt(pts)}" fill="${BODY}" stroke="${BODY}" stroke-width="${w}" stroke-linejoin="round"/>`;
 
@@ -27,21 +45,23 @@ const wrap = (content: string) => `<svg viewBox="-4 -4 128 133" class="pz-icon" 
 export function cubeIcon(n: number): string {
   const proj = (x: number, y: number, z: number): P => [60 + (x - y) * 47, 8 + (x + y) * 27 + (1 - z) * 54];
   const out: string[] = [];
-  out.push(body([proj(0, 0, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0), proj(0, 1, 1)], 7));
+  out.push(body([proj(0, 0, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0), proj(0, 1, 1)], 8));
   const d = 1 / n;
-  const gap = n >= 4 ? 0.06 : 0.05;
-  const round = n >= 5 ? 1.6 : n >= 4 ? 2.2 : 3;
+  // vão entre adesivos proporcional à célula, um pouco maior nos cubos grandes para continuar visível
+  const k = n <= 2 ? 0.8 : n === 3 ? 0.78 : 0.74;
+  const radius = n <= 2 ? 6 : n === 3 ? 4.2 : n === 4 ? 3 : 2.4;
+  // cor de cada face já com a luz: topo claro, frente esquerda média, direita mais escura
+  const TOP = '#ffd83a', LEFT = '#00a651', RIGHT = '#f2600f';
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++) {
-      const a0 = i * d + gap * d * 2, a1 = (i + 1) * d - gap * d * 2;
-      const b0 = j * d + gap * d * 2, b1 = (j + 1) * d - gap * d * 2;
-      out.push(sticker([proj(a0, b0, 1), proj(a1, b0, 1), proj(a1, b1, 1), proj(a0, b1, 1)], '#ffd500', round));
-      out.push(sticker([proj(a0, 1, 1 - b0), proj(a1, 1, 1 - b0), proj(a1, 1, 1 - b1), proj(a0, 1, 1 - b1)], '#00a651', round));
-      out.push(sticker([proj(1, 1 - a0, 1 - b0), proj(1, 1 - a1, 1 - b0), proj(1, 1 - a1, 1 - b1), proj(1, 1 - a0, 1 - b1)], '#ff6a13', round));
+      const a0 = i * d, a1 = (i + 1) * d, b0 = j * d, b1 = (j + 1) * d;
+      out.push(sticker(shrink([proj(a0, b0, 1), proj(a1, b0, 1), proj(a1, b1, 1), proj(a0, b1, 1)], k), TOP, radius));
+      out.push(sticker(shrink([proj(a0, 1, 1 - b0), proj(a1, 1, 1 - b0), proj(a1, 1, 1 - b1), proj(a0, 1, 1 - b1)], k), LEFT, radius));
+      out.push(sticker(shrink([proj(1, 1 - a0, 1 - b0), proj(1, 1 - a1, 1 - b0), proj(1, 1 - a1, 1 - b1), proj(1, 1 - a0, 1 - b1)], k), RIGHT, radius));
     }
-  out.push(shade([proj(0, 1, 1), proj(1, 1, 1), proj(1, 1, 0), proj(0, 1, 0)], '#003d1f', 0.16));
-  out.push(shade([proj(1, 1, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0)], '#5a1f00', 0.22));
-  out.push(shade([proj(0, 0, 1), proj(1, 0, 1), proj(1, 1, 1), proj(0, 1, 1)], '#ffffff', 0.1));
+  // leve brilho no topo e sombra na direita
+  out.push(shade([proj(0, 0, 1), proj(1, 0, 1), proj(1, 1, 1), proj(0, 1, 1)], '#ffffff', 0.06));
+  out.push(shade([proj(1, 1, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0)], '#3a1200', 0.12));
   return wrap(out.join(''));
 }
 
@@ -67,10 +87,10 @@ export function pyraminxIcon(): string {
       for (let k = 0; k <= r; k++) tris.push([pt(r, k), pt(r + 1, k), pt(r + 1, k + 1)]);
       for (let k = 0; k < r; k++) tris.push([pt(r, k), pt(r + 1, k + 1), pt(r, k + 1)]);
     }
-    return tris.map((t) => sticker(shrink(t, 0.78), color, 2.4));
+    return tris.map((t) => sticker(shrink(t, 0.74), color, 3.2));
   }
   const out: string[] = [];
-  out.push(body([apex, left, front, right], 7));
+  out.push(body([apex, left, front, right], 8));
   out.push(...face(apex, left, front, '#00a651'));
   out.push(...face(apex, front, right, '#d0192d'));
   out.push(shade([apex, front, right], '#2a0006', 0.22));
@@ -164,7 +184,7 @@ export function megaminxIcon(): string {
       stickers.push([V[i], e(i, j), inner[i], e(i, k)]); // canto
       stickers.push([e(i, j), e(j, i), inner[j], inner[i]]); // aresta
     }
-    for (const st of stickers) out.push(sticker(shrink(st, 0.84), f.color, 1.6));
+    for (const st of stickers) out.push(sticker(shrink(st, 0.8), f.color, 2));
     if (lit < 0.85) out.push(shade(V, '#000000', Math.min(0.45, (0.9 - lit) * 0.5)));
   }
   return wrap(out.join(''));

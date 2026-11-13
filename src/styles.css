@@ -230,7 +230,7 @@ main { flex: 1; }
 .grid3 i:nth-child(3), .grid3 i:nth-child(4) { background: #ffd500; } .grid3 i:nth-child(5) { background: #f4f6f8; } .grid3 i:nth-child(7), .grid3 i:nth-child(8) { background: #0a5bd6; }
 .scanline { position: absolute; left: 0; right: 0; height: 2px; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); animation: scan 2.4s ease-in-out infinite; }
 @keyframes scan { 0%, 100% { top: 12%; } 50% { top: 86%; } }
-.art-steps { display: flex; gap: 14px; }
+.art-steps { display: flex; align-items: center; justify-content: center; gap: 14px; }
 .play { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-size: 1rem; animation: pulse 1.8s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(124,140,255,0.6); } 50% { box-shadow: 0 0 0 10px rgba(124,140,255,0); } }
 .steps { display: flex; gap: 5px; }
