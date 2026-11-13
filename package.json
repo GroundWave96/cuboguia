@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "dev:https": "vite --host --mode https",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name cuboguia --branch main"
+    "deploy:manual": "npm run build && wrangler pages deploy dist --project-name cuboguia --branch main"
   },
   "dependencies": {
     "three": "^0.169.0"

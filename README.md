@@ -56,7 +56,15 @@ A interface (pintura, câmera e tutorial) funciona com qualquer puzzle que imple
 
 ## Publicação (Cloudflare Pages)
 
-- Build command: `npm run build`
-- Output directory: `dist`
+O site está em **https://cuboguia.pages.dev** e é publicado **automaticamente**:
+o projeto do Cloudflare Pages está ligado a este repositório do GitHub.
+
+- Todo commit na branch `main` → publica em produção.
+- Commits em outras branches → geram um link de pré-visualização.
+
+Configuração no Cloudflare: comando de build `npm run build`, pasta `dist`,
+Node definido pelo arquivo `.nvmrc`.
+
+Publicação manual (só se precisar): `npm run deploy:manual`.
 
 A câmera só funciona em HTTPS (o Cloudflare Pages já entrega HTTPS).
