@@ -238,15 +238,41 @@ export class NxNView implements PuzzleView {
 
   /** Gira a câmera suavemente para mostrar os adesivos indicados (mantendo a frente reconhecível). */
   focusCamera(stickers: number[]) {
-    const sum = new THREE.Vector3();
-    for (const i of stickers) sum.add(new THREE.Vector3(...this.geo.stickers[i].normal));
-    const base = this.defaultCamPos.clone().normalize();
-    const dir = sum.lengthSq() > 0.01 ? base.add(sum.normalize().multiplyScalar(0.75)).normalize() : base;
-    if (dir.lengthSq() < 0.01) dir.copy(this.defaultCamPos).normalize();
+    const dir = this.bestDiagonal(stickers);
     const dist = this.camera.position.length();
     // se a câmera já está praticamente nessa direção, não gira (evita esperas à toa)
     if (this.camera.position.clone().normalize().angleTo(dir) < 0.07) return;
     this.camTween = { from: this.camera.position.clone(), to: dir.multiplyScalar(dist), t0: performance.now(), dur: 650 };
+  }
+
+  /**
+   * Escolhe uma das 8 vistas em diagonal (cada uma mostra 3 faces do cubo) — nunca
+   * uma vista reta de uma face só. Vence a que mostra melhor os adesivos em foco,
+   * com preferência por ver o topo e a frente e por não trocar de lado à toa.
+   */
+  bestDiagonal(stickers: number[]): THREE.Vector3 {
+    const base = this.defaultCamPos.clone().normalize();
+    if (!stickers.length) return base;
+    const normals = stickers.map((i) => new THREE.Vector3(...this.geo.stickers[i].normal));
+    const cur = this.camera.position;
+    let best = base;
+    let bestScore = -Infinity;
+    for (const sx of [1, -1])
+      for (const sy of [1, -1])
+        for (const sz of [1, -1]) {
+          const d = new THREE.Vector3(base.x * sx, base.y * sy, base.z * sz);
+          const seen = normals.reduce((a, n) => a + Math.max(0, n.dot(d)), 0) / normals.length;
+          const score =
+            seen * 3 +
+            (sz > 0 ? 0.35 : 0) + // frente visível
+            (sy > 0 ? 0.25 : 0) + // topo visível
+            (Math.sign(cur.x) === sx && Math.sign(cur.y) === sy && Math.sign(cur.z) === sz ? 0.15 : 0); // não pular de lado
+          if (score > bestScore) {
+            bestScore = score;
+            best = d;
+          }
+        }
+    return best;
   }
 
   private camTween: { from: THREE.Vector3; to: THREE.Vector3; t0: number; dur: number } | null = null;
@@ -270,9 +296,11 @@ export class NxNView implements PuzzleView {
     const t = Math.min(1, (performance.now() - tw.t0) / tw.dur);
     const k = easeInOut(t);
     const len = tw.from.length() + (tw.to.length() - tw.from.length()) * k;
-    const p = tw.from.clone().normalize().lerp(tw.to.clone().normalize(), k);
-    if (p.lengthSq() < 1e-4) p.set(0, 1, 0);
-    this.camera.position.copy(p.normalize().multiplyScalar(len));
+    // arco em volta do cubo (interpolação esférica), mesmo entre lados opostos
+    const a = tw.from.clone().normalize();
+    const full = new THREE.Quaternion().setFromUnitVectors(a, tw.to.clone().normalize());
+    const q = new THREE.Quaternion().slerpQuaternions(new THREE.Quaternion(), full, k);
+    this.camera.position.copy(a.applyQuaternion(q).multiplyScalar(len));
     this.controls.target.set(0, 0, 0);
     if (t >= 1) {
       this.camTween = null;
