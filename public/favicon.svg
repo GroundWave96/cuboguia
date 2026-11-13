@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0b0e17"/><g transform="translate(3 3) scale(.8125)"><rect x="0" y="0" width="9.4" height="9.4" rx="2" fill="#ffd500"/><rect x="10.6" y="0" width="9.4" height="9.4" rx="2" fill="#ff6a13"/><rect x="21.2" y="0" width="9.4" height="9.4" rx="2" fill="#00a651"/><rect x="0" y="10.6" width="9.4" height="9.4" rx="2" fill="#0a5bd6"/><rect x="10.6" y="10.6" width="9.4" height="9.4" rx="2" fill="#f4f6f8"/><rect x="21.2" y="10.6" width="9.4" height="9.4" rx="2" fill="#d0192d"/><rect x="0" y="21.2" width="9.4" height="9.4" rx="2" fill="#00a651"/><rect x="10.6" y="21.2" width="9.4" height="9.4" rx="2" fill="#ffd500"/><rect x="21.2" y="21.2" width="9.4" height="9.4" rx="2" fill="#0a5bd6"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c2340"/>
+      <stop offset="1" stop-color="#0b0e17"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c8cff"/>
+      <stop offset="1" stop-color="#3fd0c9"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="124" height="124" rx="28" fill="url(#bg)" stroke="url(#ring)" stroke-width="3"/>
+  <polygon points="64.00,20.06 102.54,42.20 102.54,86.48 64.00,108.62 25.46,86.48 25.46,42.20" fill="#0d1018" stroke="#0d1018" stroke-width="7.22" stroke-linejoin="round"/>
+  <polygon points="64.00,22.27 79.42,31.13 64.00,39.99 48.58,31.13" fill="#ffd500" stroke="#ffd500" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="27.39,45.52 42.80,54.38 42.80,72.09 27.39,63.23" fill="#00a651" stroke="#00a651" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="65.93,65.45 81.34,56.59 81.34,74.30 65.93,83.16" fill="#ff6a13" stroke="#ff6a13" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="44.73,33.34 60.15,42.20 44.73,51.06 29.31,42.20" fill="#ffd500" stroke="#ffd500" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="27.39,67.66 42.80,76.52 42.80,94.23 27.39,85.37" fill="#00a651" stroke="#00a651" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="65.93,87.59 81.34,78.73 81.34,96.44 65.93,105.30" fill="#ff6a13" stroke="#ff6a13" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="83.27,33.34 98.69,42.20 83.27,51.06 67.85,42.20" fill="#ffd500" stroke="#ffd500" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="46.66,56.59 62.07,65.45 62.07,83.16 46.66,74.30" fill="#00a651" stroke="#00a651" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="85.20,54.38 100.61,45.52 100.61,63.23 85.20,72.09" fill="#ff6a13" stroke="#ff6a13" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="64.00,44.41 79.42,53.27 64.00,62.13 48.58,53.27" fill="#ffd500" stroke="#ffd500" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="46.66,78.73 62.07,87.59 62.07,105.30 46.66,96.44" fill="#00a651" stroke="#00a651" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="85.20,76.52 100.61,67.66 100.61,85.37 85.20,94.23" fill="#ff6a13" stroke="#ff6a13" stroke-width="3.28" stroke-linejoin="round"/>
+  <polygon points="25.46,42.20 64.00,64.34 64.00,108.62 25.46,86.48" fill="#008a43" opacity="0.18"/>
+  <polygon points="64.00,64.34 102.54,42.20 102.54,86.48 64.00,108.62" fill="#e2560a" opacity="0.28"/>
+  <polygon points="64.00,20.06 102.54,42.20 64.00,64.34 25.46,42.20" fill="#ffffff" opacity="0.10"/>
+</svg>

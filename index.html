@@ -7,24 +7,45 @@
     <meta name="description" content="Informe as cores do seu cubo mágico (pintando em 3D ou pela câmera) e siga um tutorial animado, passo a passo, para resolvê-lo." />
     <meta name="theme-color" content="#0b0e17" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="CuboGuia" />
+    <meta property="og:title" content="CuboGuia — resolva seu cubo mágico passo a passo" />
+    <meta property="og:description" content="Pinte ou escaneie seu cubo e siga um tutorial animado em 3D." />
+    <meta property="og:image" content="/icon-512.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <header class="topbar">
-      <a href="#/" class="brand" aria-label="CuboGuia, início">
-        <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
-          <rect x="2" y="2" width="8.6" height="8.6" rx="2" fill="#ffd500" /><rect x="11.7" y="2" width="8.6" height="8.6" rx="2" fill="#ff6a13" /><rect x="21.4" y="2" width="8.6" height="8.6" rx="2" fill="#00a651" />
-          <rect x="2" y="11.7" width="8.6" height="8.6" rx="2" fill="#0a5bd6" /><rect x="11.7" y="11.7" width="8.6" height="8.6" rx="2" fill="#f4f6f8" /><rect x="21.4" y="11.7" width="8.6" height="8.6" rx="2" fill="#d0192d" />
-          <rect x="2" y="21.4" width="8.6" height="8.6" rx="2" fill="#00a651" /><rect x="11.7" y="21.4" width="8.6" height="8.6" rx="2" fill="#ffd500" /><rect x="21.4" y="21.4" width="8.6" height="8.6" rx="2" fill="#0a5bd6" />
-        </svg>
-        <span>Cubo<b>Guia</b></span>
-      </a>
-      <nav><a href="#/p/cube3">Resolver 3x3</a></nav>
+      <div class="topbar-inner">
+        <a href="#/" class="brand" aria-label="CuboGuia, início">
+          <img src="/logo.svg" width="36" height="36" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Cubo<b>Guia</b></span>
+            <span class="brand-tag">tutoriais de cubo mágico em 3D</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="Principal" id="main-nav"></nav>
+        <a class="btn primary sm nav-cta" href="#/p/cube3">Resolver agora</a>
+      </div>
     </header>
     <main id="app"></main>
-    <footer class="footer">Feito para quem quer aprender a resolver o cubo mágico · método de iniciante (camada por camada)</footer>
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img src="/logo.svg" width="24" height="24" alt="" />
+          <span class="brand-name">Cubo<b>Guia</b></span>
+          <span class="footer-sub">Aprenda a resolver o cubo mágico, passo a passo.</span>
+        </div>
+        <p class="footer-credit">
+          Desenvolvido por
+          <a href="https://gabrielpimentel.pages.dev/" target="_blank" rel="noopener">Gabriel Pimentel</a>
+        </p>
+      </div>
+    </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

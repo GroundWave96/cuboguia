@@ -8,10 +8,11 @@ export function renderHome(app: HTMLElement) {
       <span class="eyebrow">Tutorial interativo em 3D</span>
       <h1>Resolva o <em>seu</em> cubo mágico, passo a passo.</h1>
       <p class="lead">Mostre como o seu cubo está — pintando as cores no modelo 3D ou apontando a câmera — e receba um tutorial animado,
-      do jeito que se aprende: camada por camada.</p>
+      no seu ritmo: do método de iniciante, camada por camada, até o CFOP dos speedcubers.</p>
       <div class="hero-cta">
         <a class="btn primary big" href="#/p/cube3">Resolver meu 3x3</a>
-        <a class="btn ghost big" href="#como-funciona">Como funciona</a>
+        <a class="btn ghost big" href="#/p/cube2">Tenho um 2x2</a>
+        <a class="btn ghost big" href="#/" data-scroll="como-funciona">Como funciona</a>
       </div>
     </div>
     <div class="hero-cube" id="hero-cube"></div>
