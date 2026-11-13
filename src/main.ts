@@ -1,5 +1,5 @@
 import './styles.css';
-import { PUZZLES } from './core/registry';
+import { mountHeader } from './ui/header';
 import { renderHome } from './ui/home';
 import { renderInput } from './ui/input';
 import { renderSolve } from './ui/solve';
@@ -7,7 +7,6 @@ import { renderSolve } from './ui/solve';
 export type Cleanup = () => void;
 
 const app = document.getElementById('app')!;
-const nav = document.getElementById('main-nav')!;
 let cleanup: Cleanup | null = null;
 /** seção da página inicial para rolar depois de renderizar (ex.: "Como funciona") */
 let pendingScroll: string | null = null;
@@ -16,12 +15,8 @@ let pendingScroll: string | null = null;
 const topbar = document.querySelector<HTMLElement>('.topbar')!;
 new ResizeObserver(() => document.documentElement.style.setProperty('--topbar-h', `${topbar.offsetHeight}px`)).observe(topbar);
 
-// menu montado a partir do registro: novos puzzles aparecem sozinhos
-nav.innerHTML = [
-  `<a href="#/" data-nav="home">Início</a>`,
-  ...PUZZLES.filter((p) => p.available).map((p) => `<a href="#/p/${p.id}" data-nav="${p.id}">${p.name.replace('Cubo ', '')}</a>`),
-  `<a href="#/" data-scroll="como-funciona" class="nav-extra">Como funciona</a>`,
-].join('');
+// menu montado a partir do registro: novos puzzles aparecem sozinhos no painel
+const setActiveNav = mountHeader();
 
 function parseHash() {
   const raw = location.hash.replace(/^#/, '') || '/';
@@ -33,14 +28,6 @@ export function navigate(path: string) {
   location.hash = path;
 }
 
-function setActiveNav(key: string) {
-  nav.querySelectorAll<HTMLAnchorElement>('[data-nav]').forEach((a) => {
-    const on = a.dataset.nav === key;
-    a.classList.toggle('active', on);
-    if (on) a.setAttribute('aria-current', 'page');
-    else a.removeAttribute('aria-current');
-  });
-}
 
 async function route() {
   cleanup?.();
