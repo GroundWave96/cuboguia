@@ -24,7 +24,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   <section class="page workspace">
     <div class="ws-header">
       <a class="back" href="#/">← Início</a>
-      <h1>${def.name}: como está o seu cubo?</h1>
+      <h1>Como está o seu ${def.name}?</h1>
       <p>${impl.holdHint} As peças de referência já vêm pintadas — elas nunca mudam de lugar.</p>
     </div>
     <div class="ws-grid">
@@ -74,9 +74,26 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
 
   function renderPaint() {
     const net = impl.net;
-    const cols = Math.max(...net.map((f) => f.col)) + 1;
-    const rows = Math.max(...net.map((f) => f.row)) + 1;
-    const n = net[0].grid.length;
+    const netHtml = impl.netSvg
+      ? `<svg class="net-svg" viewBox="${impl.netSvg.viewBox}" role="group" aria-label="Planificação">
+          ${impl.netSvg.stickers
+            .map((s) => `<polygon class="st ${impl.fixedStickers.includes(s.index) ? 'fixed' : ''}" data-i="${s.index}" points="${s.points}"/>`)
+            .join('')}
+        </svg>`
+      : (() => {
+          const cols = Math.max(...net.map((f) => f.col)) + 1;
+          const rows = Math.max(...net.map((f) => f.row)) + 1;
+          const n = net[0].grid.length;
+          return `<div class="net" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},auto)">
+            ${net
+              .map(
+                (f) => `<div class="net-face" style="grid-column:${f.col + 1};grid-row:${f.row + 1};grid-template-columns:repeat(${n},1fr)" title="${f.label}">
+                  ${f.grid.flat().map((i) => `<button class="st ${impl.fixedStickers.includes(i) ? 'fixed' : ''}" data-i="${i}" aria-label="${f.label}"></button>`).join('')}
+                </div>`,
+              )
+              .join('')}
+          </div>`;
+        })();
     body.innerHTML = `
       <div class="palette" role="radiogroup" aria-label="Cor do pincel">
         ${impl.colors
@@ -86,22 +103,14 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
           )
           .join('')}
       </div>
-      <div class="net" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},auto)">
-        ${net
-          .map(
-            (f) => `<div class="net-face" style="grid-column:${f.col + 1};grid-row:${f.row + 1};grid-template-columns:repeat(${n},1fr)" title="${f.label}">
-              ${f.grid.flat().map((i) => `<button class="st ${impl.fixedStickers.includes(i) ? 'fixed' : ''}" data-i="${i}" aria-label="${f.label}"></button>`).join('')}
-            </div>`,
-          )
-          .join('')}
-      </div>
+      ${netHtml}
       <div class="row-actions">
         <button class="btn ghost sm" data-act="clear">Limpar</button>
-        <button class="btn ghost sm" data-act="solved">Cubo resolvido</button>
+        <button class="btn ghost sm" data-act="solved">Resolvido</button>
         <button class="btn ghost sm" data-act="random">Exemplo embaralhado</button>
       </div>
       <div class="errors" aria-live="polite"></div>
-      <fieldset class="methods">
+      <fieldset class="methods" ${impl.methods.length < 2 ? 'hidden' : ''}>
         <legend>Como você quer aprender?</legend>
         ${impl.methods
           .map(
@@ -122,7 +131,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
         updatePaintUI();
       }),
     );
-    body.querySelectorAll<HTMLButtonElement>('.st').forEach((b) => b.addEventListener('click', () => paint(Number(b.dataset.i))));
+    body.querySelectorAll<HTMLElement>('.st').forEach((b) => b.addEventListener('click', () => paint(Number(b.dataset.i))));
     body.querySelector('[data-act="clear"]')!.addEventListener('click', () => {
       state = blank();
       commit();
@@ -159,9 +168,10 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       el.textContent = `${n}/${per}`;
       el.className = n > per ? 'over' : n === per ? 'full' : '';
     });
-    body.querySelectorAll<HTMLButtonElement>('.st').forEach((b) => {
+    body.querySelectorAll<HTMLElement>('.st').forEach((b) => {
       const c = state[Number(b.dataset.i)];
-      b.style.background = hex(c) ?? '';
+      if (b instanceof SVGElement) b.style.fill = hex(c) ?? '';
+      else b.style.background = hex(c) ?? '';
       b.classList.toggle('unknown', c === UNKNOWN);
     });
     const errBox = body.querySelector('.errors');
@@ -176,7 +186,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       return;
     }
     saveState(puzzleId, state);
-    location.hash = `/p/${puzzleId}/solve?m=${method}&s=${encodeState(state)}`;
+    location.hash = `/p/${puzzleId}/solve?m=${method}&s=${encodeState(state, impl.colors.map((c) => c.key))}`;
   }
 
   function renderCamera() {

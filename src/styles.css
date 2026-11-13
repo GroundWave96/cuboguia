@@ -70,7 +70,7 @@ code {
 .brand-name { font-family: var(--display); font-size: 1.22rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
 .brand-name b { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .brand-tag { font-size: 0.72rem; color: var(--faint); font-weight: 500; letter-spacing: 0.01em; }
-.nav { display: flex; align-items: center; gap: 4px; margin-left: auto; padding: 4px; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+.nav { display: flex; align-items: center; gap: 4px; margin-left: auto; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 4px; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
 .nav a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; padding: 7px 14px; border-radius: 999px; transition: color 0.15s, background 0.15s; white-space: nowrap; }
 .nav a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
 .nav a.active { color: var(--text); background: rgba(124,140,255,0.18); box-shadow: inset 0 0 0 1px rgba(124,140,255,0.45); }
@@ -207,6 +207,13 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .alert { background: rgba(255,107,122,0.1); border: 1px solid rgba(255,107,122,0.35); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.92rem; }
 .alert p { margin: 4px 0; }
 
+/* rede 2D em polígonos (megaminx) */
+.net-svg { display: block; width: 100%; max-width: 520px; margin: 0 auto 14px; }
+.net-svg .st { fill: #2a2f3d; stroke: #05070c; stroke-width: 2.2; stroke-linejoin: round; cursor: pointer; transition: filter 0.1s; }
+.net-svg .st:hover { filter: brightness(1.25); }
+.net-svg .st.unknown { fill: #2a2f3d !important; }
+.net-svg .st.fixed { cursor: not-allowed; }
+
 /* escolha do método */
 .methods { border: 0; padding: 0; margin: 0 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .methods legend { font-weight: 600; font-size: 0.92rem; margin-bottom: 8px; padding: 0; }
@@ -270,6 +277,11 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .thumb .dot { width: 9px; height: 9px; }
 .mini { display: grid; gap: 1px; width: 100%; max-width: 40px; aspect-ratio: 1; background: #05070c; border-radius: 4px; padding: 1px; }
 .mini i { border-radius: 2px; background: #1b2030; }
+.scan-thumbs.many { grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.scan-thumbs.many .thumb { padding: 2px; border-radius: 7px; gap: 0; }
+.scan-thumbs.many .thumb span { display: none; }
+.mini-svg { width: 100%; max-width: 40px; aspect-ratio: 1; display: block; }
+.mini-svg polygon { stroke: #05070c; stroke-width: 0.012; stroke-linejoin: round; }
 
 /* durante a leitura pela câmera, tudo precisa caber na tela sem rolar */
 .workspace.scanning .ws-header p { display: none; }
@@ -337,6 +349,12 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 .confetti i:nth-child(3n) { margin-left: 5%; } .confetti i:nth-child(5n) { margin-left: -4%; animation-duration: 3.2s; }
 @keyframes fall { to { transform: translateY(420px) rotate(540deg); opacity: 0; } }
 
+/* calculando */
+.loading-card { text-align: center; padding: 40px 24px; }
+.loading-card p { color: var(--muted); margin: 0; }
+.spinner { width: 42px; height: 42px; margin: 0 auto 16px; border-radius: 50%; border: 4px solid var(--surface-2); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* toasts */
 .toasts { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; width: max-content; max-width: calc(100vw - 32px); }
 .toast { background: #1b2133; border: 1px solid var(--border-strong); color: var(--text); padding: 10px 16px; border-radius: 12px; box-shadow: var(--shadow); font-size: 0.92rem; animation: tin 0.25s ease-out; transition: opacity 0.3s, transform 0.3s; }
@@ -371,6 +389,9 @@ a.pz-card:hover { transform: translateY(-4px); border-color: rgba(124,140,255,0.
 @media (max-width: 760px) {
   .brand-tag, .nav-extra { display: none; }
   .topbar-inner { gap: 10px; }
+}
+@media (max-width: 420px) {
+  .brand-text { display: none; }
 }
 @media (max-width: 520px) {
   .nav-cta { display: none; }

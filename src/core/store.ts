@@ -25,8 +25,13 @@ export function loadState(puzzleId: string): string[] | null {
 }
 
 /** Estado compacto para a URL (permite recarregar/compartilhar o tutorial). */
-export const encodeState = (s: string[]) => s.join('');
-export const decodeState = (s: string, len: number) => (s && s.length === len ? s.split('') : null);
+/** um caractere por adesivo: o índice da cor na lista do puzzle (0-9, a-z) */
+export const encodeState = (s: string[], keys: string[]) => s.map((k) => (keys.includes(k) ? keys.indexOf(k).toString(36) : '_')).join('');
+export function decodeState(s: string, len: number, keys: string[]): string[] | null {
+  if (!s || s.length !== len) return null;
+  const out = s.split('').map((c) => (c === '_' ? '?' : keys[parseInt(c, 36)]));
+  return out.every((k) => k !== undefined) ? out : null;
+}
 
 /** Método de solução preferido (conveniência por navegador). */
 export function loadMethod(valid: string[]): string {

@@ -15,6 +15,30 @@ const CAMERA_REFS: Record<string, RGB> = {
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
 
+type Pt = [number, number];
+interface Cell {
+  poly: Pt[];
+  center: Pt;
+  /** tamanho da área amostrada (fração do quadro) */
+  r: number;
+}
+
+/** envoltória convexa (contorno da face para escurecer o resto da imagem) */
+function hull(pts: Pt[]): Pt[] {
+  const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o: Pt, a: Pt, b: Pt) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower: Pt[] = [], upper: Pt[] = [];
+  for (const q of p) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], q) <= 0) lower.pop();
+    lower.push(q);
+  }
+  for (const q of [...p].reverse()) {
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], q) <= 0) upper.pop();
+    upper.push(q);
+  }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+}
+
 export class CameraScanner {
   readonly root: HTMLElement;
   private video!: HTMLVideoElement;
@@ -41,7 +65,6 @@ export class CameraScanner {
   }
   private timer = 0;
   private running = false;
-  private n: number;
 
   constructor(
     container: HTMLElement,
@@ -49,7 +72,6 @@ export class CameraScanner {
     private onDone: (state: string[]) => void,
     private onFace?: (stickers: number[]) => void,
   ) {
-    this.n = impl.scan[0].grid.length;
     impl.scan.forEach((f, fi) => f.grid.flat().forEach((st, k) => this.where.set(st, [fi, k])));
     this.defaultRefs = impl.colors.map((c) => ({ key: c.key, lab: rgbToLab(CAMERA_REFS[c.name] ?? hexToRgb(c.hex)) }));
     this.captured = impl.scan.map(() => null);
@@ -57,6 +79,22 @@ export class CameraScanner {
     this.root.className = 'scanner';
     container.appendChild(this.root);
     this.render();
+  }
+
+  /** células da face atual, em coordenadas 0..1 do quadro quadrado */
+  private cellsOf(i = this.current): Cell[] {
+    const face = this.impl.scan[i];
+    if (face.cells) return face.cells.map((c) => ({ poly: c.poly, center: c.center, r: 0.022 }));
+    const n = face.grid.length;
+    const x0 = (1 - GRID_FRACTION) / 2;
+    const cs = GRID_FRACTION / n;
+    const out: Cell[] = [];
+    for (let r = 0; r < n; r++)
+      for (let c = 0; c < n; c++) {
+        const x = x0 + c * cs, y = x0 + r * cs, e = cs * 0.06;
+        out.push({ poly: [[x + e, y + e], [x + cs - e, y + e], [x + cs - e, y + cs - e], [x + e, y + cs - e]], center: [x + cs / 2, y + cs / 2], r: cs * 0.2 });
+      }
+    return out;
   }
 
   private hex(key: string) {
@@ -67,6 +105,7 @@ export class CameraScanner {
 
   /** Cor (chave) de uma amostra: pelo matiz quando o puzzle usa as cores padrão; senão, a mais próxima. */
   private classify(rgb: RGB): string {
+    if (this.impl.scanColorModel === 'nearest') return nearest(rgbToLab(rgb), this.defaultRefs);
     const name = classifyCubeColor(rgb);
     const c = this.impl.colors.find((x) => x.name === name);
     return c ? c.key : nearest(rgbToLab(rgb), this.defaultRefs);
@@ -90,7 +129,7 @@ export class CameraScanner {
       <div class="scan-stage">
         <div class="video-wrap ${this.running ? '' : 'off'}"><video playsinline muted autoplay></video><canvas class="overlay"></canvas></div>
         <div class="up-label ${this.running ? '' : 'hidden'}" style="--up:${upHex}">
-          <span class="arrow">▲</span>${face.upLabel}
+          <span class="arrow">${face.arrow ?? '▲'}</span>${face.upLabel}
         </div>
         <div class="scan-warn" aria-live="polite"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
@@ -105,14 +144,23 @@ export class CameraScanner {
         <button class="btn ghost icon-only" data-act="switch" title="Trocar câmera" aria-label="Trocar câmera" ${this.running ? '' : 'disabled'}>🔄</button>
         <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>Capturar ${face.title.toLowerCase()}</button>
       </div>
-      <div class="scan-thumbs">
+      <div class="scan-thumbs ${this.impl.scan.length > 6 ? 'many' : ''}">
         ${this.impl.scan
           .map(
             (s, i) => `<button class="thumb ${i === this.current ? 'active' : ''} ${this.captured[i] ? 'ok' : ''}" data-face="${i}" title="${s.title}">
-              <div class="mini" style="grid-template-columns:repeat(${this.n},1fr)">${Array.from({ length: this.n * this.n }, (_, k) => {
-                const c = this.captured[i]?.[k];
-                return `<i style="background:${c ? this.hex(this.classify(c)) : 'transparent'}"></i>`;
-              }).join('')}</div>
+              ${
+                s.cells
+                  ? `<svg class="mini-svg" viewBox="0.12 0.14 0.76 0.76">${this.cellsOf(i)
+                      .map((c, k) => {
+                        const rgb = this.captured[i]?.[k];
+                        return `<polygon points="${c.poly.map((p) => p.join(',')).join(' ')}" fill="${rgb ? this.hex(this.classify(rgb)) : '#1b2030'}"/>`;
+                      })
+                      .join('')}</svg>`
+                  : `<div class="mini" style="grid-template-columns:repeat(${s.grid.length},1fr)">${Array.from({ length: s.grid.length ** 2 }, (_, k) => {
+                      const c = this.captured[i]?.[k];
+                      return `<i style="background:${c ? this.hex(this.classify(c)) : 'transparent'}"></i>`;
+                    }).join('')}</div>`
+              }
               <span>${s.faceColor ? `<i class="dot" style="background:${this.hex(s.faceColor)}"></i>` : `<small>${scanShortName(s.face)}</small>`}</span>
             </button>`,
           )
@@ -237,14 +285,13 @@ export class CameraScanner {
     }
     const ctx = this.work.getContext('2d', { willReadFrequently: true })!;
     ctx.drawImage(v, 0, 0, w, h);
-    const g = this.gridRect(w, h);
-    const cell = g.side / this.n;
+    // o quadro quadrado mostra o centro do vídeo (object-fit: cover)
+    const m = Math.min(w, h), ox = (w - m) / 2, oy = (h - m) / 2;
     const live: RGB[] = [];
-    for (let r = 0; r < this.n; r++)
-      for (let c = 0; c < this.n; c++) {
-        const inset = cell * 0.3;
-        const x = Math.round(g.x + c * cell + inset), y = Math.round(g.y + r * cell + inset);
-        const s = Math.max(2, Math.round(cell - 2 * inset));
+    for (const cell of this.cellsOf()) {
+        const half = Math.max(1, Math.round(cell.r * m));
+        const x = Math.round(ox + cell.center[0] * m) - half, y = Math.round(oy + cell.center[1] * m) - half;
+        const s = 2 * half;
         const data = ctx.getImageData(x, y, s, s).data;
         // mediana por canal: ignora reflexos e bordas
         const R: number[] = [], G: number[] = [], B: number[] = [];
@@ -262,10 +309,11 @@ export class CameraScanner {
   }
 
   private updateWarning() {
-    if (this.live.length !== this.n * this.n) return;
     const face = this.impl.scan[this.current];
+    if (this.live.length !== this.cellsOf().length) return;
     const name = (k: string) => this.impl.colors.find((c) => c.key === k)?.name ?? k;
-    const center = this.n % 2 === 1 ? (this.n * this.n) >> 1 : -1;
+    const gn = face.grid.length;
+    const center = face.cells ? 0 : gn % 2 === 1 ? (gn * gn) >> 1 : -1;
     let msg = '';
     for (const fc of face.fixedCells) {
       const got = this.classify(this.live[fc.cell]);
@@ -294,15 +342,18 @@ export class CameraScanner {
     const ctx = cv.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, dw, dh);
-    const g = this.gridRect(dw, dh);
-    const cell = g.side / this.n;
-    // escurece fora da grade
+    const M = Math.min(dw, dh), OX = (dw - M) / 2, OY = (dh - M) / 2;
+    const P = (p: Pt): Pt => [OX + p[0] * M, OY + p[1] * M];
+    const face = this.impl.scan[this.current];
+    const cells = this.cellsOf();
+    // escurece fora da face
+    const outline = hull(cells.flatMap((c) => c.poly)).map(P);
     ctx.fillStyle = 'rgba(5,8,18,0.45)';
     ctx.beginPath();
     ctx.rect(0, 0, dw, dh);
-    ctx.roundRect(g.x, g.y, g.side, g.side, 14);
+    outline.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+    ctx.closePath();
     ctx.fill('evenodd');
-    const face = this.impl.scan[this.current];
     const bar = (key: string, x: number, y: number, w: number, h: number) => {
       ctx.fillStyle = this.hex(key);
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
@@ -312,45 +363,69 @@ export class CameraScanner {
       ctx.fill();
       ctx.stroke();
     };
-    const gap = 6, thick = 12, thin = 7, inset = cell * 0.2;
-    const nb = face.neighbors;
-    if (nb) {
-      // cubos com centro: barras com a cor de cada face vizinha
-      bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
-      bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
-      bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
-      bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
+    if (face.marks) {
+      // faces poligonais: um traço colorido por fora de cada aresta
+      for (const mk of face.marks) {
+        const a = P(mk.a), b = P(mk.b);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = mk.primary ? 15 : 11;
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+        ctx.strokeStyle = this.hex(mk.color);
+        ctx.lineWidth = mk.primary ? 12 : 8;
+        ctx.stroke();
+      }
     } else {
-      // sem centro: mostra as cores JÁ capturadas que encostam em cada borda
-      const seg = (stickers: number[], horizontal: boolean, x0: number, y0: number, t: number) =>
-        stickers.forEach((st, k) => {
-          const key = this.capturedKey(st);
-          if (!key) return;
-          const a = k * cell + cell * 0.12, len = cell * 0.76;
-          if (horizontal) bar(key, x0 + a, y0, len, t);
-          else bar(key, x0, y0 + a, t, len);
-        });
-      seg(face.edges.up, true, g.x, g.y - gap - thick, thick);
-      seg(face.edges.down, true, g.x, g.y + g.side + gap, thin + 3);
-      seg(face.edges.left, false, g.x - gap - thin - 3, g.y, thin + 3);
-      seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
+      const g = this.gridRect(dw, dh);
+      const n = face.grid.length;
+      const cell = g.side / n;
+      const gap = 6, thick = 12, thin = 7, inset = cell * 0.2;
+      const nb = face.neighbors;
+      if (nb) {
+        // cubos com centro: barras com a cor de cada face vizinha
+        bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
+        bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
+        bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
+        bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
+      } else {
+        // sem centro: mostra as cores JÁ capturadas que encostam em cada borda
+        const seg = (stickers: number[], horizontal: boolean, x0: number, y0: number, t: number) =>
+          stickers.forEach((st, k) => {
+            const key = this.capturedKey(st);
+            if (!key) return;
+            const a = k * cell + cell * 0.12, len = cell * 0.76;
+            if (horizontal) bar(key, x0 + a, y0, len, t);
+            else bar(key, x0, y0 + a, t, len);
+          });
+        seg(face.edges.up, true, g.x, g.y - gap - thick, thick);
+        seg(face.edges.down, true, g.x, g.y + g.side + gap, thin + 3);
+        seg(face.edges.left, false, g.x - gap - thin - 3, g.y, thin + 3);
+        seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
+      }
     }
     const fixedAt = new Map(face.fixedCells.map((f) => [f.cell, f.color]));
     this.live.forEach((rgb, i) => {
-      const r = Math.floor(i / this.n), c = i % this.n;
-      const x = g.x + c * cell, y = g.y + r * cell;
+      const cell = cells[i];
+      if (!cell) return;
       const fixedColor = fixedAt.get(i);
+      const poly = cell.poly.map(P);
       ctx.strokeStyle = fixedColor ? this.hex(fixedColor) : 'rgba(255,255,255,0.85)';
       ctx.lineWidth = fixedColor ? 3.5 : 2;
+      ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.roundRect(x + 4, y + 4, cell - 8, cell - 8, 10);
+      poly.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+      ctx.closePath();
       ctx.stroke();
+      const [cx, cy] = P(cell.center);
       const key = this.classify(rgb);
-      const dot = cell * 0.26;
+      const dot = Math.max(10, cell.r * M * 1.3);
       ctx.fillStyle = this.hex(key);
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
       ctx.beginPath();
-      ctx.roundRect(x + cell / 2 - dot / 2, y + cell / 2 - dot / 2, dot, dot, 6);
+      ctx.roundRect(cx - dot / 2, cy - dot / 2, dot, dot, 5);
       ctx.fill();
       ctx.stroke();
       if (this.debug) {
@@ -362,8 +437,8 @@ export class CameraScanner {
         ctx.lineWidth = 3;
         const lines = [`h${h.toFixed(0)} s${s.toFixed(2)} v${v.toFixed(2)}`, rgb.join(',')];
         lines.forEach((t, li) => {
-          ctx.strokeText(t, x + cell / 2, y + cell * 0.82 + li * 12);
-          ctx.fillText(t, x + cell / 2, y + cell * 0.82 + li * 12);
+          ctx.strokeText(t, cx, cy + dot + 10 + li * 12);
+          ctx.fillText(t, cx, cy + dot + 10 + li * 12);
         });
       }
     });
@@ -381,7 +456,7 @@ export class CameraScanner {
   }
 
   private capture() {
-    if (this.live.length !== this.n * this.n) return;
+    if (this.live.length !== this.cellsOf().length) return;
     this.captured[this.current] = this.stableSample();
     this.history = [];
     this.lastWarn = '';
@@ -415,7 +490,7 @@ export class CameraScanner {
       const m = members.reduce((a, l) => [a[0] + l[0], a[1] + l[1], a[2] + l[2]] as Lab, [0, 0, 0] as Lab);
       return { key: c.key, lab: [m[0] / members.length, m[1] / members.length, m[2] / members.length] as Lab };
     });
-    const keys = balancedAssign(samples, refs, this.n * this.n, fixed);
+    const keys = balancedAssign(samples, refs, Math.round(this.impl.stickerCount / this.impl.colors.length), fixed);
     keys.forEach((k, i) => (state[i] = k || '?'));
     this.stop();
     this.onDone(state);

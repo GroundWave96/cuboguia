@@ -13,7 +13,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   if (!def?.available) throw new Error('Este puzzle ainda não está disponível.');
   const impl: PuzzleImpl = await loadPuzzle(puzzleId);
 
-  const initial: PuzzleState | null = decodeState(params.get('s') ?? '', impl.stickerCount) ?? loadState(puzzleId);
+  const initial: PuzzleState | null = decodeState(params.get('s') ?? '', impl.stickerCount, impl.colors.map((c) => c.key)) ?? loadState(puzzleId);
   if (!initial) {
     location.hash = `/p/${puzzleId}`;
     return () => {};
@@ -22,6 +22,9 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   if (!valid.ok) throw new Error('O cubo informado não é válido: ' + valid.errors.join(' '));
 
   const methodId = impl.methods.some((m) => m.id === params.get('m')) ? params.get('m')! : impl.methods[0].id;
+  // aviso enquanto calcula (o Megaminx leva 1–3 s)
+  app.innerHTML = `<section class="page narrow"><div class="card loading-card"><div class="spinner" aria-hidden="true"></div><h2>Calculando a solução…</h2><p>Montando o passo a passo para o seu ${def.name}.</p></div></section>`;
+  await new Promise((r) => setTimeout(r, 40));
   const sol: Solution = impl.solve(initial, methodId);
   saveMethod(methodId);
   const steps = sol.steps;
@@ -43,6 +46,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
   const faceText = Object.fromEntries(impl.notationHelp.map((h) => [h.move, h.text]));
   const describeMove = (m: string) => {
+    if (impl.describeMove) return impl.describeMove(m);
     const wide = m[0] !== m[0].toUpperCase() || m.includes('w');
     const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? ' + meio (2 camadas)' : '');
     const dir = m.endsWith("'") ? 'anti-horário ↺' : m.endsWith('2') ? 'meia volta (180°)' : 'horário ↻';
@@ -67,7 +71,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         ${impl.methods
           .map(
             (m) =>
-              `<a class="${m.id === methodId ? 'on' : ''}" href="#/p/${puzzleId}/solve?m=${m.id}&s=${encodeState(initial)}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
+              `<a class="${m.id === methodId ? 'on' : ''}" href="#/p/${puzzleId}/solve?m=${m.id}&s=${encodeState(initial, impl.colors.map((c) => c.key))}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
           )
           .join('')}
       </div>
@@ -267,8 +271,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         <summary>Como ler os movimentos?</summary>
         <p>Cada letra é uma face. Gire-a olhando <b>de frente para ela</b>:</p>
         <ul>${impl.notationHelp.map((h) => `<li><code>${h.move}</code> ${h.text}</li>`).join('')}</ul>
-        <p><code>R</code> = sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = meia volta.</p>
-        <p>Letra minúscula (<code>r</code>) = a face <b>e</b> a camada do meio juntas (duas camadas).</p>
+        ${impl.notationNote ?? `<p><code>R</code> = sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = meia volta.</p>
+        <p>Letra minúscula (<code>r</code>) = a face <b>e</b> a camada do meio juntas (duas camadas).</p>`}
       </details>`;
 
     const on = (act: string, fn: () => void) => panel.querySelector(`[data-act="${act}"]`)?.addEventListener('click', fn);

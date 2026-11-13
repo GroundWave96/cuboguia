@@ -79,6 +79,16 @@ export interface ScanFace {
   edges: { up: number[]; down: number[]; left: number[]; right: number[] };
   /** células da grade com cor conhecida (centro no 3x3, canto de referência no 2x2) */
   fixedCells: { cell: number; color: string }[];
+  /**
+   * Para faces que não são grades quadradas (ex.: pentágonos do Megaminx):
+   * polígono de cada célula em coordenadas 0..1 do quadro da câmera, na mesma
+   * ordem de grid.flat().
+   */
+  cells?: { poly: [number, number][]; center: [number, number] }[];
+  /** marcas coloridas por fora das bordas (cor da face vizinha), em coordenadas 0..1 */
+  marks?: { a: [number, number]; b: [number, number]; color: string; primary?: boolean }[];
+  /** seta do rótulo de orientação (padrão ▲) */
+  arrow?: string;
 }
 
 export interface PuzzleView {
@@ -121,7 +131,15 @@ export interface PuzzleImpl {
   solve(state: PuzzleState, methodId?: string): Solution;
   createView(container: HTMLElement): PuzzleView;
   net: NetFace[];
+  /** rede 2D desenhada com polígonos (puzzles que não são grades quadradas) */
+  netSvg?: { viewBox: string; stickers: { index: number; points: string }[]; labels?: { x: number; y: number; text: string }[] };
   scan: ScanFace[];
+  /** como classificar as cores da câmera: pelo matiz (6 cores do cubo) ou pela cor mais próxima */
+  scanColorModel?: 'hue6' | 'nearest';
+  /** explicação da notação (HTML) mostrada no tutorial, se diferente da do cubo */
+  notationNote?: string;
+  /** texto explicando um movimento (ex.: "Direita · horário") */
+  describeMove?: (move: string) => string;
   notationHelp: { move: string; text: string }[];
 }
 

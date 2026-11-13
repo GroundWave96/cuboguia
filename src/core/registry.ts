@@ -21,7 +21,14 @@ export const PUZZLES: PuzzleDefinition[] = [
   { id: 'cube4', name: 'Cubo 4x4', subtitle: 'Revenge', available: false, icon: cubeIcon(4) },
   { id: 'cube5', name: 'Cubo 5x5', subtitle: 'Professor', available: false, icon: cubeIcon(5) },
   { id: 'pyraminx', name: 'Pyraminx', subtitle: 'O triângulo', available: false, icon: pyraminxIcon() },
-  { id: 'megaminx', name: 'Megaminx', subtitle: 'Dodecaedro de 12 faces', available: false, icon: megaminxIcon() },
+  {
+    id: 'megaminx',
+    name: 'Megaminx',
+    subtitle: 'Dodecaedro de 12 faces. Camada por camada.',
+    available: true,
+    icon: megaminxIcon(),
+    load: () => import('../puzzles/megaminx').then((m) => m.default as PuzzleImpl),
+  },
 ];
 
 export const getPuzzle = (id: string) => PUZZLES.find((p) => p.id === id);
