@@ -2,7 +2,15 @@
 
 Site para aprender a resolver o cubo mágico: você informa como o seu cubo está
 (pintando no modelo 3D ou lendo as faces com a câmera) e recebe um tutorial
-animado, passo a passo, pelo **método de iniciante (camada por camada)**.
+animado, passo a passo.
+
+| Puzzle | Métodos |
+|---|---|
+| 3x3 | Iniciante (camadas) · CFOP (Cross, F2L, OLL/PLL em 2 etapas) |
+| 2x2 | Iniciante (camadas) · Solução ótima (≤ 11 movimentos) |
+
+No 2x2 (sem centros) a referência é o canto branco-azul-vermelho, sempre
+atrás-embaixo-esquerda; os solucionadores só usam U, R e F para não movê-lo.
 
 ## Rodar localmente
 
@@ -20,7 +28,8 @@ src/
   core/            tipos, registro de puzzles, cores, armazenamento
   puzzles/
     nxn/           geometria + visual 3D genéricos para cubos NxN (2x2, 3x3, 4x4, 5x5...)
-    cube3/         3x3: peças, validação e solucionador (método de iniciante)
+    cube3/         3x3: peças, validação e solucionadores (iniciante e CFOP)
+    cube2/         2x2: validação e solucionadores (iniciante e ótimo)
   ui/              páginas: início, entrada de cores (pintura/câmera), tutorial
 tests/             testes (vitest)
 ```

@@ -1,5 +1,5 @@
 import type { ColorInfo, NetFace, ScanFace } from '../../core/types';
-import { FACE_FRAME, FACE_ORDER, type FaceId, type Vec3 } from './geometry';
+import { FACE_FRAME, FACE_ORDER, type FaceId, type NxNGeometry, type Vec3 } from './geometry';
 
 const FACE_LABEL: Record<FaceId, string> = {
   U: 'Cima',
@@ -33,42 +33,77 @@ export function faceNeighbors(face: FaceId) {
   return { up: faceByNormal(neg(d)), down: faceByNormal(d), left: faceByNormal(neg(r)), right: faceByNormal(r) };
 }
 
-/** Ordem de captura pela câmera e instruções de como segurar o cubo. */
-export function buildScan(n: number, colors: ColorInfo[]): ScanFace[] {
-  const name = (k: string) => colors.find((c) => c.key === k)!.name;
-  const up = name('U');
-  const front = name('F');
-  const side = (face: FaceId, intro: string): ScanFace => ({
-    face,
-    grid: faceGrid(n, face),
-    title: `Face ${name(face)}`,
-    instruction: `${intro} Mostre a face <b>${name(face)}</b> para a câmera, com o <b>${up}</b> para cima.`,
-    centerColor: face,
-    upColor: 'U',
-    neighbors: faceNeighbors(face),
-  });
-  return [
-    side('F', `Segure o cubo com o ${up} em cima e o ${front} de frente.`),
-    side('R', 'Gire o cubo um quarto de volta para a esquerda.'),
-    side('B', 'Gire mais um quarto de volta para a esquerda.'),
-    side('L', 'Gire mais um quarto de volta para a esquerda.'),
-    {
-      face: 'U',
-      grid: faceGrid(n, 'U'),
-      title: `Face ${up}`,
-      instruction: `Volte o ${front} para a frente e incline o cubo: mostre a face <b>${up}</b> para a câmera, com o <b>${front}</b> na parte de baixo da imagem.`,
-      centerColor: 'U',
-      upColor: 'B',
-      neighbors: faceNeighbors('U'),
-    },
-    {
-      face: 'D',
-      grid: faceGrid(n, 'D'),
-      title: `Face ${name('D')}`,
-      instruction: `Agora mostre a face <b>${name('D')}</b> para a câmera, com o <b>${front}</b> na parte de cima da imagem.`,
-      centerColor: 'D',
-      upColor: 'F',
-      neighbors: faceNeighbors('D'),
-    },
-  ];
+const POSITION_NAME: Record<FaceId, string> = { F: 'Frente', R: 'Direita', B: 'Trás', L: 'Esquerda', U: 'Topo', D: 'Base' };
+const POSITION_SHORT: Record<FaceId, string> = { F: 'Fr', R: 'Dir', B: 'Trás', L: 'Esq', U: 'Topo', D: 'Base' };
+const EVEN_UP_LABEL: Record<FaceId, string> = {
+  F: 'TOPO DO CUBO',
+  R: 'TOPO DO CUBO',
+  B: 'TOPO DO CUBO',
+  L: 'TOPO DO CUBO',
+  U: 'LADO DE TRÁS',
+  D: 'LADO DA FRENTE',
+};
+
+export interface ScanOptions {
+  /** adesivos com cor conhecida além dos centros (ex.: canto de referência do 2x2) */
+  fixed?: Map<number, string>;
+  /** dica curta por face, para cubos sem centro */
+  hints?: Partial<Record<FaceId, string>>;
 }
+
+/**
+ * Ordem de captura pela câmera: frente, direita, trás, esquerda (girando o cubo para
+ * a esquerda), depois topo e base. Funciona para qualquer NxN.
+ */
+export function buildScan(geo: NxNGeometry, colors: ColorInfo[], opts: ScanOptions = {}): ScanFace[] {
+  const n = geo.n;
+  const odd = n % 2 === 1;
+  const color = (k: string) => colors.find((c) => c.key === k)!;
+  const fixed = new Map(opts.fixed ?? []);
+  if (odd) for (const f of FACE_ORDER) fixed.set(FACE_ORDER.indexOf(f) * n * n + ((n * n) >> 1), f);
+
+  const stickerOn = (cubie2: Vec3, normal: Vec3) =>
+    geo.stickers.find((s) => s.cubie2.every((v, i) => v === cubie2[i]) && s.normal.every((v, i) => v === normal[i]))!.index;
+
+  const build = (face: FaceId): ScanFace => {
+    const grid = faceGrid(n, face);
+    const { r, d } = FACE_FRAME[face];
+    const along = (cells: number[], normal: Vec3) => cells.map((i) => stickerOn(geo.stickers[i].cubie2, normal));
+    const edges = {
+      up: along(grid[0], neg(d)),
+      down: along(grid[n - 1], d),
+      left: along(grid.map((row) => row[0]), neg(r)),
+      right: along(grid.map((row) => row[n - 1]), r),
+    };
+    const fixedCells = grid.flat().flatMap((st, cell) => (fixed.has(st) ? [{ cell, color: fixed.get(st)! }] : []));
+    if (odd) {
+      const nb = faceNeighbors(face);
+      const up = color(nb.up);
+      return {
+        face,
+        grid,
+        title: `Face ${color(face).name}`,
+        faceColor: face,
+        hint: `<i class="dot" style="background:${up.hex}"></i>${up.name} em cima`,
+        upLabel: `${up.name.toUpperCase()} EM CIMA`,
+        upColor: nb.up,
+        neighbors: nb,
+        edges,
+        fixedCells,
+      };
+    }
+    return {
+      face,
+      grid,
+      title: POSITION_NAME[face],
+      faceColor: '',
+      hint: opts.hints?.[face] ?? '',
+      upLabel: EVEN_UP_LABEL[face],
+      edges,
+      fixedCells,
+    };
+  };
+  return (['F', 'R', 'B', 'L', 'U', 'D'] as FaceId[]).map(build);
+}
+
+export const scanShortName = (face: string) => POSITION_SHORT[face as FaceId] ?? face;

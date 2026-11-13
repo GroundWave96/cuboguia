@@ -69,7 +69,8 @@ export class NxNView implements PuzzleView {
 
     const n = geo.n;
     this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-    this.defaultCamPos = new THREE.Vector3(4.6, 4.2, 6.6).multiplyScalar(n / 3);
+    // distância proporcional ao tamanho, com folga para cubos pequenos (2x2)
+    this.defaultCamPos = new THREE.Vector3(4.6, 4.2, 6.6).multiplyScalar((n + 1.5) / 4.5);
     this.camera.position.copy(this.defaultCamPos);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;

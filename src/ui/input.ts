@@ -8,7 +8,6 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   const def = getPuzzle(puzzleId);
   if (!def?.available) throw new Error('Este puzzle ainda não está disponível.');
   const impl: PuzzleImpl = await loadPuzzle(puzzleId);
-  const name = (k: string) => impl.colors.find((c) => c.key === k)?.name ?? k;
 
   const blank = (): PuzzleState => {
     const solved = impl.solvedState();
@@ -26,7 +25,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     <div class="ws-header">
       <a class="back" href="#/">← Início</a>
       <h1>${def.name}: como está o seu cubo?</h1>
-      <p>Segure o cubo com o <b>${name('U')}</b> em cima e o <b>${name('F')}</b> de frente. Os centros já vêm pintados — eles nunca mudam de lugar.</p>
+      <p>${impl.holdHint} As peças de referência já vêm pintadas — elas nunca mudam de lugar.</p>
     </div>
     <div class="ws-grid">
       <div class="ws-view card">
@@ -53,7 +52,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
 
   const paint = (i: number) => {
     if (impl.fixedStickers.includes(i)) {
-      toast('Os centros são fixos: eles definem a cor de cada face.');
+      toast('Esta peça é a referência: ela define a cor de cada face e já vem pintada.');
       return;
     }
     state[i] = state[i] === selected ? UNKNOWN : selected;

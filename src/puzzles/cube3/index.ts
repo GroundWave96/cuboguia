@@ -12,6 +12,7 @@ const geo = new NxNGeometry(3);
 
 const cube3: PuzzleImpl = {
   colors: CUBE3_COLORS,
+  holdHint: 'Segure o cubo com o <b>amarelo</b> em cima e o <b>verde</b> de frente.',
   stickerCount: geo.count,
   solvedState: () => geo.solved(),
   fixedStickers: CENTERS,
@@ -37,7 +38,7 @@ const cube3: PuzzleImpl = {
   solve: (state, methodId) => (methodId === 'cfop' ? solveCFOP(state) : solveBeginner(state)),
   createView: (container) => new NxNView(container, geo, COLOR_HEX),
   net: buildNet(3),
-  scan: buildScan(3, CUBE3_COLORS),
+  scan: buildScan(geo, CUBE3_COLORS),
   notationHelp: [
     { move: 'U', text: 'Cima (amarelo)' },
     { move: 'D', text: 'Baixo (branco)' },

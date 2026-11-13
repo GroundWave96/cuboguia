@@ -62,7 +62,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     <div class="ws-header">
       <a class="back" href="#/p/${puzzleId}">← Editar cores</a>
       <h1>Tutorial: resolvendo seu ${def.name.replace('Cubo ', '')}</h1>
-      <p>${sol.method} · <b>${steps.length}</b> passos · <b>${flat.length}</b> movimentos. Mantenha o cubo com o amarelo em cima e o verde de frente o tempo todo.</p>
+      <p>${sol.method} · <b>${steps.length}</b> passos · <b>${flat.length}</b> movimentos. ${impl.holdHint} Mantenha essa posição o tempo todo.</p>
       <div class="method-switch" role="group" aria-label="Método">
         ${impl.methods
           .map(

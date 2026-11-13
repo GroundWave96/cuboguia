@@ -65,11 +65,20 @@ export interface ScanFace {
   /** índices dos adesivos linha a linha, como a câmera vê a face */
   grid: number[][];
   title: string;
-  instruction: string;
-  centerColor: string; // chave de cor
-  upColor: string; // cor que deve ficar para cima
-  /** cores vizinhas como a câmera vê a face (para desenhar a orientação na grade) */
-  neighbors: { up: string; down: string; left: string; right: string };
+  /** cor do miolo da face quando resolvida (para o pontinho do título) */
+  faceColor: string;
+  /** dica curta mostrada no cabeçalho (HTML) */
+  hint: string;
+  /** rótulo do lado de cima na grade, ex.: "AMARELO EM CIMA" */
+  upLabel: string;
+  /** cor (chave) do rótulo/barra de cima, quando existe uma cor fixa ali */
+  upColor?: string;
+  /** cor fixa (centro ou canto de referência) de cada lado — só em cubos com centro */
+  neighbors?: { up: string; down: string; left: string; right: string };
+  /** adesivos das faces vizinhas encostados em cada borda, na ordem em que aparecem */
+  edges: { up: number[]; down: number[]; left: number[]; right: number[] };
+  /** células da grade com cor conhecida (centro no 3x3, canto de referência no 2x2) */
+  fixedCells: { cell: number; color: string }[];
 }
 
 export interface PuzzleView {
@@ -96,6 +105,8 @@ export interface SolveMethod {
 
 export interface PuzzleImpl {
   colors: ColorInfo[];
+  /** como segurar o cubo (HTML), mostrado na pintura e no tutorial */
+  holdHint: string;
   stickerCount: number;
   solvedState(): PuzzleState;
   /** Adesivos que não podem ser pintados (ex.: centros do 3x3). */
