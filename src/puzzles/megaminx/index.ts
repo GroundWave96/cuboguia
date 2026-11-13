@@ -1,5 +1,6 @@
 import type { PuzzleImpl } from '../../core/types';
 import { PolyView } from '../poly/PolyView';
+import { megaPieces } from './pieces3d';
 import { FACES, invertMegaMove, megaGeo as geo, type V3 } from './geometry';
 import { MEGA_COLORS, MEGA_COLOR_HEX, MEGA_COLOR_NAME } from './colors';
 import { buildMegaNet, buildMegaScan } from './layout';
@@ -49,7 +50,7 @@ const megaminx: PuzzleImpl = {
   solve: (state, methodId) => (methodId === 'advanced' ? solveMegaminxAdvanced(state) : solveMegaminx(state)),
   createView: (container) =>
     new PolyView(container, {
-      stickers: geo.stickers.map((s) => ({ index: s.index, poly: s.poly, normal: geo.normals[s.face] })),
+      ...megaPieces(),
       bodyFaces: geo.faceVerts.map((vs) => vs.map((v) => geo.vertices[v])),
       palette: MEGA_COLOR_HEX,
       solved: geo.solved(),

@@ -25,6 +25,13 @@ export interface PolyViewOptions {
   defaultDir: V3;
   viewDirs: V3[];
   radius: number;
+  /**
+   * Peças separadas (opcional): cada uma é um sólido convexo com seus adesivos.
+   * Com elas o visual ganha frestas entre as peças e o giro move as peças de verdade.
+   */
+  pieces?: { faces: V3[][]; stickers: number[] }[];
+  /** cantos arredondados dos adesivos (fração da menor aresta) */
+  stickerRound?: number;
 }
 
 const UNKNOWN_HEX = '#3b4152';
@@ -39,6 +46,38 @@ function polyGeometry(points: THREE.Vector3[]): THREE.BufferGeometry {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.computeVertexNormals();
   return g;
+}
+
+/** adesivo com cantos arredondados, desenhado no plano da face (frame u, w, n) */
+function roundedSticker(points: THREE.Vector3[], normal: THREE.Vector3, scale: number, roundFrac: number) {
+  const c = points.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / points.length);
+  const u = points[0].clone().sub(c).normalize();
+  const w = new THREE.Vector3().crossVectors(normal, u).normalize();
+  let pts = points.map((p) => {
+    const d = p.clone().sub(c);
+    return new THREE.Vector2(d.dot(u) * scale, d.dot(w) * scale);
+  });
+  // garante sentido anti-horário no plano
+  let area = 0;
+  for (let i = 0; i < pts.length; i++) area += pts[i].x * pts[(i + 1) % pts.length].y - pts[(i + 1) % pts.length].x * pts[i].y;
+  if (area < 0) pts = pts.reverse();
+  const edges = pts.map((p, i) => p.distanceTo(pts[(i + 1) % pts.length]));
+  const r0 = Math.min(...edges) * roundFrac;
+  const shape = new THREE.Shape();
+  pts.forEach((p, i) => {
+    const prev = pts[(i + pts.length - 1) % pts.length];
+    const next = pts[(i + 1) % pts.length];
+    const r = Math.min(r0, p.distanceTo(prev) * 0.45, p.distanceTo(next) * 0.45);
+    const a = p.clone().add(prev.clone().sub(p).normalize().multiplyScalar(r));
+    const b = p.clone().add(next.clone().sub(p).normalize().multiplyScalar(r));
+    if (i === 0) shape.moveTo(a.x, a.y);
+    else shape.lineTo(a.x, a.y);
+    shape.quadraticCurveTo(p.x, p.y, b.x, b.y);
+  });
+  shape.closePath();
+  const geo = new THREE.ShapeGeometry(shape, 5);
+  const basis = new THREE.Matrix4().makeBasis(u, w, normal);
+  return { geo, center: c, quat: new THREE.Quaternion().setFromRotationMatrix(basis) };
 }
 
 /** corta um polígono convexo pelo semiespaço dot(p, n) * sign >= c * sign */
@@ -63,6 +102,9 @@ export class PolyView implements PuzzleView {
   private controls: OrbitControls;
   private root = new THREE.Group();
   private body: THREE.Mesh;
+  private pieceMeshes: THREE.Mesh[] = [];
+  private pieceHomes: { pos: THREE.Vector3; quat: THREE.Quaternion }[] = [];
+  private pieceOfSticker = new Map<number, number>();
   private bodyMat = new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 0.6, metalness: 0.1, side: THREE.DoubleSide });
   private stickerMeshes: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>[] = [];
   private homes: { pos: THREE.Vector3; quat: THREE.Quaternion }[] = [];
@@ -110,14 +152,34 @@ export class PolyView implements PuzzleView {
     this.scene.add(this.root);
 
     this.body = this.buildBody(o.bodyFaces.map((f) => f.map(v3)));
+    if (o.pieces) {
+      // núcleo escuro (aparece nas frestas) + uma malha por peça
+      this.body.scale.setScalar(0.9);
+      o.pieces.forEach((pc, pi) => {
+        const mesh = this.buildBody(pc.faces.map((f) => f.map(v3)));
+        this.root.add(mesh);
+        this.pieceMeshes.push(mesh);
+        this.pieceHomes.push({ pos: mesh.position.clone(), quat: mesh.quaternion.clone() });
+        pc.stickers.forEach((i) => this.pieceOfSticker.set(i, pi));
+      });
+    }
     this.root.add(this.body);
     for (const st of o.stickers) {
       const n = v3(st.normal);
       const pts = st.poly.map(v3);
-      const c = pts.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
-      const local = pts.map((p) => p.clone().sub(c).multiplyScalar(0.91));
-      const mesh = new THREE.Mesh(polyGeometry(local), new THREE.MeshStandardMaterial({ color: UNKNOWN_HEX, roughness: 0.32, metalness: 0.02, side: THREE.DoubleSide }));
-      mesh.position.copy(c.clone().add(n.clone().multiplyScalar(o.radius * 0.006)));
+      const mat = new THREE.MeshStandardMaterial({ color: UNKNOWN_HEX, roughness: 0.32, metalness: 0.02, side: THREE.DoubleSide });
+      let mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+      if (o.stickerRound) {
+        const r = roundedSticker(pts, n, 0.9, o.stickerRound);
+        mesh = new THREE.Mesh(r.geo, mat);
+        mesh.position.copy(r.center.clone().add(n.clone().multiplyScalar(o.radius * 0.004)));
+        mesh.quaternion.copy(r.quat);
+      } else {
+        const c = pts.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
+        const local = pts.map((p) => p.clone().sub(c).multiplyScalar(0.91));
+        mesh = new THREE.Mesh(polyGeometry(local), mat);
+        mesh.position.copy(c.clone().add(n.clone().multiplyScalar(o.radius * 0.006)));
+      }
       mesh.userData.index = st.index;
       this.root.add(mesh);
       this.stickerMeshes[st.index] = mesh;
@@ -191,7 +253,7 @@ export class PolyView implements PuzzleView {
     const rect = this.renderer.domElement.getBoundingClientRect();
     const v = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(v, this.camera);
-    const hits = this.raycaster.intersectObjects([this.body, ...this.stickerMeshes], false);
+    const hits = this.raycaster.intersectObjects([this.body, ...this.pieceMeshes, ...this.stickerMeshes], false);
     const h = hits[0];
     return h && typeof h.object.userData.index === 'number' ? h.object.userData.index : -1;
   }
@@ -322,13 +384,19 @@ export class PolyView implements PuzzleView {
     }
     const info = this.o.moveInfo(move);
     const axis = v3(info.axis).normalize();
-    const { cap, rest } = this.splitBody(axis, info.cut);
-    this.body.visible = false;
-    this.root.add(rest);
     const pivot = new THREE.Group();
     this.root.add(pivot);
-    pivot.add(cap);
     const layer = info.layer.map((i) => this.stickerMeshes[i]);
+    const usePieces = this.pieceMeshes.length > 0;
+    const movingPieces = usePieces ? [...new Set(info.layer.map((i) => this.pieceOfSticker.get(i)!))].map((pi) => this.pieceMeshes[pi]) : [];
+    let cap: THREE.Mesh | null = null, rest: THREE.Mesh | null = null;
+    if (usePieces) for (const pm of movingPieces) pivot.attach(pm);
+    else {
+      ({ cap, rest } = this.splitBody(axis, info.cut));
+      this.body.visible = false;
+      this.root.add(rest);
+      pivot.add(cap);
+    }
     for (const m of layer) pivot.attach(m);
     const dur = Math.abs(info.angle) > 1.5 ? durationMs * 1.4 : durationMs;
     return new Promise((resolve) => {
@@ -347,9 +415,19 @@ export class PolyView implements PuzzleView {
           m.position.copy(h.pos);
           m.quaternion.copy(h.quat);
         }
-        this.root.remove(pivot, rest);
-        cap.geometry.dispose();
-        rest.geometry.dispose();
+        // peças voltam para casa: pela simetria, cada uma tem o mesmo formato da que estava lá
+        for (const pm of movingPieces) {
+          this.root.add(pm);
+          const h = this.pieceHomes[this.pieceMeshes.indexOf(pm)];
+          pm.position.copy(h.pos);
+          pm.quaternion.copy(h.quat);
+        }
+        this.root.remove(pivot);
+        if (cap && rest) {
+          this.root.remove(rest);
+          cap.geometry.dispose();
+          rest.geometry.dispose();
+        }
         this.body.visible = true;
         finish();
         resolve();
