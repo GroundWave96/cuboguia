@@ -46,11 +46,12 @@ describe('geometria do megaminx', () => {
   });
 });
 
-import { solveMegaminx } from '../src/puzzles/megaminx/solver';
+import { solveMegaminx, solveMegaminxAdvanced } from '../src/puzzles/megaminx/solver';
 
 describe('solucionador do megaminx', () => {
   it('megaminx resolvido não gera passos', () => {
     expect(solveMegaminx(solved).steps.length).toBe(0);
+    expect(solveMegaminxAdvanced(solved).steps.length).toBe(0);
   });
   it('resolve embaralhamentos aleatórios', () => {
     let total = 0, maxMs = 0;
@@ -65,6 +66,19 @@ describe('solucionador do megaminx', () => {
       total += moves.length;
     }
     console.log(`megaminx: média ${(total / N).toFixed(0)} movimentos, pior ${maxMs.toFixed(0)} ms`);
+  }, 600_000);
+  it('método avançado resolve embaralhamentos aleatórios com menos movimentos', () => {
+    let adv = 0, beg = 0;
+    const N = 12;
+    for (let i = 0; i < N; i++) {
+      const start = applyAll(solved, megaGeo.randomScramble(60));
+      const moves = solveMegaminxAdvanced(start).steps.flatMap((s) => s.segments.flatMap((g) => g.moves));
+      expect(applyAll(start, moves)).toEqual(solved);
+      adv += moves.length;
+      beg += solveMegaminx(start).steps.flatMap((s) => s.segments.flatMap((g) => g.moves)).length;
+    }
+    console.log(`megaminx avançado: média ${(adv / N).toFixed(0)} (iniciante ${(beg / N).toFixed(0)})`);
+    expect(adv).toBeLessThan(beg);
   }, 600_000);
 });
 

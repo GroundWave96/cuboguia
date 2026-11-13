@@ -116,6 +116,15 @@ function llTemplates(): { name: string; alg: string }[] {
       if (x[0] === y[0]) continue;
       for (const a of as) out.push({ name: 'Ciclo de cantos', alg: `${x} ${pw(a)} ${y} ${pw(-a)} ${inv(x)} ${pw(a)} ${inv(y)} ${pw(-a)}` });
     }
+  // Sune seguido de um Sune inverso (com ajuste no meio): permutações curtas de cantos
+  const sune = (a: number, b: number, c: number) => `R ${pw(a)} R' ${pw(b)} R ${pw(c)} R'`;
+  const suneInv = (a: number, b: number, c: number) => `R ${pw(-c)} R' ${pw(-b)} R ${pw(-a)} R'`;
+  for (const a of as)
+    for (const b of as)
+      for (const c of as)
+        for (const d of [0, ...as])
+          for (const [x, y, z] of [[a, b, c], [-a, b, c], [a, -b, c], [a, b, -c]])
+            out.push({ name: 'Sune + Sune inverso', alg: `${sune(a, b, c)}${d ? ' ' + pw(d) : ''} ${suneInv(x, y, z)}` });
   // pares de giro de canto: X^k U^a X^-k U^-a, com X = R' D' R D
   const X = "R' D' R D", Xi = "D' R' D R";
   for (let k = 1; k <= 5; k++)
@@ -190,7 +199,7 @@ function placePiece(s: S, piece: number[], macros: Macro[]): Macro[] | null {
 }
 
 // Busca sobre várias peças ao mesmo tempo (última face)
-function multiBfs(s: S, tracked: number[], positions: number[], macros: Macro[], goal: (p: number[]) => boolean): Macro[] | null {
+function multiBfs(s: S, tracked: number[], positions: number[], macros: Macro[], goal: (p: number[]) => boolean, maxDepth = Infinity): Macro[] | null {
   const idx = new Map(positions.map((p, i) => [p, i]));
   const B = positions.length;
   const k = tracked.length;
@@ -220,12 +229,14 @@ function multiBfs(s: S, tracked: number[], positions: number[], macros: Macro[],
   const prev = new Int32Array(size).fill(-1);
   const via = new Int16Array(size);
   const queue = new Int32Array(size);
+  const depth = new Uint8Array(size);
   const start = enc(cur);
   prev[start] = start;
   let head = 0, tail = 0;
   queue[tail++] = start;
   while (head < tail) {
     const x = queue[head++];
+    if (depth[x] >= maxDepth) continue;
     const ps = dec(x);
     for (let mi = 0; mi < usable.length; mi++) {
       const m = usable[mi];
@@ -234,12 +245,99 @@ function multiBfs(s: S, tracked: number[], positions: number[], macros: Macro[],
       if (prev[y] !== -1) continue;
       prev[y] = x;
       via[y] = mi;
+      depth[y] = depth[x] + 1;
       if (goal(np)) {
         const path: Macro[] = [];
         for (let z = y; z !== start; z = prev[z]) path.push(usable[via[z]]);
         return path.reverse();
       }
       queue[tail++] = y;
+    }
+  }
+  return null;
+}
+
+/**
+ * Igual ao multiBfs, mas minimiza o número de MOVIMENTOS (não de algoritmos):
+ * Dijkstra com fila em baldes, até um custo máximo.
+ */
+function multiDijkstra(s: S, tracked: number[], positions: number[], macros: Macro[], goal: (p: number[]) => boolean, maxCost: number): Macro[] | null {
+  const B = positions.length;
+  const k = tracked.length;
+  const idxOf = new Int32Array(STICKERS).fill(-1);
+  positions.forEach((p, i) => (idxOf[p] = i));
+  const cur = tracked.map((home) => {
+    const piece = (geo.corners.find((c) => c.includes(home)) ?? geo.edges.find((e) => e.includes(home)))!;
+    const colors = piece.map(faceOf);
+    const pool = piece.length === 3 ? geo.corners : geo.edges;
+    for (const slot of pool) {
+      const cs = slot.map((i) => s[i]);
+      if (colors.every((c) => cs.includes(c))) return slot[cs.indexOf(faceOf(home))];
+    }
+    throw new Error('peça não encontrada');
+  });
+  if (goal(cur)) return [];
+  // tabela: para cada macro, índice de destino de cada posição
+  const usable: Macro[] = [];
+  const maps: Int32Array[] = [];
+  for (const m of macros) {
+    const t = new Int32Array(B);
+    let ok = true;
+    for (let i = 0; i < B; i++) {
+      const d = idxOf[m.loc[positions[i]]];
+      if (d < 0) {
+        ok = false;
+        break;
+      }
+      t[i] = d;
+    }
+    if (ok) {
+      usable.push(m);
+      maps.push(t);
+    }
+  }
+  const goalIdx = tracked.map((h) => idxOf[h]);
+  let goalCode = 0;
+  for (let i = 0; i < k; i++) goalCode = goalCode * B + goalIdx[i];
+  const size = B ** k;
+  const dist = new Int16Array(size).fill(-1);
+  const prev = new Int32Array(size).fill(-1);
+  const via = new Int16Array(size);
+  const done = new Uint8Array(size);
+  const buckets: number[][] = Array.from({ length: maxCost + 1 }, () => []);
+  let start = 0;
+  for (let i = 0; i < k; i++) start = start * B + idxOf[cur[i]];
+  dist[start] = 0;
+  buckets[0].push(start);
+  const digits = new Int32Array(k);
+  for (let c = 0; c <= maxCost; c++) {
+    const bucket = buckets[c];
+    for (let bi = 0; bi < bucket.length; bi++) {
+      const x = bucket[bi];
+      if (done[x] || dist[x] !== c) continue;
+      done[x] = 1;
+      if (x === goalCode) {
+        const path: Macro[] = [];
+        for (let z = x; z !== start; z = prev[z]) path.push(usable[via[z]]);
+        return path.reverse();
+      }
+      let r = x;
+      for (let i = k - 1; i >= 0; i--) {
+        digits[i] = r % B;
+        r = (r - digits[i]) / B;
+      }
+      for (let mi = 0; mi < usable.length; mi++) {
+        const nc = c + usable[mi].moves.length;
+        if (nc > maxCost) continue;
+        const t = maps[mi];
+        let y = 0;
+        for (let i = 0; i < k; i++) y = y * B + t[digits[i]];
+        if (done[y] || (dist[y] !== -1 && dist[y] <= nc)) continue;
+        dist[y] = nc;
+        prev[y] = x;
+        via[y] = mi;
+        buckets[nc].push(y);
+      }
     }
   }
   return null;
@@ -272,7 +370,7 @@ function segmentsOf(path: Macro[]): StepSegment[] {
     let n = 1;
     while (i + n < path.length && path[i + n] === m) n++;
     segs.push({
-      label: `${m.alg}${n > 1 ? ` × ${n}` : ''} (${viewText(m.view)})`,
+      label: `${m.alg}${n > 1 ? ` × ${n}` : ''}${m.view ? ` (${viewText(m.view)})` : ''}`,
       moves: Array.from({ length: n }, () => m.moves).flat(),
     });
     i += n;
@@ -298,18 +396,31 @@ function currentStickers(s: S, piece: number[]) {
  * conserta (como o "U R U' R' U' F' U F" do 3x3, que são dois gatilhos seguidos).
  * Só entram os pares que, juntos, preservam tudo o que já está resolvido.
  */
-function pairMacros(keep: number[], piece: number[]): Macro[] {
+function pairMacros(keep: number[], piece: number[], wide = false): Macro[] {
   const near = new Set<number>([U]);
   for (const f of piece.map(faceOf)) {
     near.add(f);
     for (const g of geo.neighbors[f]) if (g !== D) near.add(g);
   }
+  // modo amplo: qualquer face menos a branca (que já está pronta)
+  if (wide) FACES.forEach((_, f) => f !== D && near.add(f));
   const keepSet = keep;
   const faceIdx = (mv: string) => FACES.indexOf(mv.replace(/[2']/g, '') as never);
   const T = TRIGGERS().filter((m) => m.moves.every((mv) => near.has(faceIdx(mv))) && !fixes(m, keepSet));
   const out: Macro[] = [];
-  for (const t1 of T)
-    for (const t2 of T) {
+  const seen = new Set<string>();
+  // Para o par preservar o que está pronto, os dois gatilhos precisam mexer
+  // exatamente no MESMO conjunto de adesivos prontos: agrupa por esse conjunto.
+  const groups = new Map<string, Macro[]>();
+  for (const t of T) {
+    const sig = keepSet.filter((k) => t.perm[k] !== k).join(',');
+    const g = groups.get(sig);
+    if (g) g.push(t);
+    else groups.set(sig, [t]);
+  }
+  for (const G of groups.values())
+  for (const t1 of G)
+    for (const t2 of G) {
       let ok = true;
       for (const k of keepSet)
         if (t1.perm[t2.perm[k]] !== k) {
@@ -317,8 +428,15 @@ function pairMacros(keep: number[], piece: number[]): Macro[] {
           break;
         }
       if (!ok) continue;
-      const m = makeMacro([...t1.moves, ...t2.moves], 'alg', `${t1.alg!.replace('Gatilho ', '')} + ${t2.alg!.replace('Gatilho ', '')}`);
-      out.push(m);
+      // composição direta das permutações (sem refazer movimento por movimento)
+      const perm = new Int32Array(STICKERS);
+      for (let i = 0; i < STICKERS; i++) perm[i] = t1.perm[t2.perm[i]];
+      const key = perm.join(',');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const loc = new Int32Array(STICKERS);
+      for (let i = 0; i < STICKERS; i++) loc[perm[i]] = i;
+      out.push({ moves: [...t1.moves, ...t2.moves], perm, loc, alg: `${t1.alg!.replace('Gatilho ', '')} + ${t2.alg!.replace('Gatilho ', '')}`, kind: 'alg' });
     }
   return out;
 }
@@ -337,13 +455,15 @@ function solvePieces(ctx: Ctx, stageId: string, pieces: number[][], pool: Macro[
       if (!best || len < best.len) best = { piece, path, len };
     }
     // nenhuma peça entra só com gatilhos simples: tenta pares de gatilhos
-    if (!best)
+    for (const wide of [false, true]) {
+      if (best) break;
       for (const piece of remaining) {
-        const path = placePiece(ctx.s, piece, [...allowed, ...pairMacros(ctx.keep, piece)]);
+        const path = placePiece(ctx.s, piece, [...allowed, ...pairMacros(ctx.keep, piece, wide)]);
         if (!path) continue;
         best = { piece, path, len: path.reduce((a, m) => a + m.moves.length, 0) };
         break; // basta uma
       }
+    }
     if (!best) throw new Error(`Não encontrei solução (etapa ${stageId}, faltando ${remaining.length}) — confira se as cores foram pintadas corretamente.`);
     const kind = best.piece.length === 3 ? 'Canto' : 'Aresta';
     push(ctx, stageId, `${kind} ${pieceName(best.piece)}`, text(best.piece, best.path), best.path, currentStickers(ctx.s, best.piece));
@@ -356,7 +476,7 @@ const has = (piece: number[], faces: number[]) => piece.map(faceOf).every((f) =>
 const touches = (piece: number[], f: number) => piece.map(faceOf).includes(f);
 
 const algHint = (path: Macro[]) =>
-  path.some((m) => m.kind === 'alg')
+  path.some((m) => m.kind === 'alg' && m.view)
     ? ' Nos algoritmos, as letras são relativas: segure com as faces indicadas em “frente”, “direita” e “cima” — os movimentos absolutos estão logo abaixo.'
     : '';
 
@@ -457,6 +577,260 @@ export function solveMegaminx(state: PuzzleState): Solution {
   solveLastLayer(ctx);
   if (!allSolved(ctx.s, ALL)) throw new Error('O solucionador não terminou o megaminx.');
   return { method: 'Método de iniciante (camadas)', stages: MEGA_STAGES, steps: ctx.steps };
+}
+
+
+// ===========================================================================
+// MÉTODO AVANÇADO (estilo Balint/Westlund): peças em PARES, como no F2L do CFOP
+// ===========================================================================
+
+/** faces perto de um grupo de peças (para restringir a busca e ficar rápida) */
+function nearFaces(pieces: number[][]): Set<number> {
+  const near = new Set<number>([U]);
+  for (const f of pieces.flat().map(faceOf)) {
+    near.add(f);
+    for (const g of geo.neighbors[f]) if (g !== D) near.add(g);
+  }
+  return near;
+}
+const faceIdxOf = (mv: string) => FACES.indexOf(mv.replace(/[2']/g, '') as never);
+const usesOnly = (m: Macro, near: Set<number>) => m.moves.every((mv) => near.has(faceIdxOf(mv)));
+
+const positionsFor = (pieces: number[][]) => [...new Set(pieces.flatMap((p) => (p.length === 3 ? geo.corners.flat() : geo.edges.flat())))];
+
+/** coloca 2 peças juntas (busca sobre as posições das duas ao mesmo tempo) */
+function placeGroup(s: S, group: number[][], macros: Macro[], maxCost: number): Macro[] | null {
+  const homes = group.map((p) => p[0]);
+  return multiDijkstra(s, homes, positionsFor(group), macros, (ps) => ps.every((p, i) => p === homes[i]), maxCost);
+}
+
+const moveCount = (path: Macro[]) => path.reduce((a, m) => a + m.moves.length, 0);
+
+interface GroupOpts {
+  /** pares candidatos entre as peças que faltam */
+  pairs: (remaining: number[][]) => number[][][];
+  /** gatilhos permitidos (além dos giros simples) */
+  pool: () => Macro[];
+  /** quantos pares avaliar por rodada (os mais promissores) */
+  tryPairs: number;
+  /** custo máximo (movimentos) da busca de um par */
+  maxCost: number;
+  title: (group: number[][]) => string;
+  text: (group: number[][], path: Macro[]) => string;
+}
+
+/** Resolve uma etapa juntando peças em pares sempre que isso economiza movimentos. */
+function solveGroups(ctx: Ctx, stageId: string, pieces: number[][], o: GroupOpts) {
+  let remaining = pieces.filter((p) => !allSolved(ctx.s, p));
+  ctx.keep.push(...pieces.filter((p) => allSolved(ctx.s, p)).flat());
+  while (remaining.length) {
+    const allowed = [...SINGLE_TURNS, ...o.pool()].filter((m) => fixes(m, ctx.keep));
+    // custo de cada peça sozinha (rápido) — também serve para estimar os pares
+    const single = new Map<number[], Macro[] | null>();
+    for (const p of remaining) single.set(p, placePiece(ctx.s, p, allowed));
+    let best: { group: number[][]; path: Macro[]; perPiece: number } | null = null;
+    for (const [p, path] of single)
+      if (path && (!best || moveCount(path) < best.perPiece)) best = { group: [p], path, perPiece: moveCount(path) };
+    const est = (g: number[][]) => g.reduce((a, p) => a + (single.get(p) ? moveCount(single.get(p)!) : 99), 0);
+    const pairs = o
+      .pairs(remaining)
+      .sort((a, b) => est(a) - est(b))
+      .slice(0, o.tryPairs);
+    for (const g of pairs) {
+      const near = nearFaces(g);
+      // só vale a pena se o par sair mais barato que as duas peças separadas
+      const budget = Math.min(o.maxCost, Math.max(1, est(g) - 1));
+      // nos pares, só giros simples e gatilhos de 3 movimentos (X Y X'): o miolo do F2L.
+      // (com o conjunto completo saem mais pares, mas o total de movimentos piora)
+      const path = placeGroup(ctx.s, g, allowed.filter((m) => m.moves.length <= 3 && usesOnly(m, near)), budget);
+      if (!path) continue;
+      const per = moveCount(path) / 2;
+      if (!best || per < best.perPiece) best = { group: g, path, perPiece: per };
+    }
+    // ninguém entra: pares de gatilhos para uma peça (como no método de iniciante)
+    for (const wide of [false, true]) {
+      if (best) break;
+      for (const p of remaining) {
+        const path = placePiece(ctx.s, p, [...allowed, ...pairMacros(ctx.keep, p, wide)]);
+        if (path) {
+          best = { group: [p], path, perPiece: moveCount(path) };
+          break;
+        }
+      }
+    }
+    if (!best) throw new Error(`Não encontrei solução (etapa ${stageId}, faltando ${remaining.length}) — confira se as cores foram pintadas corretamente.`);
+    const g = best.group;
+    push(ctx, stageId, o.title(g), o.text(g, best.path), best.path, g.flatMap((p) => currentStickers(ctx.s, p)));
+    ctx.keep.push(...g.flat());
+    remaining = remaining.filter((p) => !g.includes(p));
+  }
+}
+
+const adjacent = (c: number[], e: number[]) => e.map(faceOf).every((f) => c.map(faceOf).includes(f));
+const pairsOf = (rem: number[][], ok: (a: number[], b: number[]) => boolean) => {
+  const out: number[][][] = [];
+  for (let i = 0; i < rem.length; i++) for (let j = i + 1; j < rem.length; j++) if (ok(rem[i], rem[j])) out.push([rem[i], rem[j]]);
+  return out;
+};
+const groupName = (g: number[][]) =>
+  g.length === 1 ? `${g[0].length === 3 ? 'Canto' : 'Aresta'} ${pieceName(g[0])}` : `Par ${pieceName(g.find((p) => p.length === 3) ?? g[0])} + ${pieceName(g.find((p) => p.length === 2 && p !== g[0]) ?? g[1])}`;
+
+function solveAdvancedF2L(ctx: Ctx) {
+  const lowerCount = (p: number[]) => p.map(faceOf).filter((f) => LOWER.includes(f)).length;
+  const upperCount = (p: number[]) => p.map(faceOf).filter((f) => UPPER.includes(f)).length;
+
+  // 1. estrela: duas arestas de cada vez
+  solveGroups(ctx, 'star', geo.edges.filter((e) => touches(e, D)), {
+    pairs: (rem) => pairsOf(rem, () => true),
+    pool: () => [],
+    tryPairs: 10,
+    maxCost: 16,
+    title: (g) => (g.length === 2 ? `Arestas ${pieceName(g[0])} e ${pieceName(g[1])}` : groupName(g)),
+    text: (g, path) =>
+      (g.length === 2
+        ? `Planeje as duas arestas juntas: <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> descem para a face branca na mesma sequência.`
+        : `Leve a aresta <b>${pieceName(g[0])}</b> para a face branca.`) + algHint(path),
+  });
+
+  // 2. F2L: canto branco + aresta da 2ª camada que fica em cima dele
+  const dCorners = geo.corners.filter((c) => touches(c, D));
+  const e2 = geo.edges.filter((e) => has(e, LOWER));
+  solveGroups(ctx, 'f2l', [...dCorners, ...e2], {
+    pairs: (rem) => pairsOf(rem, (a, b) => (a.length === 3 && b.length === 2 && adjacent(a, b)) || (b.length === 3 && a.length === 2 && adjacent(b, a))),
+    pool: () => TRIGGERS(),
+    tryPairs: 5,
+    maxCost: 24,
+    title: groupName,
+    text: (g, path) =>
+      (g.length === 2
+        ? `Junte o canto <b>${pieceName(g.find((p) => p.length === 3)!)}</b> com a aresta <b>${pieceName(g.find((p) => p.length === 2)!)}</b> e encaixe os dois de uma vez, como um par do F2L no 3x3.`
+        : `Encaixe a peça <b>${pieceName(g[0])}</b> sozinha.`) + algHint(path),
+  });
+
+  const snapshot = { s: ctx.s, steps: ctx.steps.length, keep: ctx.keep.length };
+  try {
+    s2lBlocks(ctx, lowerCount, upperCount);
+  } catch {
+    ctx.s = snapshot.s;
+    ctx.steps.length = snapshot.steps;
+    ctx.keep.length = snapshot.keep;
+    s2lSafe(ctx, lowerCount, upperCount);
+  }
+}
+
+type Counter = (p: number[]) => number;
+
+/** S2L na ordem que nunca trava: arestas da 3ª faixa, cantos da 3ª faixa, depois a 4ª faixa */
+function s2lSafe(ctx: Ctx, lowerCount: Counter, upperCount: Counter) {
+  const e3 = geo.edges.filter((e) => lowerCount(e) === 1 && upperCount(e) === 1);
+  const c3 = geo.corners.filter((c) => lowerCount(c) === 2 && upperCount(c) === 1);
+  const edgePairs = (rem: number[][]) => pairsOf(rem, (a, b) => a.map(faceOf).some((f) => b.map(faceOf).includes(f)));
+  const opts = (pairs: GroupOpts['pairs']): GroupOpts => ({
+    pairs,
+    pool: () => TRIGGERS(),
+    tryPairs: 2,
+    maxCost: 24,
+    title: (g) => (g.length === 2 && g.every((p) => p.length === 2) ? `Arestas ${pieceName(g[0])} e ${pieceName(g[1])}` : groupName(g)),
+    text: (g, path) => (g.length === 2 ? `Encaixe <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> na mesma sequência.` : `Encaixe a peça <b>${pieceName(g[0])}</b> nas camadas do meio.`) + algHint(path),
+  });
+  solveGroups(ctx, 's2l', e3, opts(edgePairs));
+  solveGroups(ctx, 's2l', c3, opts(() => []));
+  s2lUpper(ctx, lowerCount, upperCount);
+}
+
+function s2lBlocks(ctx: Ctx, lowerCount: Counter, upperCount: Counter) {
+  void upperCount;
+  // 3. S2L em blocos: cada face de cima tem, na base, 1 canto + 2 arestas.
+  //    Completar um bloco por vez mantém a face vizinha livre para as inserções.
+  const pairRule = (a: number[], b: number[]) => (a.length === 3 && b.length === 2 && adjacent(a, b)) || (b.length === 3 && a.length === 2 && adjacent(b, a)) || (a.length === 2 && b.length === 2);
+  const blocks = UPPER.map((um) => [
+    ...geo.corners.filter((c) => lowerCount(c) === 2 && touches(c, um)),
+    ...geo.edges.filter((e) => lowerCount(e) === 1 && touches(e, um)),
+  ]);
+  // começa pelo bloco mais barato e segue em volta do anel
+  const blockCost = (b: number[][]) => b.reduce((a, p) => a + (placePiece(ctx.s, p, [...SINGLE_TURNS, ...TRIGGERS()].filter((m) => fixes(m, ctx.keep)))?.length ?? 9), 0);
+  const first = blocks.map((b, i) => [blockCost(b), i]).sort((a, b) => a[0] - b[0])[0][1];
+  for (let k = 0; k < 5; k++) {
+    const block = blocks[(first + k) % 5];
+    solveGroups(ctx, 's2l', block, {
+      pairs: (rem) => pairsOf(rem, pairRule),
+      pool: () => TRIGGERS(),
+      tryPairs: 2,
+      maxCost: 24,
+      title: (g) => (g.length === 2 && g.every((p) => p.length === 2) ? `Arestas ${pieceName(g[0])} e ${pieceName(g[1])}` : groupName(g)),
+      text: (g, path) =>
+        (g.length === 2
+          ? `Encaixe <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> juntos no bloco abaixo da face <b>${cname(faceOf(g[0].find((i) => UPPER.includes(faceOf(i))) ?? g[0][0]))}</b>.`
+          : `Complete o bloco com a peça <b>${pieceName(g[0])}</b>.`) + algHint(path),
+    });
+  }
+  s2lUpper(ctx, lowerCount, upperCount);
+}
+
+function s2lUpper(ctx: Ctx, lowerCount: Counter, upperCount: Counter) {
+  const mid4 = [...geo.corners.filter((c) => lowerCount(c) === 1 && upperCount(c) === 2), ...geo.edges.filter((e) => upperCount(e) === 2)];
+  solveGroups(ctx, 's2l', mid4, {
+    pairs: (rem) => pairsOf(rem, (a, b) => (a.length === 3 && b.length === 2 && adjacent(a, b)) || (b.length === 3 && a.length === 2 && adjacent(b, a))),
+    pool: () => TRIGGERS(),
+    tryPairs: 2,
+    maxCost: 24,
+    title: groupName,
+    text: (g, path) =>
+      (g.length === 2
+        ? `Junte o canto <b>${pieceName(g.find((p) => p.length === 3)!)}</b> com a aresta <b>${pieceName(g.find((p) => p.length === 2)!)}</b> e encaixe o par logo abaixo da face cinza.`
+        : `Encaixe a peça <b>${pieceName(g[0])}</b> logo abaixo da face cinza.`) + algHint(path),
+  });
+}
+
+function solveAdvancedLastLayer(ctx: Ctx) {
+  const uEdges = geo.edges.filter((e) => touches(e, U));
+  const uCorners = geo.corners.filter((c) => touches(c, U));
+  const uEdgeStickers = uEdges.flat();
+  const uCornerStickers = uCorners.flat();
+  const UFACE = ALL.filter((i) => faceOf(i) === U);
+  const turnsU = SINGLE_TURNS.filter((m) => m.moves[0].replace(/[2']/g, '') === 'U');
+  const F2L = ALL.filter((i) => !uEdgeStickers.includes(i) && !uCornerStickers.includes(i) && faceOf(i) !== U);
+  const ll = LL_MACROS();
+  const focus = [...UFACE, ...uEdgeStickers, ...uCornerStickers];
+  const homesU = uEdges.map((e) => e.find((i) => faceOf(i) === U)!);
+  const ed = multiBfs(ctx.s, homesU, uEdgeStickers, [...turnsU, ...ll.filter((m) => fixes(m, F2L))], (ps) => ps.every((p, i) => p === homesU[i]));
+  if (!ed) throw new Error('Não encontrei solução para as arestas da última face — confira as cores.');
+  push(
+    ctx,
+    'lledges',
+    'Última face: arestas',
+    'Num olhar só, as 5 arestas cinzas ficam com o cinza para cima e no lugar certo (orientação e posição juntas). Aplique os algoritmos com as faces de “frente/direita/cima” indicadas.',
+    ed,
+    focus,
+  );
+  const keepE = [...F2L, ...uEdgeStickers, 0];
+  const homesC = uCorners.map((c) => c.find((i) => faceOf(i) === U)!);
+  const co = multiBfs(ctx.s, homesC, uCornerStickers, ll.filter((m) => fixes(m, keepE)), (ps) => ps.every((p, i) => p === homesC[i]));
+  if (!co) throw new Error('Um canto está girado sozinho — confira as cores dos cantos.');
+  push(
+    ctx,
+    'llcorners',
+    'Última face: cantos',
+    'No segundo olhar, os 5 cantos cinzas vão para o lugar e já ficam com o cinza para cima. Os algoritmos trocam e giram cantos sem mexer nas arestas.',
+    co,
+    focus,
+  );
+}
+
+export const MEGA_ADV_STAGES: SolutionStage[] = [
+  { id: 'star', name: 'Estrela', goal: 'Montar a estrela branca planejando duas arestas de cada vez.' },
+  { id: 'f2l', name: 'F2L', goal: 'Completar a face branca e a 2ª camada encaixando canto + aresta juntos (5 pares).' },
+  { id: 's2l', name: 'S2L', goal: 'Completar as camadas do meio (3ª e 4ª) também em pares canto + aresta.' },
+  { id: 'lledges', name: 'Arestas da última face', goal: 'Orientar e posicionar as 5 arestas cinzas de uma vez.' },
+  { id: 'llcorners', name: 'Cantos da última face', goal: 'Posicionar e girar os 5 cantos cinzas de uma vez.' },
+];
+
+export function solveMegaminxAdvanced(state: PuzzleState): Solution {
+  const ctx: Ctx = { s: toS(state), steps: [], keep: ALL.filter((i) => i % 11 === 0) };
+  solveAdvancedF2L(ctx);
+  solveAdvancedLastLayer(ctx);
+  if (!allSolved(ctx.s, ALL)) throw new Error('O solucionador não terminou o megaminx.');
+  return { method: 'Avançado (F2L e S2L em pares, última face em 2 olhares)', stages: MEGA_ADV_STAGES, steps: ctx.steps };
 }
 
 export { toS as megaToS, faceOf as megaFaceOf };

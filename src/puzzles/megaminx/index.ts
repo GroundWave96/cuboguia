@@ -3,7 +3,7 @@ import { PolyView } from '../poly/PolyView';
 import { FACES, invertMegaMove, megaGeo as geo, type V3 } from './geometry';
 import { MEGA_COLORS, MEGA_COLOR_HEX, MEGA_COLOR_NAME } from './colors';
 import { buildMegaNet, buildMegaScan } from './layout';
-import { solveMegaminx } from './solver';
+import { solveMegaminx, solveMegaminxAdvanced } from './solver';
 import { validateMegaminx } from './validate';
 
 const FACE_TEXT: Record<string, string> = {
@@ -39,8 +39,14 @@ const megaminx: PuzzleImpl = {
       tagline: 'Camada por camada · ~300 movimentos',
       description: 'Face branca, depois as camadas do meio e por fim a face cinza — como o 3x3, com mais peças.',
     },
+    {
+      id: 'advanced',
+      name: 'Avançado (pares)',
+      tagline: 'Estilo speedcuber · ~250 movimentos',
+      description: 'Estrela planejada de 2 em 2, F2L e S2L com canto + aresta juntos e a última face em 2 olhares.',
+    },
   ],
-  solve: (state) => solveMegaminx(state),
+  solve: (state, methodId) => (methodId === 'advanced' ? solveMegaminxAdvanced(state) : solveMegaminx(state)),
   createView: (container) =>
     new PolyView(container, {
       stickers: geo.stickers.map((s) => ({ index: s.index, poly: s.poly, normal: geo.normals[s.face] })),

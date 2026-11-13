@@ -8,7 +8,7 @@ animado, passo a passo.
 |---|---|
 | 3x3 | Iniciante (camadas) · CFOP (Cross, F2L, OLL/PLL em 2 etapas) |
 | 2x2 | Iniciante (camadas) · Solução ótima (≤ 11 movimentos) |
-| Megaminx | Iniciante (camadas: estrela, face branca, 2ª–4ª camadas, face cinza) |
+| Megaminx | Iniciante (camadas, ~300 mov.) · Avançado (F2L/S2L em pares, última face em 2 olhares, ~250 mov.) |
 
 No 2x2 (sem centros) a referência é o canto branco-azul-vermelho, sempre
 atrás-embaixo-esquerda; os solucionadores só usam U, R e F para não movê-lo.
