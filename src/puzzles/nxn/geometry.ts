@@ -56,19 +56,41 @@ export interface ParsedMove {
   face: FaceId;
   /** quartos de volta no sentido horário: 1, 2 ou 3 */
   turns: 1 | 2 | 3;
-  /** quantas camadas a partir da face (1 = só a face externa) */
+  /** primeira camada girada, contando a partir da face (1 = a face externa; 0 = fatia do meio) */
+  from: number;
+  /** última camada girada (from..depth) */
   depth: number;
 }
 
+/**
+ * Notação:
+ *   R      só a face
+ *   Rw, r  duas camadas (face + a de dentro)
+ *   3Rw    três camadas a partir da face
+ *   2R     só a 2ª camada (fatia interna), sem a face
+ *   M E S  fatia do meio (cubos ímpares), no sentido de L, D e F
+ */
+const MIDDLE: Record<string, FaceId> = { M: 'L', E: 'D', S: 'F' };
+
 export function parseMove(move: string): ParsedMove {
-  // aceita "Rw" e a forma minúscula "r" (duas camadas)
+  const mid = /^([MES])(['2]?)$/.exec(move.trim());
+  if (mid) return { face: MIDDLE[mid[1]], turns: mid[2] === "'" ? 3 : mid[2] === '2' ? 2 : 1, from: 0, depth: 0 };
   const m = /^(\d*)([URFDLBurfdlb])(w?)(['2]?)$/.exec(move.trim());
   if (!m) throw new Error(`Movimento inválido: ${move}`);
   const face = m[2].toUpperCase() as FaceId;
   const wide = m[3] === 'w' || m[2] !== m[2].toUpperCase();
-  const depth = m[1] ? parseInt(m[1], 10) : wide ? 2 : 1;
+  const num = m[1] ? parseInt(m[1], 10) : 0;
   const turns = m[4] === "'" ? 3 : m[4] === '2' ? 2 : 1;
-  return { face, turns, depth };
+  if (wide) return { face, turns, from: 1, depth: num || 2 };
+  if (num) return { face, turns, from: num, depth: num };
+  return { face, turns, from: 1, depth: 1 };
+}
+
+/** a peça (pela posição ×2 ao longo do eixo da face) está nas camadas do movimento? */
+export function layerHit(along: number, n: number, mv: ParsedMove) {
+  if (mv.from === 0) return along === 0;
+  const h = n - 1;
+  return along >= h - 2 * (mv.depth - 1) && along <= h - 2 * (mv.from - 1);
 }
 
 export function invertMove(move: string): string {
@@ -116,9 +138,7 @@ export class NxNGeometry {
 
   /** Adesivos que pertencem à camada movida. */
   inLayer(s: StickerGeo, mv: ParsedMove): boolean {
-    const axis = FACE_FRAME[mv.face].n;
-    const h = this.n - 1;
-    return dot(s.cubie2, axis) >= h - 2 * (mv.depth - 1);
+    return layerHit(dot(s.cubie2, FACE_FRAME[mv.face].n), this.n, mv);
   }
 
   /** perm tal que novoEstado[i] = estadoAntigo[perm[i]] */

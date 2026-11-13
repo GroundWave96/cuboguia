@@ -9,6 +9,7 @@ const SHOW: Record<string, { scramble: number; ms: number }> = {
   cube2: { scramble: 10, ms: 190 },
   pyraminx: { scramble: 9, ms: 220 },
   megaminx: { scramble: 14, ms: 200 },
+  cube5: { scramble: 20, ms: 150 },
 };
 
 export function renderHome(app: HTMLElement) {

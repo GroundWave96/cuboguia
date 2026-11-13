@@ -19,7 +19,14 @@ export const PUZZLES: PuzzleDefinition[] = [
     load: () => import('../puzzles/cube2').then((m) => m.default as PuzzleImpl),
   },
   { id: 'cube4', name: 'Cubo 4x4', subtitle: 'Revenge', available: false, icon: cubeIcon(4) },
-  { id: 'cube5', name: 'Cubo 5x5', subtitle: 'Professor', available: false, icon: cubeIcon(5) },
+  {
+    id: 'cube5',
+    name: 'Cubo 5x5',
+    subtitle: 'Professor. Centros, arestas e fim como 3x3.',
+    available: true,
+    icon: cubeIcon(5),
+    load: () => import('../puzzles/cube5').then((m) => m.default as PuzzleImpl),
+  },
   {
     id: 'pyraminx',
     name: 'Pyraminx',
