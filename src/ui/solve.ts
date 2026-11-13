@@ -54,7 +54,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   let busy = false;
   let playing = false;
   let speed = 1;
-  const moveMs = () => 420 / speed;
+  // 1× = 700 ms por quarto de volta (meia volta leva 1,5×)
+  const moveMs = () => 700 / speed;
 
   app.innerHTML = `
   <section class="page workspace solve">

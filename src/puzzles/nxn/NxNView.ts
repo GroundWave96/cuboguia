@@ -243,10 +243,25 @@ export class NxNView implements PuzzleView {
     const dir = sum.lengthSq() > 0.01 ? base.add(sum.normalize().multiplyScalar(0.75)).normalize() : base;
     if (dir.lengthSq() < 0.01) dir.copy(this.defaultCamPos).normalize();
     const dist = this.camera.position.length();
+    // se a câmera já está praticamente nessa direção, não gira (evita esperas à toa)
+    if (this.camera.position.clone().normalize().angleTo(dir) < 0.07) return;
     this.camTween = { from: this.camera.position.clone(), to: dir.multiplyScalar(dist), t0: performance.now(), dur: 650 };
   }
 
   private camTween: { from: THREE.Vector3; to: THREE.Vector3; t0: number; dur: number } | null = null;
+  private camWaiters: (() => void)[] = [];
+
+  /** Resolve quando a câmera termina de girar (+ uma pausa curta para o olho acompanhar). */
+  private cameraSettled(): Promise<void> {
+    if (!this.camTween) return Promise.resolve();
+    return new Promise((resolve) => this.camWaiters.push(() => setTimeout(resolve, 180)));
+  }
+
+  private releaseCamWaiters() {
+    const w = this.camWaiters;
+    this.camWaiters = [];
+    w.forEach((f) => f());
+  }
 
   private updateCamTween() {
     const tw = this.camTween;
@@ -258,18 +273,23 @@ export class NxNView implements PuzzleView {
     if (p.lengthSq() < 1e-4) p.set(0, 1, 0);
     this.camera.position.copy(p.normalize().multiplyScalar(len));
     this.controls.target.set(0, 0, 0);
-    if (t >= 1) this.camTween = null;
+    if (t >= 1) {
+      this.camTween = null;
+      this.releaseCamWaiters();
+    }
   }
 
   resetCamera() {
     this.camTween = null;
+    this.releaseCamWaiters();
     this.camera.position.copy(this.defaultCamPos);
     this.controls.target.set(0, 0, 0);
     this.controls.update();
   }
 
   animateMove(move: string, durationMs: number): Promise<void> {
-    this.queue = this.queue.then(() => this.runMove(move, durationMs));
+    // primeiro a câmera termina de girar; só depois o movimento é animado
+    this.queue = this.queue.then(() => (durationMs > 0 ? this.cameraSettled() : undefined)).then(() => this.runMove(move, durationMs));
     return this.queue;
   }
 
@@ -320,6 +340,7 @@ export class NxNView implements PuzzleView {
 
   dispose() {
     this.disposed = true;
+    this.releaseCamWaiters();
     cancelAnimationFrame(this.raf);
     this.ro.disconnect();
     this.controls.dispose();
