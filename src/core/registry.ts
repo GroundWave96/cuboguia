@@ -20,7 +20,14 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   { id: 'cube4', name: 'Cubo 4x4', subtitle: 'Revenge', available: false, icon: cubeIcon(4) },
   { id: 'cube5', name: 'Cubo 5x5', subtitle: 'Professor', available: false, icon: cubeIcon(5) },
-  { id: 'pyraminx', name: 'Pyraminx', subtitle: 'O triângulo', available: false, icon: pyraminxIcon() },
+  {
+    id: 'pyraminx',
+    name: 'Pyraminx',
+    subtitle: 'O triângulo. Iniciante ou solução ótima.',
+    available: true,
+    icon: pyraminxIcon(),
+    load: () => import('../puzzles/pyraminx').then((m) => m.default as PuzzleImpl),
+  },
   {
     id: 'megaminx',
     name: 'Megaminx',

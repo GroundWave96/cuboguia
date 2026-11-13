@@ -8,10 +8,14 @@ animado, passo a passo.
 |---|---|
 | 3x3 | Iniciante (camadas) · CFOP (Cross, F2L, OLL/PLL em 2 etapas) |
 | 2x2 | Iniciante (camadas) · Solução ótima (≤ 11 movimentos) |
+| Pyraminx | Iniciante (pontas, centros, base, topo) · Solução ótima (≤ 11 + pontas) |
 | Megaminx | Iniciante (camadas, ~300 mov.) · Avançado (F2L/S2L em pares, última face em 2 olhares, ~250 mov.) |
 
 No 2x2 (sem centros) a referência é o canto branco-azul-vermelho, sempre
 atrás-embaixo-esquerda; os solucionadores só usam U, R e F para não movê-lo.
+
+No Pyraminx a referência é a posição dos centros (eles só giram no lugar):
+centro sem amarelo em cima e centro sem verde atrás; os solucionadores usam os 4 eixos.
 
 No Megaminx o esquema de cores fica em `src/puzzles/megaminx/colors.ts`
 (`MIRROR = true` espelha o sentido das cores, para puzzles com o esquema invertido).
@@ -34,6 +38,7 @@ src/
     nxn/           geometria + visual 3D genéricos para cubos NxN (2x2, 3x3, 4x4, 5x5...)
     cube3/         3x3: peças, validação e solucionadores (iniciante e CFOP)
     cube2/         2x2: validação e solucionadores (iniciante e ótimo)
+    pyraminx/      Pyraminx: tetraedro, peças 3D, rede triangular e solucionadores
     megaminx/      Megaminx: geometria do dodecaedro, rede em duas flores, câmera e solucionador
     poly/          visual 3D genérico de poliedros (corta o corpo na animação do giro)
   ui/              páginas: início, entrada de cores (pintura/câmera), tutorial

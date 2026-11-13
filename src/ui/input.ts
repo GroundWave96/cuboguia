@@ -25,7 +25,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     <div class="ws-header">
       <a class="back" href="#/">← Início</a>
       <h1>Como está o seu ${def.name}?</h1>
-      <p>${impl.holdHint} As peças de referência já vêm pintadas — elas nunca mudam de lugar.</p>
+      <p>${impl.holdHint}${impl.fixedStickers.length ? ' As peças de referência já vêm pintadas — elas nunca mudam de lugar.' : ''}</p>
     </div>
     <div class="ws-grid">
       <div class="ws-view card">
