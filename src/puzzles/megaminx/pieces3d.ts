@@ -52,5 +52,5 @@ export function megaPieces() {
   // núcleo: só a região que nenhum giro alcança (abaixo de todos os planos de corte),
   // assim ele nunca aparece por fora no meio de uma animação
   const core = geo.normals.reduce((faces, _, f) => below(faces, f), dodeca);
-  return { pieces: shrunk, stickers, stickerRound: 0.28, core: shrinkPolyhedron(core, 0.995) };
+  return { pieces: shrunk, stickers, stickerRound: 0.28, pieceRound: 0.022, core: shrinkPolyhedron(core, 0.995) };
 }

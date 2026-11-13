@@ -45,7 +45,7 @@ export function pyraPieces() {
   // núcleo: abaixo de todos os cortes das camadas (nunca aparece no giro)
   let core = tetra;
   for (let v = 0; v < 4; v++) core = below(core, v, LAYER_CUT);
-  return { pieces: shrunk, stickers, stickerRound: 0.3, core: shrinkPolyhedron(core, 0.99) };
+  return { pieces: shrunk, stickers, stickerRound: 0.3, pieceRound: 0.03, core: shrinkPolyhedron(core, 0.99) };
 }
 
 // ---------------------------------------------------------------------------

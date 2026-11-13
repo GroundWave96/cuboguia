@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PuzzleState, PuzzleView } from '../../core/types';
+import { roundedPolyhedron } from './rounded';
 
 type V3 = [number, number, number];
 
@@ -34,6 +35,8 @@ export interface PolyViewOptions {
   core?: V3[][];
   /** cantos arredondados dos adesivos (fração da menor aresta) */
   stickerRound?: number;
+  /** raio do arredondamento das quinas das peças (como as peças dos cubos) */
+  pieceRound?: number;
 }
 
 const UNKNOWN_HEX = '#3b4152';
@@ -161,7 +164,8 @@ export class PolyView implements PuzzleView {
         this.body = this.buildBody(o.core.map((f) => f.map(v3)));
       } else this.body.scale.setScalar(0.9);
       o.pieces.forEach((pc, pi) => {
-        const mesh = this.buildBody(pc.faces.map((f) => f.map(v3)));
+        const rounded = o.pieceRound ? roundedPolyhedron(pc.faces, o.pieceRound) : null;
+        const mesh = rounded ? new THREE.Mesh(rounded, this.bodyMat) : this.buildBody(pc.faces.map((f) => f.map(v3)));
         this.root.add(mesh);
         this.pieceMeshes.push(mesh);
         this.pieceHomes.push({ pos: mesh.position.clone(), quat: mesh.quaternion.clone() });
