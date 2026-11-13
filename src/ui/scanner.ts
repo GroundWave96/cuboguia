@@ -15,6 +15,25 @@ const CAMERA_REFS: Record<string, RGB> = {
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
 
+/** captura automática: cores paradas por STABLE_MS, depois contagem de COUNT_MS */
+const STABLE_MS = 500;
+const COUNT_MS = 1500;
+const AUTO_KEY = 'cuboguia.autoCapture';
+function loadAuto(): boolean {
+  try {
+    return localStorage.getItem(AUTO_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+function saveAuto(on: boolean) {
+  try {
+    localStorage.setItem(AUTO_KEY, on ? '1' : '0');
+  } catch {
+    /* sem armazenamento: só não lembra a escolha */
+  }
+}
+
 type Pt = [number, number];
 interface Cell {
   poly: Pt[];
@@ -65,6 +84,18 @@ export class CameraScanner {
   }
   private timer = 0;
   private running = false;
+
+  // ---- captura automática
+  private auto = loadAuto();
+  /** cores (por maioria nos últimos quadros) e desde quando estão iguais */
+  private sigKey = '';
+  private stableSince = 0;
+  /** início da contagem (0 = sem contagem) */
+  private countStart = 0;
+  /** depois de capturar, só volta a contar quando a imagem mudar (o cubo foi girado) */
+  private armed = true;
+  private lastSig: string[] | null = null;
+  private autoMsg = '';
 
   constructor(
     container: HTMLElement,
@@ -117,6 +148,7 @@ export class CameraScanner {
     this.onFace?.(face.grid.flat());
     const upHex = face.upColor ? this.hex(face.upColor) : 'var(--accent-2)';
     this.lastWarn = ''; // o aviso é recriado junto com o HTML
+    this.autoMsg = '';
     this.root.innerHTML = `
       <div class="scan-head">
         <div class="scan-progress"><span style="width:${(done / this.captured.length) * 100}%"></span></div>
@@ -132,9 +164,10 @@ export class CameraScanner {
           <span class="arrow">${face.arrow ?? '▲'}</span>${face.upLabel}
         </div>
         <div class="scan-warn" aria-live="polite"></div>
+        <div class="scan-auto ${this.running && this.auto ? '' : 'hidden'}"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
           <div class="cam-icon">📷</div>
-          <p>${this.impl.holdHint} Em cada face, as marcas ao redor da grade mostram como segurar o cubo.</p>
+          <p>${this.impl.holdHint} Em cada face, as marcas ao redor da grade mostram como segurar o cubo.${this.auto ? ' Com a captura automática ligada, é só segurar cada face parada por 2 segundos.' : ''}</p>
           <button class="btn primary" data-act="start">Ativar câmera</button>
           <p class="scan-info"></p>
           <p class="scan-error"></p>
@@ -142,7 +175,8 @@ export class CameraScanner {
       </div>
       <div class="scan-actions">
         <button class="btn ghost icon-only" data-act="switch" title="Trocar câmera" aria-label="Trocar câmera" ${this.running ? '' : 'disabled'}>🔄</button>
-        <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>Capturar ${face.title.toLowerCase()}</button>
+        <button class="btn ghost auto-btn ${this.auto ? 'on' : ''}" data-act="auto" aria-pressed="${this.auto}" title="Capturar sozinho quando as cores ficarem paradas"><span class="sw" aria-hidden="true"></span>Auto</button>
+        <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>${this.auto && this.running ? 'Capturar agora' : `Capturar ${face.title.toLowerCase()}`}</button>
       </div>
       <div class="scan-thumbs ${this.impl.scan.length > 6 ? 'many' : ''}">
         ${this.impl.scan
@@ -176,9 +210,19 @@ export class CameraScanner {
     this.root.querySelector('[data-act="start"]')?.addEventListener('click', () => this.start());
     this.root.querySelector('[data-act="capture"]')?.addEventListener('click', () => this.capture());
     this.root.querySelector('[data-act="switch"]')?.addEventListener('click', () => this.switchCamera());
+    this.root.querySelector('[data-act="auto"]')?.addEventListener('click', () => {
+      this.auto = !this.auto;
+      saveAuto(this.auto);
+      this.countStart = 0;
+      this.armed = true;
+      this.render();
+    });
     this.root.querySelectorAll<HTMLButtonElement>('[data-face]').forEach((b) =>
       b.addEventListener('click', () => {
         this.current = Number(b.dataset.face);
+        // escolheu a face na mão: pode capturar sozinho de novo
+        this.armed = true;
+        this.countStart = 0;
         this.render();
       }),
     );
@@ -304,8 +348,71 @@ export class CameraScanner {
     this.live = live;
     this.history.push(live);
     if (this.history.length > 7) this.history.shift();
+    this.updateAuto();
     this.drawOverlay();
     this.updateWarning();
+  }
+
+  /** cor de cada célula pela maioria dos últimos quadros (um quadro piscando não conta) */
+  private majoritySig(): string[] {
+    const frames = this.history.slice(-5);
+    return this.live.map((_, i) => {
+      const count = new Map<string, number>();
+      for (const f of frames) {
+        const k = this.classify(f[i]);
+        count.set(k, (count.get(k) ?? 0) + 1);
+      }
+      let best = '', n = -1;
+      for (const [k, c] of count)
+        if (c > n) {
+          best = k;
+          n = c;
+        }
+      return best;
+    });
+  }
+
+  private updateAuto() {
+    if (!this.auto || !this.running || this.live.length !== this.cellsOf().length) {
+      this.countStart = 0;
+      return this.setAutoMsg('');
+    }
+    const now = performance.now();
+    const sig = this.majoritySig();
+    const key = sig.join('|');
+    if (key !== this.sigKey) {
+      // alguma cor mudou: recomeça a espera (e cancela a contagem)
+      this.sigKey = key;
+      this.stableSince = now;
+      this.countStart = 0;
+    }
+    if (!this.armed) {
+      const ref = this.lastSig;
+      const diff = ref && ref.length === sig.length ? sig.filter((k, i) => k !== ref[i]).length : sig.length;
+      if (diff < Math.max(2, Math.ceil(sig.length * 0.25))) return this.setAutoMsg('Gire o cubo para a próxima face');
+      this.armed = true;
+    }
+    // a face certa: centro (ou canto de referência) com a cor pedida
+    const face = this.impl.scan[this.current];
+    if (!face.fixedCells.every((fc) => sig[fc.cell] === fc.color)) {
+      this.countStart = 0;
+      return this.setAutoMsg('');
+    }
+    if (now - this.stableSince < STABLE_MS) return this.setAutoMsg('Segure a face parada…');
+    if (!this.countStart) this.countStart = now;
+    if (now - this.countStart >= COUNT_MS) {
+      this.countStart = 0;
+      this.capture();
+      return;
+    }
+    this.setAutoMsg('Capturando… segure firme');
+  }
+
+  private setAutoMsg(msg: string) {
+    if (msg === this.autoMsg) return;
+    this.autoMsg = msg;
+    const el = this.root.querySelector('.scan-auto');
+    if (el) el.textContent = msg;
   }
 
   private updateWarning() {
@@ -406,6 +513,37 @@ export class CameraScanner {
         seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
       }
     }
+    if (this.countStart) {
+      // anel de progresso da contagem, sobre o contorno da face
+      const k = Math.min(1, (performance.now() - this.countStart) / COUNT_MS);
+      // um pouco para fora do contorno, para não cobrir os adesivos
+      const cx = outline.reduce((a, p) => a + p[0], 0) / outline.length;
+      const cy = outline.reduce((a, p) => a + p[1], 0) / outline.length;
+      const ring = outline.map(([x, y]): Pt => {
+        const d = Math.hypot(x - cx, y - cy) || 1;
+        return [x + ((x - cx) / d) * 4, y + ((y - cy) / d) * 4];
+      });
+      let per = 0;
+      ring.forEach((p, i) => {
+        const q = ring[(i + 1) % ring.length];
+        per += Math.hypot(q[0] - p[0], q[1] - p[1]);
+      });
+      ctx.save();
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ring.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(63,208,201,0.25)';
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.strokeStyle = '#3fd0c9';
+      ctx.shadowColor = '#3fd0c9';
+      ctx.shadowBlur = 10;
+      ctx.setLineDash([per * k, per]);
+      ctx.stroke();
+      ctx.restore();
+    }
     const fixedAt = new Map(face.fixedCells.map((f) => [f.cell, f.color]));
     this.live.forEach((rgb, i) => {
       const cell = cells[i];
@@ -458,6 +596,11 @@ export class CameraScanner {
   private capture() {
     if (this.live.length !== this.cellsOf().length) return;
     this.captured[this.current] = this.stableSample();
+    // lembra as cores: só volta a contar depois que o cubo for girado
+    this.lastSig = this.majoritySig();
+    this.armed = false;
+    this.countStart = 0;
+    navigator.vibrate?.(60);
     this.history = [];
     this.lastWarn = '';
     this.root.querySelector('.video-wrap')?.classList.add('flash');

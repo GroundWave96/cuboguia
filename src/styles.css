@@ -408,6 +408,13 @@ body.no-scroll { overflow: hidden; }
 .scan-info { font-size: 0.85rem !important; }
 .scan-warn { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 8px; background: rgba(40,24,6,0.9); border: 1px solid rgba(255,181,71,0.5); color: #ffd79a; font-size: 0.82rem; padding: 6px 10px; border-radius: 10px; text-align: center; }
 .scan-actions { display: flex; gap: 8px; margin: 10px 0; }
+.scan-auto { position: absolute; z-index: 3; left: 50%; bottom: 10px; transform: translateX(-50%); white-space: nowrap; background: rgba(5,8,18,0.85); border: 1px solid rgba(63,208,201,0.55); color: #c9f3f0; font-size: 0.82rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; pointer-events: none; }
+.scan-auto:empty, .scan-auto.hidden, .scan-warn:not(:empty) ~ .scan-auto { display: none; }
+.auto-btn { display: inline-flex; align-items: center; gap: 8px; padding-left: 12px; padding-right: 14px; }
+.auto-btn .sw { position: relative; width: 30px; height: 18px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong); transition: background 0.15s; flex: none; }
+.auto-btn .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform 0.15s, background 0.15s; }
+.auto-btn.on .sw { background: rgba(63,208,201,0.35); border-color: rgba(63,208,201,0.7); }
+.auto-btn.on .sw::after { transform: translateX(12px); background: #3fd0c9; }
 .scan-actions .big { flex: 1; }
 .btn.icon-only { padding: 0; width: 54px; font-size: 1.2rem; flex: none; }
 .scan-thumbs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
