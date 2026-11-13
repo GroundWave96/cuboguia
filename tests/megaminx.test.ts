@@ -101,3 +101,18 @@ describe('validação do megaminx', () => {
     expect(validateMegaminx(s).ok).toBe(false);
   });
 });
+
+import { megaPieces } from '../src/puzzles/megaminx/pieces3d';
+
+describe('visual 3D do megaminx', () => {
+  it('núcleo fica abaixo de todos os planos de corte (nada aparece por fora no giro)', () => {
+    const { core, pieces } = megaPieces();
+    const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    megaGeo.normals.forEach((n, f) => {
+      const cut = megaGeo.cutOf(f);
+      for (const p of core.flat()) expect(dot(p, n)).toBeLessThan(cut);
+      const layer = new Set(megaGeo.layer(f));
+      for (const pc of pieces) if (pc.stickers.some((i) => layer.has(i))) for (const p of pc.faces.flat()) expect(dot(p, n)).toBeGreaterThan(cut);
+    });
+  });
+});

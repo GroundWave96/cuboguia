@@ -49,5 +49,8 @@ export function megaPieces() {
     return { faces: shrinkPolyhedron(pc.faces, GAP), stickers: pc.stickers };
   });
   stickers.sort((a, b) => a.index - b.index);
-  return { pieces: shrunk, stickers, stickerRound: 0.28 };
+  // núcleo: só a região que nenhum giro alcança (abaixo de todos os planos de corte),
+  // assim ele nunca aparece por fora no meio de uma animação
+  const core = geo.normals.reduce((faces, _, f) => below(faces, f), dodeca);
+  return { pieces: shrunk, stickers, stickerRound: 0.28, core: shrinkPolyhedron(core, 0.995) };
 }

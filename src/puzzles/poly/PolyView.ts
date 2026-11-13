@@ -30,6 +30,8 @@ export interface PolyViewOptions {
    * Com elas o visual ganha frestas entre as peças e o giro move as peças de verdade.
    */
   pieces?: { faces: V3[][]; stickers: number[] }[];
+  /** núcleo que aparece nas frestas; precisa ficar abaixo de todos os planos de corte */
+  core?: V3[][];
   /** cantos arredondados dos adesivos (fração da menor aresta) */
   stickerRound?: number;
 }
@@ -154,7 +156,10 @@ export class PolyView implements PuzzleView {
     this.body = this.buildBody(o.bodyFaces.map((f) => f.map(v3)));
     if (o.pieces) {
       // núcleo escuro (aparece nas frestas) + uma malha por peça
-      this.body.scale.setScalar(0.9);
+      if (o.core) {
+        this.body.geometry.dispose();
+        this.body = this.buildBody(o.core.map((f) => f.map(v3)));
+      } else this.body.scale.setScalar(0.9);
       o.pieces.forEach((pc, pi) => {
         const mesh = this.buildBody(pc.faces.map((f) => f.map(v3)));
         this.root.add(mesh);
