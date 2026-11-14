@@ -17,6 +17,8 @@ export interface ColorInfo {
   key: string;
   name: string; // nome em português ("verde")
   hex: string;
+  /** como a cor costuma aparecer numa câmera com boa luz (RGB), se diferente do padrão */
+  camera?: [number, number, number];
 }
 
 export interface ValidationResult {
@@ -134,6 +136,13 @@ export interface PuzzleImpl {
   /** rede 2D desenhada com polígonos (puzzles que não são grades quadradas) */
   netSvg?: { viewBox: string; stickers: { index: number; points: string }[]; labels?: { x: number; y: number; text: string }[] };
   scan: ScanFace[];
+  /** texto da tela da câmera, se diferente do holdHint */
+  scanHint?: string;
+  /**
+   * Depois da câmera: ajusta o estado lido (ex.: o 2x2 não tem centro, então a leitura
+   * pode começar em qualquer face e aqui o cubo é girado para a posição de referência).
+   */
+  normalizeScan?: (state: PuzzleState) => PuzzleState;
   /** como classificar as cores da câmera: pelo matiz (6 cores do cubo) ou pela cor mais próxima */
   scanColorModel?: 'hue6' | 'nearest';
   /** explicação da notação (HTML) mostrada no tutorial, se diferente da do cubo */

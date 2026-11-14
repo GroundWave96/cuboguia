@@ -2,7 +2,7 @@ import type { PuzzleImpl } from '../../core/types';
 import { NxNGeometry, invertMove } from '../nxn/geometry';
 import { NxNView } from '../nxn/NxNView';
 import { buildNet, buildScan } from '../nxn/layout';
-import { cornerFacelets, faceKeyOf } from '../nxn/pieces';
+import { cornerFacelets } from '../nxn/pieces';
 import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
 import { makeValidate2 } from './validate';
 import { solveBeginner2 } from './solver/beginner2';
@@ -15,6 +15,39 @@ const geo = new NxNGeometry(2);
  * sempre atrás-embaixo-esquerda (DBL) — já vem pintado, como os centros do 3x3.
  */
 const REFERENCE = cornerFacelets(geo)[6];
+
+/** as 24 posições do cubo inteiro (Rw e Uw giram as duas camadas = o cubo todo) */
+const ROTATIONS: string[][] = (() => {
+  const ids = Array.from({ length: geo.count }, (_, i) => String(i));
+  const seen = new Map<string, string[]>([[ids.join(','), []]]);
+  let frontier: [string[], string[]][] = [[ids, []]];
+  while (frontier.length) {
+    const next: [string[], string[]][] = [];
+    for (const [st, seq] of frontier)
+      for (const m of ['Rw', 'Uw']) {
+        const n = geo.apply(st, m);
+        const k = n.join(',');
+        if (seen.has(k)) continue;
+        seen.set(k, [...seq, m]);
+        next.push([n, [...seq, m]]);
+      }
+    frontier = next;
+  }
+  return [...seen.values()];
+})();
+
+/**
+ * A câmera pode começar por qualquer face; depois disso, gira o cubo lido até o canto
+ * de referência (branco-azul-vermelho) ficar atrás-embaixo-esquerda com o branco embaixo.
+ */
+function normalizeScan(state: string[]): string[] {
+  const solved = geo.solved();
+  for (const seq of ROTATIONS) {
+    const s = seq.reduce((acc, m) => geo.apply(acc, m), state);
+    if (REFERENCE.every((i) => s[i] === solved[i])) return s;
+  }
+  return state; // não achou o canto: a validação explica o que está errado
+}
 
 const cube2: PuzzleImpl = {
   colors: CUBE3_COLORS,
@@ -56,17 +89,20 @@ const cube2: PuzzleImpl = {
   solve: (state, methodId) => (methodId === 'optimal' ? solveOptimal2(state) : solveBeginner2(state)),
   createView: (container) => new NxNView(container, geo, COLOR_HEX),
   net: buildNet(2),
+  // sem canto fixo na câmera: começa por qualquer face e o site acha a posição no fim
   scan: buildScan(geo, CUBE3_COLORS, {
-    fixed: new Map(REFERENCE.map((i) => [i, faceKeyOf(geo, i)])),
     hints: {
-      F: 'Canto <b>branco-azul-vermelho</b> atrás, embaixo, à esquerda',
+      F: 'Comece por <b>qualquer face</b>',
       R: 'Gire o cubo ¼ de volta para a esquerda',
       B: 'Mais ¼ para a esquerda',
       L: 'Mais ¼ para a esquerda',
-      U: 'Volte à frente e incline: topo para a câmera',
+      U: 'Volte à primeira face e incline: topo para a câmera',
       D: 'Agora a base para a câmera',
     },
   }),
+  scanHint:
+    'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
+  normalizeScan,
   notationHelp: [
     { move: 'U', text: 'Cima' },
     { move: 'R', text: 'Direita' },

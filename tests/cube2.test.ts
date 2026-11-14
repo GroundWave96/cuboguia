@@ -103,3 +103,20 @@ describe('solucionadores 2x2', () => {
 });
 
 void toS;
+
+describe('2x2 — câmera começando por qualquer face', () => {
+  it('gira o cubo lido até o canto de referência ficar no lugar', async () => {
+    const cube2 = (await import('../src/puzzles/cube2')).default;
+    const { NxNGeometry } = await import('../src/puzzles/nxn/geometry');
+    const g = new NxNGeometry(2);
+    for (let t = 0; t < 30; t++) {
+      const start = cube2.scramble(15).reduce((s, m) => cube2.applyMove(s, m), cube2.solvedState());
+      // o usuário segurou o cubo virado de um jeito qualquer
+      const turns = Array.from({ length: 6 }, () => ['Rw', 'Uw', 'Fw'][Math.floor(Math.random() * 3)]);
+      const seen = turns.reduce((s, m) => g.apply(s, m), start);
+      const fixedBack = cube2.normalizeScan!(seen);
+      expect(fixedBack.join('')).toBe(start.join(''));
+      expect(cube2.validate(fixedBack).ok).toBe(true);
+    }
+  });
+});

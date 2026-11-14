@@ -62,10 +62,30 @@ export function balancedAssign(
       out[p.i] = p.k;
       count.set(p.k, (count.get(p.k) ?? 0) + 1);
     }
+    // troca pares quando isso diminui a distância total (o guloso pode errar no fim,
+    // quando a última vaga de uma cor vai para a amostra errada)
+    for (let pass = 0; pass < 6; pass++) {
+      let improved = false;
+      const lab = (k: string) => centers.find((c) => c.key === k)!.lab;
+      for (let i = 0; i < samples.length; i++) {
+        if (fixed.has(i) || !out[i]) continue;
+        for (let j = i + 1; j < samples.length; j++) {
+          if (fixed.has(j) || !out[j] || out[i] === out[j]) continue;
+          const now = colorDist(samples[i], lab(out[i])) + colorDist(samples[j], lab(out[j]));
+          const swapped = colorDist(samples[i], lab(out[j])) + colorDist(samples[j], lab(out[i]));
+          if (swapped < now - 1e-6) {
+            [out[i], out[j]] = [out[j], out[i]];
+            improved = true;
+          }
+        }
+      }
+      if (!improved) break;
+    }
     result = out;
     // recalcula o centro de cada cor como a média das amostras atribuídas
+    // (sem as fixas: um centro com logo não deve puxar a média da cor)
     centers = centers.map((c) => {
-      const members = samples.filter((_, i) => out[i] === c.key);
+      const members = samples.filter((_, i) => out[i] === c.key && !fixed.has(i));
       if (!members.length) return c;
       const m = members.reduce((acc, l) => [acc[0] + l[0], acc[1] + l[1], acc[2] + l[2]] as Lab, [0, 0, 0] as Lab);
       return { key: c.key, lab: [m[0] / members.length, m[1] / members.length, m[2] / members.length] as Lab };

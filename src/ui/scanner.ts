@@ -1,16 +1,7 @@
 import type { PuzzleImpl } from '../core/types';
 import { scanShortName } from '../puzzles/nxn/layout';
-import { balancedAssign, classifyCubeColor, hexToRgb, nearest, rgbToHsv, rgbToLab, type Lab, type RGB } from '../core/color';
-
-/** Cores típicas vistas por uma câmera (mais escuras/menos saturadas que a cor "ideal"). */
-const CAMERA_REFS: Record<string, RGB> = {
-  amarelo: [205, 195, 45],
-  laranja: [235, 115, 35],
-  verde: [35, 165, 85],
-  branco: [205, 210, 210],
-  vermelho: [185, 30, 45],
-  azul: [25, 75, 175],
-};
+import { rgbToHsv, type RGB } from '../core/color';
+import { ColorModel, assignAll } from '../core/scancolor';
 
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
@@ -104,7 +95,7 @@ export class CameraScanner {
     private onFace?: (stickers: number[]) => void,
   ) {
     impl.scan.forEach((f, fi) => f.grid.flat().forEach((st, k) => this.where.set(st, [fi, k])));
-    this.defaultRefs = impl.colors.map((c) => ({ key: c.key, lab: rgbToLab(CAMERA_REFS[c.name] ?? hexToRgb(c.hex)) }));
+    this.model = new ColorModel(impl.colors, impl.scanColorModel === 'nearest' ? 'nearest' : 'hue6');
     this.captured = impl.scan.map(() => null);
     this.root = document.createElement('div');
     this.root.className = 'scanner';
@@ -132,14 +123,18 @@ export class CameraScanner {
     return this.impl.colors.find((c) => c.key === key)!.hex;
   }
 
-  private defaultRefs: { key: string; lab: Lab }[];
+  /** cores aprendidas com os centros capturados (se adapta à luz e ao puzzle) */
+  private model: ColorModel;
+  /** pixels espalhados pelos adesivos de cor conhecida (centro), para aceitar logo */
+  private fixedPixels = new Map<number, RGB[]>();
 
-  /** Cor (chave) de uma amostra: pelo matiz quando o puzzle usa as cores padrão; senão, a mais próxima. */
   private classify(rgb: RGB): string {
-    if (this.impl.scanColorModel === 'nearest') return nearest(rgbToLab(rgb), this.defaultRefs);
-    const name = classifyCubeColor(rgb);
-    const c = this.impl.colors.find((x) => x.name === name);
-    return c ? c.key : nearest(rgbToLab(rgb), this.defaultRefs);
+    return this.model.classify(rgb);
+  }
+
+  /** a célula de cor conhecida mostra essa cor? (centro com logo também vale) */
+  private fixedOk(cell: number, color: string, rgb = this.live[cell]): boolean {
+    return !!rgb && this.model.centerMatches(rgb, this.fixedPixels.get(cell), color);
   }
 
   private render() {
@@ -167,7 +162,7 @@ export class CameraScanner {
         <div class="scan-auto ${this.running && this.auto ? '' : 'hidden'}"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
           <div class="cam-icon">📷</div>
-          <p>${this.impl.holdHint} Em cada face, as marcas ao redor da grade mostram como segurar o cubo.${this.auto ? ' Com a captura automática ligada, é só segurar cada face parada por 2 segundos.' : ''}</p>
+          <p>${this.impl.scanHint ?? `${this.impl.holdHint} Em cada face, as marcas ao redor da grade mostram como segurar o cubo.`}${this.auto ? ' Com a captura automática ligada, é só segurar cada face parada por 2 segundos.' : ''}</p>
           <button class="btn primary" data-act="start">Ativar câmera</button>
           <p class="scan-info"></p>
           <p class="scan-error"></p>
@@ -187,12 +182,14 @@ export class CameraScanner {
                   ? `<svg class="mini-svg" viewBox="0.12 0.14 0.76 0.76">${this.cellsOf(i)
                       .map((c, k) => {
                         const rgb = this.captured[i]?.[k];
-                        return `<polygon points="${c.poly.map((p) => p.join(',')).join(' ')}" fill="${rgb ? this.hex(this.classify(rgb)) : '#1b2030'}"/>`;
+                        const fx = s.fixedCells.find((f) => f.cell === k)?.color;
+                        return `<polygon points="${c.poly.map((p) => p.join(',')).join(' ')}" fill="${rgb ? this.hex(fx ?? this.classify(rgb)) : '#1b2030'}"/>`;
                       })
                       .join('')}</svg>`
                   : `<div class="mini" style="grid-template-columns:repeat(${s.grid.length},1fr)">${Array.from({ length: s.grid.length ** 2 }, (_, k) => {
                       const c = this.captured[i]?.[k];
-                      return `<i style="background:${c ? this.hex(this.classify(c)) : 'transparent'}"></i>`;
+                      const fx = s.fixedCells.find((f) => f.cell === k)?.color;
+                      return `<i style="background:${c ? this.hex(fx ?? this.classify(c)) : 'transparent'}"></i>`;
                     }).join('')}</div>`
               }
               <span>${s.faceColor ? `<i class="dot" style="background:${this.hex(s.faceColor)}"></i>` : `<small>${scanShortName(s.face)}</small>`}</span>
@@ -332,6 +329,23 @@ export class CameraScanner {
     // o quadro quadrado mostra o centro do vídeo (object-fit: cover)
     const m = Math.min(w, h), ox = (w - m) / 2, oy = (h - m) / 2;
     const live: RGB[] = [];
+    const fixedCells = new Set(this.impl.scan[this.current].fixedCells.map((f) => f.cell));
+    this.fixedPixels.clear();
+    this.cellsOf().forEach((cell, ci) => {
+      if (!fixedCells.has(ci)) return;
+      // grade 8×8 cobrindo quase todo o adesivo (o logo fica no meio; o fundo, nas bordas)
+      const half = Math.max(2, Math.round(cell.r * m * 1.9));
+      const x0 = Math.round(ox + cell.center[0] * m) - half, y0 = Math.round(oy + cell.center[1] * m) - half;
+      const data = ctx.getImageData(x0, y0, 2 * half, 2 * half).data;
+      const px: RGB[] = [];
+      for (let i = 0; i < 8; i++)
+        for (let j = 0; j < 8; j++) {
+          const xx = Math.floor(((j + 0.5) / 8) * 2 * half), yy = Math.floor(((i + 0.5) / 8) * 2 * half);
+          const o = (yy * 2 * half + xx) * 4;
+          px.push([data[o], data[o + 1], data[o + 2]]);
+        }
+      this.fixedPixels.set(ci, px);
+    });
     for (const cell of this.cellsOf()) {
         const half = Math.max(1, Math.round(cell.r * m));
         const x = Math.round(ox + cell.center[0] * m) - half, y = Math.round(oy + cell.center[1] * m) - half;
@@ -387,14 +401,18 @@ export class CameraScanner {
       this.countStart = 0;
     }
     if (!this.armed) {
+      // girar o cubo muda a imagem: basta UM quadro bem diferente (o cubo de lado, no meio
+      // do giro) — assim funciona mesmo se a próxima face tiver cores parecidas
       const ref = this.lastSig;
-      const diff = ref && ref.length === sig.length ? sig.filter((k, i) => k !== ref[i]).length : sig.length;
-      if (diff < Math.max(2, Math.ceil(sig.length * 0.25))) return this.setAutoMsg('Gire o cubo para a próxima face');
+      const need = Math.max(2, Math.ceil(sig.length * 0.25));
+      const diff = (s: string[]) => (ref && ref.length === s.length ? s.filter((k, i) => k !== ref[i]).length : s.length);
+      const frame = this.live.map((c) => this.classify(c));
+      if (diff(sig) < need && diff(frame) < need) return this.setAutoMsg('Gire o cubo para a próxima face');
       this.armed = true;
     }
     // a face certa: centro (ou canto de referência) com a cor pedida
     const face = this.impl.scan[this.current];
-    if (!face.fixedCells.every((fc) => sig[fc.cell] === fc.color)) {
+    if (!face.fixedCells.every((fc) => this.fixedOk(fc.cell, fc.color))) {
       this.countStart = 0;
       return this.setAutoMsg('');
     }
@@ -423,8 +441,8 @@ export class CameraScanner {
     const center = face.cells ? 0 : gn % 2 === 1 ? (gn * gn) >> 1 : -1;
     let msg = '';
     for (const fc of face.fixedCells) {
+      if (this.fixedOk(fc.cell, fc.color)) continue;
       const got = this.classify(this.live[fc.cell]);
-      if (got === fc.color) continue;
       msg =
         fc.cell === center
           ? `O centro está sendo lido como <b>${name(got)}</b>, mas esta etapa pede a face <b>${name(fc.color)}</b>.`
@@ -558,7 +576,7 @@ export class CameraScanner {
       ctx.closePath();
       ctx.stroke();
       const [cx, cy] = P(cell.center);
-      const key = this.classify(rgb);
+      const key = fixedColor ?? this.classify(rgb);
       const dot = Math.max(10, cell.r * M * 1.3);
       ctx.fillStyle = this.hex(key);
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
@@ -596,6 +614,11 @@ export class CameraScanner {
   private capture() {
     if (this.live.length !== this.cellsOf().length) return;
     this.captured[this.current] = this.stableSample();
+    for (const fc of this.impl.scan[this.current].fixedCells) {
+      const rgb = this.captured[this.current]![fc.cell];
+      const learnRgb = this.classify(rgb) === fc.color ? rgb : this.model.logoPart(this.fixedPixels.get(fc.cell), fc.color);
+      this.model.learn(`${this.current}:${fc.cell}`, fc.color, learnRgb);
+    }
     // lembra as cores: só volta a contar depois que o cubo for girado
     this.lastSig = this.majoritySig();
     this.armed = false;
@@ -615,26 +638,18 @@ export class CameraScanner {
   }
 
   private finish() {
-    const state = new Array<string>(this.impl.stickerCount).fill('?');
-    const samples: Lab[] = new Array(this.impl.stickerCount);
-    this.impl.scan.forEach((face, fi) => {
-      face.grid.flat().forEach((idx, k) => (samples[idx] = rgbToLab(this.captured[fi]![k])));
-    });
-    const fixed = new Map<number, string>();
-    for (const i of this.impl.fixedStickers) fixed.set(i, this.impl.solvedState()[i]);
-    // 1º palpite pelo matiz; depois cada cor vira a média das amostras dela
-    // e a atribuição é refeita garantindo exatamente N×N adesivos de cada cor.
     const rgbs: RGB[] = new Array(this.impl.stickerCount);
-    this.impl.scan.forEach((face, fi) => face.grid.flat().forEach((idx, k) => (rgbs[idx] = this.captured[fi]![k])));
-    const guess = rgbs.map((c) => this.classify(c));
-    const refs = this.impl.colors.map((c) => {
-      const members = samples.filter((_, i) => guess[i] === c.key);
-      if (!members.length) return this.defaultRefs.find((r) => r.key === c.key)!;
-      const m = members.reduce((a, l) => [a[0] + l[0], a[1] + l[1], a[2] + l[2]] as Lab, [0, 0, 0] as Lab);
-      return { key: c.key, lab: [m[0] / members.length, m[1] / members.length, m[2] / members.length] as Lab };
+    const fixed = new Map<number, string>();
+    this.impl.scan.forEach((face, fi) => {
+      face.grid.flat().forEach((idx, k) => (rgbs[idx] = this.captured[fi]![k]));
+      for (const fc of face.fixedCells) fixed.set(face.grid.flat()[fc.cell], fc.color);
     });
-    const keys = balancedAssign(samples, refs, Math.round(this.impl.stickerCount / this.impl.colors.length), fixed);
-    keys.forEach((k, i) => (state[i] = k || '?'));
+    // cada cor aparece exatamente N vezes; parte do que foi aprendido com os centros
+    const keys = assignAll(this.model, rgbs, Math.round(this.impl.stickerCount / this.impl.colors.length), fixed);
+    let state = keys.map((k) => k || '?');
+    if (this.debug) (window as unknown as { __scan: unknown }).__scan = { rgbs, fixed: [...fixed], keys, captured: this.captured };
+    // puzzles sem centro (2x2): descobre como o cubo estava virado
+    if (this.impl.normalizeScan) state = this.impl.normalizeScan(state);
     this.stop();
     this.onDone(state);
   }

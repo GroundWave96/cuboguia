@@ -3,3 +3,6 @@ dist
 .wrangler
 .DS_Store
 *.log
+
+# fotos de teste da câmera (grandes); os testes usam tests/fixtures/camera-samples.json
+tests/cube images/
