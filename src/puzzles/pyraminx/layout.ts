@@ -2,6 +2,7 @@
 import type { ColorInfo, PuzzleImpl, ScanFace } from '../../core/types';
 import { clipPolyhedron, shrinkPolyhedron } from '../poly/clip';
 import { FACE_KEYS, LAYER_CUT, TIP_CUT, pyraGeo as geo, type V3 } from './geometry';
+import { neighborMarks } from '../../core/scanmarks';
 
 type P = [number, number];
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -132,6 +133,17 @@ export function buildPyraScan(_colors: ColorInfo[]): ScanFace[] {
       fixedCells: [],
       cells,
       marks: [],
+      // cores já capturadas das faces vizinhas, por fora de cada borda
+      neighborMarks: neighborMarks(
+        geo.faceVerts[f].map((v) => geo.vertices[v]),
+        V.map(toBox),
+        (e) => {
+          const fv = geo.faceVerts[f];
+          const a = fv[e], b = fv[(e + 1) % 3];
+          const g = geo.faceVerts.findIndex((w, gi) => gi !== f && w.includes(a) && w.includes(b));
+          return geo.stickers.filter((s) => s.face === g);
+        },
+      ),
     };
   });
 }

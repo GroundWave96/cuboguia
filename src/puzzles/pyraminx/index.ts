@@ -8,6 +8,60 @@ import { validatePyraminx } from './validate';
 
 const VERT_TEXT: Record<string, string> = { U: 'Cima', L: 'Esquerda', R: 'Direita', B: 'Trás' };
 
+const SCAN = buildPyraScan(PYRA_COLORS);
+
+/**
+ * A câmera lê 4 imagens de face. Se o resultado não for um pyraminx possível, o usuário
+ * provavelmente girou para o outro lado ou mostrou alguma face girada: tenta colocar as
+ * imagens 2, 3 e 4 em outras posições e giradas (a 1ª fica fixa — a posição do puzzle
+ * inteiro é ajustada depois) e fica com a primeira montagem válida.
+ */
+function repairScan(state: string[]): string[] {
+  const ok = (s: string[]) => validatePyraminx(normalizePyra(s)).ok;
+  if (ok(state)) return state;
+  const centroid = (slot: number) => {
+    const cs = SCAN[slot].cells!;
+    return [cs.reduce((a, c) => a + c.center[0], 0) / 9, cs.reduce((a, c) => a + c.center[1], 0) / 9];
+  };
+  /** para cada célula do lugar `to`, a célula do lugar `from` que cai nela girando θ */
+  const mapping = (from: number, to: number, theta: number): number[] | null => {
+    const [fx, fy] = centroid(from), [tx, ty] = centroid(to);
+    const c = Math.cos(theta), s = Math.sin(theta);
+    const out: number[] = [];
+    for (const cell of SCAN[to].cells!) {
+      const dx = cell.center[0] - tx, dy = cell.center[1] - ty;
+      const px = fx + dx * c - dy * s, py = fy + dx * s + dy * c;
+      const k = SCAN[from].cells!.findIndex((q) => Math.hypot(q.center[0] - px, q.center[1] - py) < 0.02);
+      if (k < 0) return null;
+      out.push(k);
+    }
+    return out;
+  };
+  const image = (slot: number) => SCAN[slot].grid.flat().map((i) => state[i]);
+  const perms = [[1, 2, 3], [2, 1, 3], [1, 3, 2], [3, 2, 1], [2, 3, 1], [3, 1, 2]];
+  const angles = [0, 1, 2, 3, 4, 5].map((k) => (k * Math.PI) / 3);
+  for (const perm of perms)
+    // tenta primeiro as combinações com menos faces giradas
+    for (const rots of angles.flatMap((a) => angles.flatMap((b) => angles.map((c) => [a, b, c]))).sort(
+      (x, y) => x.filter(Boolean).length - y.filter(Boolean).length,
+    )) {
+      const s = [...state];
+      let fine = true;
+      for (let t = 0; t < 3 && fine; t++) {
+        const to = t + 1, from = perm[t];
+        const m = mapping(from, to, rots[t]);
+        if (!m) {
+          fine = false;
+          break;
+        }
+        const img = image(from);
+        SCAN[to].grid.flat().forEach((idx, k) => (s[idx] = img[m[k]]));
+      }
+      if (fine && ok(s)) return s;
+    }
+  return state;
+}
+
 const pyraminx: PuzzleImpl = {
   colors: PYRA_COLORS,
   holdHint:
@@ -15,6 +69,7 @@ const pyraminx: PuzzleImpl = {
   scanHint:
     'Pode começar com <b>qualquer face</b> de frente para a câmera e <b>qualquer ponta</b> para cima — no fim o site descobre sozinho como o pyraminx estava. Depois é só girar como as setas mandam.',
   normalize: normalizePyra,
+  repairScan,
   stickerCount: 36,
   solvedState: () => geo.solved(),
   fixedStickers: [],
@@ -62,7 +117,7 @@ const pyraminx: PuzzleImpl = {
     }),
   net: [],
   netSvg: buildPyraNet(),
-  scan: buildPyraScan(PYRA_COLORS),
+  scan: SCAN,
   describeMove: (m) => {
     const { vert, tip } = geo.parse(m);
     const dir = m.endsWith("'") ? 'anti-horário ↺' : 'horário ↻';

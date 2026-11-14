@@ -89,6 +89,11 @@ export interface ScanFace {
   cells?: { poly: [number, number][]; center: [number, number] }[];
   /** marcas coloridas por fora das bordas (cor da face vizinha), em coordenadas 0..1 */
   marks?: { a: [number, number]; b: [number, number]; color: string; primary?: boolean }[];
+  /**
+   * Adesivos das faces vizinhas encostados em cada borda (faces poligonais): quando a
+   * face vizinha já foi capturada, a cor dela aparece ali — mostra para onde girar.
+   */
+  neighborMarks?: { sticker: number; edge: number; a: [number, number]; b: [number, number] }[];
   /** seta do rótulo de orientação (padrão ▲) */
   arrow?: string;
 }
@@ -144,6 +149,12 @@ export interface PuzzleImpl {
    * posição de referência que o solucionador usa. Devolve o mesmo estado se não der.
    */
   normalize?: (state: PuzzleState) => PuzzleState;
+  /**
+   * Só na câmera: se a leitura não formar um puzzle possível, tenta as outras formas
+   * como as faces podem ter sido mostradas (ordem trocada, face girada) e fica com a
+   * que forma um puzzle de verdade.
+   */
+  repairScan?: (state: PuzzleState) => PuzzleState;
   /** como classificar as cores da câmera: pelo matiz (6 cores do cubo) ou pela cor mais próxima */
   scanColorModel?: 'hue6' | 'nearest';
   /** explicação da notação (HTML) mostrada no tutorial, se diferente da do cubo */

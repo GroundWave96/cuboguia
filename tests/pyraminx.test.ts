@@ -141,3 +141,43 @@ describe('pyraminx — pintado ou lido em qualquer posição', () => {
     }
   });
 });
+
+describe('pyraminx — câmera com faces mostradas fora de ordem ou giradas', () => {
+  const USER = 'LLFFDDLRLLFDLRRFFLRRFLDDRDRFFLRDRFDD'.split('');
+  /** coloca a imagem do lugar `from` no lugar `to`, girada θ (como se o usuário errasse) */
+  async function misplace(state: string[], moves: { from: number; to: number; theta: number }[]) {
+    const impl = (await import('../src/puzzles/pyraminx')).default;
+    const S = impl.scan;
+    const cen = (i: number) => [S[i].cells!.reduce((a, c) => a + c.center[0], 0) / 9, S[i].cells!.reduce((a, c) => a + c.center[1], 0) / 9];
+    const out = [...state];
+    for (const { from, to, theta } of moves) {
+      const [fx, fy] = cen(from), [tx, ty] = cen(to);
+      const img = S[from].grid.flat().map((i) => state[i]);
+      S[to].grid.flat().forEach((idx, k) => {
+        const c = S[to].cells![k].center;
+        const dx = c[0] - tx, dy = c[1] - ty;
+        const px = fx + dx * Math.cos(theta) - dy * Math.sin(theta), py = fy + dx * Math.sin(theta) + dy * Math.cos(theta);
+        const j = S[from].cells!.findIndex((q) => Math.hypot(q.center[0] - px, q.center[1] - py) < 0.02);
+        expect(j).toBeGreaterThanOrEqual(0);
+        out[idx] = img[j];
+      });
+    }
+    return out;
+  }
+  const T = (2 * Math.PI) / 3;
+  const cases: [string, { from: number; to: number; theta: number }[]][] = [
+    ['girou para a direita (2ª e 3ª trocadas)', [{ from: 1, to: 2, theta: 0 }, { from: 2, to: 1, theta: 0 }]],
+    ['base mostrada girada ⅓', [{ from: 3, to: 3, theta: T }]],
+    ['base girada ⅔ e 2ª face girada', [{ from: 3, to: 3, theta: 2 * T }, { from: 1, to: 1, theta: T }]],
+    // a base é um triângulo de ponta para baixo na tela: trocar com ela gira 60°
+    ['ordem toda trocada', [{ from: 1, to: 3, theta: Math.PI / 3 }, { from: 3, to: 1, theta: Math.PI / 3 + T }, { from: 2, to: 2, theta: 2 * T }]],
+  ];
+  for (const [name, moves] of cases)
+    it(`${name}: recupera o padrão certo`, async () => {
+      const impl = (await import('../src/puzzles/pyraminx')).default;
+      const wrong = await misplace(USER, moves);
+      expect(impl.validate(impl.normalize!(wrong)).ok).toBe(false); // antes: "não existe esse padrão"
+      const fixed = impl.normalize!(impl.repairScan!(wrong));
+      expect(fixed.join('')).toBe(USER.join(''));
+    });
+});

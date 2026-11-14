@@ -489,8 +489,26 @@ export class CameraScanner {
       ctx.stroke();
     };
     if (face.marks) {
-      // faces poligonais: um traço colorido por fora de cada aresta
-      for (const mk of face.marks) {
+      // faces poligonais: por fora de cada aresta, as cores já capturadas da face vizinha
+      // (quando houver) ou um traço com a cor do centro vizinho
+      const seen = (face.neighborMarks ?? []).map((m) => ({ ...m, key: this.capturedKey(m.sticker) }));
+      const edgesWithColors = new Set(seen.filter((m) => m.key).map((m) => m.edge));
+      for (const m of seen) {
+        if (!m.key) continue;
+        const a = P(m.a), b = P(m.b);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+        ctx.strokeStyle = this.hex(m.key);
+        ctx.lineWidth = 9;
+        ctx.stroke();
+      }
+      face.marks.forEach((mk, i) => {
+        if (edgesWithColors.has(i)) return;
         const a = P(mk.a), b = P(mk.b);
         ctx.lineCap = 'round';
         ctx.strokeStyle = 'rgba(0,0,0,0.6)';
@@ -502,34 +520,32 @@ export class CameraScanner {
         ctx.strokeStyle = this.hex(mk.color);
         ctx.lineWidth = mk.primary ? 12 : 8;
         ctx.stroke();
-      }
+      });
     } else {
       const g = this.gridRect(dw, dh);
       const n = face.grid.length;
       const cell = g.side / n;
       const gap = 6, thick = 12, thin = 7, inset = cell * 0.2;
       const nb = face.neighbors;
-      if (nb) {
-        // cubos com centro: barras com a cor de cada face vizinha
-        bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
-        bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
-        bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
-        bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
-      } else {
-        // sem centro: mostra as cores JÁ capturadas que encostam em cada borda
-        const seg = (stickers: number[], horizontal: boolean, x0: number, y0: number, t: number) =>
-          stickers.forEach((st, k) => {
-            const key = this.capturedKey(st);
-            if (!key) return;
-            const a = k * cell + cell * 0.12, len = cell * 0.76;
-            if (horizontal) bar(key, x0 + a, y0, len, t);
-            else bar(key, x0, y0 + a, t, len);
-          });
-        seg(face.edges.up, true, g.x, g.y - gap - thick, thick);
-        seg(face.edges.down, true, g.x, g.y + g.side + gap, thin + 3);
-        seg(face.edges.left, false, g.x - gap - thin - 3, g.y, thin + 3);
-        seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
-      }
+      // as cores JÁ capturadas que encostam em cada borda (a fileira da face vizinha)
+      const seg = (stickers: number[], horizontal: boolean, x0: number, y0: number, t: number) =>
+        stickers.forEach((st, k) => {
+          const key = this.capturedKey(st);
+          if (!key) return;
+          const a = k * cell + cell * 0.12, len = cell * 0.76;
+          if (horizontal) bar(key, x0 + a, y0, len, t);
+          else bar(key, x0, y0 + a, t, len);
+        });
+      const has = (stickers: number[]) => stickers.some((st) => this.capturedKey(st));
+      // cubos com centro: enquanto a vizinha não foi lida, a barra tem a cor do centro dela
+      if (has(face.edges.up)) seg(face.edges.up, true, g.x, g.y - gap - thick, thick);
+      else if (nb) bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
+      if (has(face.edges.down)) seg(face.edges.down, true, g.x, g.y + g.side + gap, thin + 3);
+      else if (nb) bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
+      if (has(face.edges.left)) seg(face.edges.left, false, g.x - gap - thin - 3, g.y, thin + 3);
+      else if (nb) bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
+      if (has(face.edges.right)) seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
+      else if (nb) bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
     }
     if (this.countStart) {
       // anel de progresso da contagem, sobre o contorno da face
@@ -649,6 +665,7 @@ export class CameraScanner {
     let state = keys.map((k) => k || '?');
     if (this.debug) (window as unknown as { __scan: unknown }).__scan = { rgbs, fixed: [...fixed], keys, captured: this.captured };
     // puzzles sem centro (2x2): descobre como o cubo estava virado
+    if (this.impl.repairScan) state = this.impl.repairScan(state);
     if (this.impl.normalize) state = this.impl.normalize(state);
     this.stop();
     this.onDone(state);

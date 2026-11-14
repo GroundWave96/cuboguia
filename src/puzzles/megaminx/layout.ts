@@ -1,6 +1,7 @@
 /** Rede 2D (duas "flores") e moldes da câmera do Megaminx. */
 import type { ColorInfo, PuzzleImpl, ScanFace } from '../../core/types';
 import { EDGE_T, FACES, INNER, megaGeo as geo, type V3 } from './geometry';
+import { neighborMarks } from '../../core/scanmarks';
 
 type P = [number, number];
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -161,6 +162,13 @@ export function buildMegaScan(colors: ColorInfo[]): ScanFace[] {
       fixedCells: [{ cell: 0, color: fk }],
       cells,
       marks,
+      // depois que a face vizinha é capturada, as 3 peças dela encostadas nesta borda
+      // aparecem no lugar da marca de cor
+      neighborMarks: neighborMarks(vs, V2, (e) => {
+        const fv = geo.faceVerts[f];
+        const g = geo.neighbors[f].find((x) => geo.faceVerts[x].includes(fv[e]) && geo.faceVerts[x].includes(fv[(e + 1) % 5]))!;
+        return geo.stickers.filter((s) => s.face === g);
+      }, 3, 0.03),
     };
   });
 }
