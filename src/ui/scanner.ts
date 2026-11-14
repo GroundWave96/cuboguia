@@ -2,6 +2,7 @@ import type { PuzzleImpl } from '../core/types';
 import { scanShortName } from '../puzzles/nxn/layout';
 import { rgbToHsv, type RGB } from '../core/color';
 import { ColorModel, assignAll } from '../core/scancolor';
+import { cellNeighbors, isFlat, puzzleInView } from '../core/scanpresence';
 
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
@@ -87,6 +88,9 @@ export class CameraScanner {
   private armed = true;
   private lastSig: string[] | null = null;
   private autoMsg = '';
+  /** tem um puzzle na grade? (últimos quadros) — sem puzzle, não conta */
+  private presence: boolean[] = [];
+  private pairsCache = new Map<number, [number, number][]>();
 
   constructor(
     container: HTMLElement,
@@ -346,19 +350,34 @@ export class CameraScanner {
         }
       this.fixedPixels.set(ci, px);
     });
+    const flat: boolean[] = [];
     for (const cell of this.cellsOf()) {
         const half = Math.max(1, Math.round(cell.r * m));
         const x = Math.round(ox + cell.center[0] * m) - half, y = Math.round(oy + cell.center[1] * m) - half;
         const s = 2 * half;
         const data = ctx.getImageData(x, y, s, s).data;
         // mediana por canal: ignora reflexos e bordas
-        const R: number[] = [], G: number[] = [], B: number[] = [];
+        const R: number[] = [], G: number[] = [], B: number[] = [], L: number[] = [];
         for (let i = 0; i < data.length; i += 4) {
           R.push(data[i]); G.push(data[i + 1]); B.push(data[i + 2]);
+          L.push(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
         }
         const med = (a: number[]) => a.sort((p, q) => p - q)[a.length >> 1];
+        flat.push(isFlat(L));
         live.push([med(R), med(G), med(B)]);
       }
+    // tem um puzzle ali? faixas escuras entre as células + células lisas
+    const frame = ctx.getImageData(0, 0, w, h).data;
+    const rgbAt = (fx: number, fy: number): RGB => {
+      const xx = Math.min(w - 1, Math.max(0, Math.round(fx))), yy = Math.min(h - 1, Math.max(0, Math.round(fy)));
+      const o = (yy * w + xx) * 4;
+      return [frame[o], frame[o + 1], frame[o + 2]];
+    };
+    const centers = this.cellsOf().map((c): [number, number] => [ox + c.center[0] * m, oy + c.center[1] * m]);
+    let pairs = this.pairsCache.get(this.current);
+    if (!pairs) this.pairsCache.set(this.current, (pairs = cellNeighbors(this.cellsOf().map((c) => c.center))));
+    this.presence.push(puzzleInView(centers, pairs, flat, rgbAt));
+    if (this.presence.length > 5) this.presence.shift();
     this.live = live;
     this.history.push(live);
     if (this.history.length > 7) this.history.shift();
@@ -409,6 +428,12 @@ export class CameraScanner {
       const frame = this.live.map((c) => this.classify(c));
       if (diff(sig) < need && diff(frame) < need) return this.setAutoMsg('Gire o cubo para a próxima face');
       this.armed = true;
+    }
+    // sem puzzle na grade (só o rosto, a parede...), não conta
+    if (this.presence.filter(Boolean).length < 3) {
+      this.countStart = 0;
+      this.stableSince = now;
+      return this.setAutoMsg('Mostre o puzzle dentro da grade');
     }
     // a face certa: centro (ou canto de referência) com a cor pedida
     const face = this.impl.scan[this.current];
