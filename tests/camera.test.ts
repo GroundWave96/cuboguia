@@ -136,7 +136,7 @@ describe('câmera — conferência do centro (face certa)', () => {
   });
   it('não aceita a face errada (com os outros centros da mesma luz já capturados)', () => {
     let wrong = 0;
-    for (const p of photos.filter((x) => x.puzzle !== 'cube2')) {
+    for (const p of photos.filter((x) => x.puzzle === 'cube3' || x.puzzle === 'megaminx')) {
       const colors = p.puzzle === 'megaminx' ? MEGA_COLORS : CUBE3_COLORS;
       const model = new ColorModel(colors, p.puzzle === 'megaminx' ? 'nearest' : 'hue6');
       for (const q of photos.filter((x) => x.puzzle === p.puzzle && x.light === p.light && x !== p)) {
@@ -168,5 +168,19 @@ describe('câmera — captura real feita pelo site (fotos escuras passadas como 
     const want = truth.join('').replace(/ /g, '').split('').map((c) => MAP[c]);
     const wrong = final.map((k, i) => (k === want[i] ? '' : `${i}:${want[i]}→${k}`)).filter(Boolean);
     expect(wrong).toEqual([]);
+  });
+});
+
+describe('câmera — pyraminx com fotos reais', () => {
+  it('lê as 4 faces sem erro (ao vivo e no resultado final)', async () => {
+    const { PYRA_COLORS } = await import('../src/puzzles/pyraminx/colors');
+    const ps = photos.filter((p) => p.puzzle === 'pyraminx');
+    const model = new ColorModel(PYRA_COLORS, 'hue6');
+    const cells = ps.flatMap((p) => p.cells);
+    const live = cells.filter((c) => model.classify(c.rgb) === c.truth).length;
+    const final = assignAll(model, cells.map((c) => c.rgb), 9, new Map());
+    const ok = final.filter((k, i) => k === cells[i].truth).length;
+    console.log(`pyraminx: ao vivo ${live}/${cells.length}, final ${ok}/${cells.length}`);
+    expect(ok).toBe(cells.length);
   });
 });

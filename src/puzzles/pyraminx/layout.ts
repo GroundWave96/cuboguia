@@ -99,8 +99,7 @@ export function buildPyraNet(): NonNullable<PuzzleImpl['netSvg']> {
 }
 
 // ---------------------------------------------------------------------------
-export function buildPyraScan(colors: ColorInfo[]): ScanFace[] {
-  const name = (k: string) => colors.find((c) => c.key === k)!.name;
+export function buildPyraScan(_colors: ColorInfo[]): ScanFace[] {
   const order = ['F', 'R', 'L', 'D'];
   return order.map((fk, i) => {
     const f = FACE_KEYS.indexOf(fk as never);
@@ -116,18 +115,19 @@ export function buildPyraScan(colors: ColorInfo[]): ScanFace[] {
       center: [(poly[0][0] + poly[1][0] + poly[2][0]) / 3, (poly[0][1] + poly[1][1] + poly[2][1]) / 3] as [number, number],
     }));
     const hints = [
-      'Centro <b>sem amarelo</b> em cima, <b>sem verde</b> atrás',
-      'Gire ⅓ de volta para a esquerda',
-      'Mais ⅓ de volta para a esquerda',
-      'Volte e mostre a base, frente para cima',
+      '<b>Qualquer face</b> de frente, uma ponta para cima',
+      'Gire ⅓ de volta para a <b>esquerda</b> (a ponta de cima fica parada): a face da direita vem para a frente',
+      'Mais ⅓ para a <b>esquerda</b>, do mesmo jeito',
+      'Volte à 1ª face e <b>tombe o pyraminx para trás</b>: a base fica de frente, com a 1ª face em cima',
     ];
     return {
       face: fk,
       grid: [Array.from({ length: 9 }, (_, s) => f * 9 + s)],
-      title: ['Frente', 'Trás-direita', 'Trás-esquerda', 'Base'][i],
+      title: ['1ª face', '2ª face', '3ª face', 'Base'][i],
       faceColor: '',
       hint: hints[i],
-      upLabel: fk === 'D' ? 'FRENTE PARA CIMA' : `PONTA DE CIMA (SEM ${name('D').toUpperCase()})`,
+      upLabel: fk === 'D' ? '1ª FACE PARA CIMA' : 'PONTA DE CIMA',
+      arrow: fk === 'D' ? '▲' : i === 0 ? '▲' : '↶',
       edges: { up: [], down: [], left: [], right: [] },
       fixedCells: [],
       cells,

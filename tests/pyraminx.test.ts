@@ -105,3 +105,39 @@ describe('validação e visual do pyraminx', () => {
     }
   });
 });
+
+describe('pyraminx — pintado ou lido em qualquer posição', () => {
+  // padrão das fotos tests/cube images/pyraminx (IMG_6191..6197), já na posição de referência
+  const USER = 'LLFFDDLRLLFDLRRFFLRRFLDDRDRFFLRDRFDD'.split('');
+  it('o padrão das fotos é válido e tem solução', async () => {
+    const impl = (await import('../src/puzzles/pyraminx')).default;
+    expect(impl.validate(USER)).toEqual({ ok: true, errors: [] });
+    const sol = impl.solve(USER, 'beginner');
+    const end = sol.steps.flatMap((s) => s.segments.flatMap((g) => g.moves)).reduce((s, m) => impl.applyMove(s, m), USER);
+    expect(end.join('')).toBe(impl.solvedState().join(''));
+  });
+  it('em qualquer uma das 12 posições, volta para a posição de referência', async () => {
+    const impl = (await import('../src/puzzles/pyraminx')).default;
+    const { PYRA_ROTATIONS } = await import('../src/puzzles/pyraminx/geometry');
+    expect(PYRA_ROTATIONS.length).toBe(12);
+    let rejectedBefore = 0;
+    for (const p of PYRA_ROTATIONS) {
+      const painted = Array.from(p, (j) => USER[j]); // como o usuário pintou, segurando de outro jeito
+      if (!impl.validate(painted).ok) rejectedBefore++;
+      const fixed = impl.normalize!(painted);
+      expect(fixed.join('')).toBe(USER.join(''));
+      expect(impl.validate(fixed).ok).toBe(true);
+    }
+    expect(rejectedBefore).toBe(11); // antes, só a posição de referência era aceita
+  });
+  it('embaralhados em posições aleatórias também', async () => {
+    const impl = (await import('../src/puzzles/pyraminx')).default;
+    const { PYRA_ROTATIONS } = await import('../src/puzzles/pyraminx/geometry');
+    for (let t = 0; t < 50; t++) {
+      const s = impl.scramble().reduce((x, m) => impl.applyMove(x, m), impl.solvedState());
+      const p = PYRA_ROTATIONS[Math.floor(Math.random() * 12)];
+      const fixed = impl.normalize!(Array.from(p, (j) => s[j]));
+      expect(impl.validate(fixed).ok).toBe(true);
+    }
+  });
+});

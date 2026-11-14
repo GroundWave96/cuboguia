@@ -649,7 +649,7 @@ export class CameraScanner {
     let state = keys.map((k) => k || '?');
     if (this.debug) (window as unknown as { __scan: unknown }).__scan = { rgbs, fixed: [...fixed], keys, captured: this.captured };
     // puzzles sem centro (2x2): descobre como o cubo estava virado
-    if (this.impl.normalizeScan) state = this.impl.normalizeScan(state);
+    if (this.impl.normalize) state = this.impl.normalize(state);
     this.stop();
     this.onDone(state);
   }

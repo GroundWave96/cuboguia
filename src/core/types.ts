@@ -139,10 +139,11 @@ export interface PuzzleImpl {
   /** texto da tela da câmera, se diferente do holdHint */
   scanHint?: string;
   /**
-   * Depois da câmera: ajusta o estado lido (ex.: o 2x2 não tem centro, então a leitura
-   * pode começar em qualquer face e aqui o cubo é girado para a posição de referência).
+   * Puzzles sem cor fixa por posição (2x2, pyraminx): o usuário pode pintar ou ler pela
+   * câmera segurando de qualquer jeito; aqui o estado é girado (o puzzle inteiro) até a
+   * posição de referência que o solucionador usa. Devolve o mesmo estado se não der.
    */
-  normalizeScan?: (state: PuzzleState) => PuzzleState;
+  normalize?: (state: PuzzleState) => PuzzleState;
   /** como classificar as cores da câmera: pelo matiz (6 cores do cubo) ou pela cor mais próxima */
   scanColorModel?: 'hue6' | 'nearest';
   /** explicação da notação (HTML) mostrada no tutorial, se diferente da do cubo */

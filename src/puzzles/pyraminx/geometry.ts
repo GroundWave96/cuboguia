@@ -214,4 +214,44 @@ class PyraminxGeometry {
 
 export const pyraGeo = new PyraminxGeometry();
 
+/** as 12 posições do pyraminx inteiro (permutações: novo[i] = antigo[p[i]]) */
+export const PYRA_ROTATIONS: Int32Array[] = (() => {
+  const gens = [0, 1, 2, 3].map((v) => pyraGeo.wholeRotation(v));
+  const id = Int32Array.from({ length: STICKERS }, (_, i) => i);
+  const seen = new Map<string, Int32Array>([[id.join(), id]]);
+  let frontier = [id];
+  while (frontier.length) {
+    const next: Int32Array[] = [];
+    for (const p of frontier)
+      for (const g of gens) {
+        const r = Int32Array.from(g, (gi) => p[gi]);
+        const k = r.join();
+        if (!seen.has(k)) {
+          seen.set(k, r);
+          next.push(r);
+        }
+      }
+    frontier = next;
+  }
+  return [...seen.values()];
+})();
+
+/**
+ * Gira o estado (o pyraminx inteiro) até os centros ficarem na posição de referência:
+ * centro sem amarelo em cima e centro sem verde atrás. Assim dá para pintar ou ler pela
+ * câmera segurando de qualquer jeito.
+ */
+export function normalizePyra(state: string[]): string[] {
+  if (state.some((c) => !(FACE_KEYS as readonly string[]).includes(c))) return state;
+  const key = (i: number) => FACE_KEYS[Math.floor(i / 9)];
+  const fits = (s: string[]) =>
+    pyraGeo.centers.every((pos) => [...pos.map(key)].sort().join() === [...pos.map((i) => s[i])].sort().join());
+  if (fits(state)) return state;
+  for (const p of PYRA_ROTATIONS) {
+    const s = Array.from(p, (j) => state[j]);
+    if (fits(s)) return s;
+  }
+  return state;
+}
+
 export const invertPyraMove = (m: string) => (m.endsWith("'") ? m.slice(0, -1) : m + "'");

@@ -102,7 +102,7 @@ const cube2: PuzzleImpl = {
   }),
   scanHint:
     'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
-  normalizeScan,
+  normalize: normalizeScan,
   notationHelp: [
     { move: 'U', text: 'Cima' },
     { move: 'R', text: 'Direita' },

@@ -179,6 +179,13 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   }
 
   function goSolve() {
+    // segurou o puzzle em outra posição? gira o desenho para a posição de referência
+    const turned = impl.normalize?.(state);
+    if (turned && turned.join() !== state.join()) {
+      state = turned;
+      commit();
+      toast('Seu puzzle estava em outra posição — giramos o desenho para a posição de referência. No tutorial, segure igual ao desenho 3D.', 7000);
+    }
     const res = impl.validate(state);
     const errBox = body.querySelector('.errors');
     if (!res.ok) {

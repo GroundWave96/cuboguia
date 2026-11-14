@@ -49,6 +49,19 @@ FACES2 = [
     ('IMG_6189', C, 'claro', [(60, 30), (450, 25), (445, 420), (65, 415)], 'RY BO'),
     ('IMG_6190', C, 'claro', [(155, 100), (500, 100), (495, 450), (150, 440)], 'RG OB'),
 ]
+# Pyraminx: cantos da face na folha (ponta de cima, inf-esq, inf-dir) e as 9 cores na ordem:
+# ponta de cima, aresta esq., centro de cima, aresta dir., ponta inf-esq, centro inf-esq,
+# aresta de baixo, centro inf-dir, ponta inf-dir  (G verde, Y amarelo, R vermelho, B azul)
+P = (0.0, 604.8, 0.19841)
+PYRA_KEYS = {'G': 'F', 'Y': 'D', 'R': 'L', 'B': 'R'}
+PYRA = [
+    ('IMG_6191', [(278, 20), (45, 420), (495, 418)], 'GBGGBYYYR'),
+    ('IMG_6192', [(338, 100), (135, 355), (468, 420)], 'RGRRYRYBG'),
+    ('IMG_6193', [(310, 105), (105, 405), (465, 425)], 'BRBBYBYYG'),
+    ('IMG_6196', [(308, 135), (152, 380), (448, 400)], 'YGGBRGRRB'),
+]
+PYRA_BARY = [(7, 1, 1), (4, 4, 1), (5, 2, 2), (4, 1, 4), (1, 7, 1), (2, 5, 2), (1, 4, 4), (2, 2, 5), (1, 1, 7)]
+
 # Megaminx: pontos soltos (na folha, com o deslocamento do painel), chave da cor e se é o centro
 MEGA = [
     ('1ceae760', (0, 0), [((300, 240), 'DL', 1), ((210, 105), 'DR', 0), ((295, 110), 'DBR', 0), ((390, 105), 'R', 0), ((400, 190), 'DBR', 0),
@@ -149,8 +162,27 @@ def mega():
     return out
 
 
+def pyra():
+    out = []
+    x0, y0, s = P
+    for name, tri, colors in PYRA:
+        im = load(os.path.join(IMG, 'pyraminx', name + '.jpeg'))
+        T = [(x0 + X / s, y0 + Y / s) for X, Y in tri]
+        side = T[2][0] - T[1][0]
+        k = (0.8 * 360) / side  # na câmera o triângulo ocupa ~80% de 360 px
+        small = im.resize((int(im.width * k), int(im.height * k)), Image.BILINEAR)
+        T = [(x * k, y * k) for x, y in T]
+        cells = []
+        for (a, b, c), lab in zip(PYRA_BARY, colors):
+            px = (a * T[0][0] + b * T[1][0] + c * T[2][0]) / 9
+            py = (a * T[0][1] + b * T[1][1] + c * T[2][1]) / 9
+            cells.append({'rgb': median_rgb(small, px, py, side * k * 0.03), 'truth': PYRA_KEYS[lab]})
+        out.append({'photo': f'pyraminx/{name}', 'puzzle': 'pyraminx', 'light': 'claro', 'cells': cells})
+    return out
+
+
 if __name__ == '__main__':
-    data = cube_faces('3x3', FACES3, 3) + cube_faces('2x2', FACES2, 2) + mega()
+    data = cube_faces('3x3', FACES3, 3) + cube_faces('2x2', FACES2, 2) + mega() + pyra()
     dst = os.path.join(ROOT, 'fixtures', 'camera-samples.json')
     with open(dst, 'w') as fh:
         json.dump(data, fh, separators=(',', ':'))

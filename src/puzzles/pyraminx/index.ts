@@ -1,6 +1,6 @@
 import type { PuzzleImpl } from '../../core/types';
 import { PolyView } from '../poly/PolyView';
-import { LAYER_CUT, TIP_CUT, VERTS, invertPyraMove, pyraGeo as geo, type V3 } from './geometry';
+import { LAYER_CUT, TIP_CUT, VERTS, invertPyraMove, normalizePyra, pyraGeo as geo, type V3 } from './geometry';
 import { PYRA_COLORS, PYRA_COLOR_HEX } from './colors';
 import { buildPyraNet, buildPyraScan, pyraPieces } from './layout';
 import { solvePyraBeginner, solvePyraOptimal } from './solver';
@@ -11,7 +11,10 @@ const VERT_TEXT: Record<string, string> = { U: 'Cima', L: 'Esquerda', R: 'Direit
 const pyraminx: PuzzleImpl = {
   colors: PYRA_COLORS,
   holdHint:
-    'Segure o pyraminx com o <b>centro sem amarelo</b> em cima e o <b>centro sem verde</b> atrás, embaixo (o centro é a peça logo abaixo de cada ponta). Assim a frente é a face verde e a base, a amarela.',
+    'Segure o pyraminx igual ao desenho 3D: em cima, a <b>ponta sem amarelo</b>; atrás, a <b>ponta sem verde</b> (cada ponta tem 3 cores). Assim a face da frente é a verde e a base, a amarela.',
+  scanHint:
+    'Pode começar com <b>qualquer face</b> de frente para a câmera e <b>qualquer ponta</b> para cima — no fim o site descobre sozinho como o pyraminx estava. Depois é só girar como as setas mandam.',
+  normalize: normalizePyra,
   stickerCount: 36,
   solvedState: () => geo.solved(),
   fixedStickers: [],
