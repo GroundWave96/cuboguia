@@ -49,6 +49,54 @@ function normalizeScan(state: string[]): string[] {
   return state; // não achou o canto: a validação explica o que está errado
 }
 
+const validate2 = makeValidate2(geo);
+
+/** sem canto fixo na câmera: começa por qualquer face e o site acha a posição no fim */
+const SCAN = buildScan(geo, CUBE3_COLORS, {
+  hints: {
+    F: 'Comece por <b>qualquer face</b>',
+    R: 'Gire o cubo ¼ de volta para a esquerda',
+    B: 'Mais ¼ para a esquerda',
+    L: 'Mais ¼ para a esquerda',
+    U: 'Volte à primeira face e incline: topo para a câmera',
+    D: 'Agora a base para a câmera',
+  },
+});
+
+/** gira a imagem 2x2 de uma face ¼ de volta (sentido horário na tela) */
+const turnImage = (img: string[]) => [img[2], img[0], img[3], img[1]];
+
+/**
+ * Se a leitura não formar um 2x2 possível, testa os enganos mais comuns — girou para a
+ * direita (2ª e 4ª faces trocadas), mostrou o topo/a base girados ou trocados — do que
+ * muda menos para o que muda mais, e fica com a primeira montagem válida.
+ */
+function repairScan(state: string[]): string[] {
+  const ok = (s: string[]) => validate2(normalizeScan(s)).ok;
+  if (ok(state)) return state;
+  const images = SCAN.map((f) => f.grid.flat().map((i) => state[i]));
+  const tries: { cost: number; slots: string[][] }[] = [];
+  for (const sides of [false, true])
+    for (const swapUD of [false, true])
+      for (let ru = 0; ru < 4; ru++)
+        for (let rd = 0; rd < 4; rd++) {
+          const slots = [...images];
+          if (sides) [slots[1], slots[3]] = [images[3], images[1]];
+          let up = swapUD ? images[5] : images[4], down = swapUD ? images[4] : images[5];
+          for (let k = 0; k < ru; k++) up = turnImage(up);
+          for (let k = 0; k < rd; k++) down = turnImage(down);
+          slots[4] = up;
+          slots[5] = down;
+          tries.push({ cost: +sides + +swapUD + +(ru > 0) + +(rd > 0), slots });
+        }
+  for (const t of tries.sort((a, b) => a.cost - b.cost)) {
+    const s = [...state];
+    SCAN.forEach((f, k) => f.grid.flat().forEach((i, j) => (s[i] = t.slots[k][j])));
+    if (ok(s)) return s;
+  }
+  return state;
+}
+
 const cube2: PuzzleImpl = {
   colors: CUBE3_COLORS,
   holdHint:
@@ -71,7 +119,7 @@ const cube2: PuzzleImpl = {
     }
     return out;
   },
-  validate: makeValidate2(geo),
+  validate: validate2,
   methods: [
     {
       id: 'beginner',
@@ -89,20 +137,11 @@ const cube2: PuzzleImpl = {
   solve: (state, methodId) => (methodId === 'optimal' ? solveOptimal2(state) : solveBeginner2(state)),
   createView: (container) => new NxNView(container, geo, COLOR_HEX),
   net: buildNet(2),
-  // sem canto fixo na câmera: começa por qualquer face e o site acha a posição no fim
-  scan: buildScan(geo, CUBE3_COLORS, {
-    hints: {
-      F: 'Comece por <b>qualquer face</b>',
-      R: 'Gire o cubo ¼ de volta para a esquerda',
-      B: 'Mais ¼ para a esquerda',
-      L: 'Mais ¼ para a esquerda',
-      U: 'Volte à primeira face e incline: topo para a câmera',
-      D: 'Agora a base para a câmera',
-    },
-  }),
+  scan: SCAN,
   scanHint:
     'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
   normalize: normalizeScan,
+  repairScan,
   notationHelp: [
     { move: 'U', text: 'Cima' },
     { move: 'R', text: 'Direita' },

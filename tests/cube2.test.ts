@@ -120,3 +120,39 @@ describe('2x2 — câmera começando por qualquer face', () => {
     }
   });
 });
+
+describe('2x2 — câmera com faces mostradas fora de ordem ou giradas', () => {
+  it('recupera o cubo certo nos enganos comuns', async () => {
+    const cube2 = (await import('../src/puzzles/cube2')).default;
+    const { NxNGeometry } = await import('../src/puzzles/nxn/geometry');
+    const g = new NxNGeometry(2);
+    const turn = (img: string[]) => [img[2], img[0], img[3], img[1]];
+    const mistakes: [string, (imgs: string[][]) => string[][]][] = [
+      ['girou para a direita', (m) => [m[0], m[3], m[2], m[1], m[4], m[5]]],
+      ['topo girado ¼', (m) => [m[0], m[1], m[2], m[3], turn(m[4]), m[5]]],
+      ['base girada ½', (m) => [m[0], m[1], m[2], m[3], m[4], turn(turn(m[5]))]],
+      ['topo e base trocados', (m) => [m[0], m[1], m[2], m[3], m[5], m[4]]],
+      ['direita + topo girado', (m) => [m[0], m[3], m[2], m[1], turn(m[4]), m[5]]],
+    ];
+    const stats: Record<string, [number, number, number]> = {};
+    for (let t = 0; t < 150; t++) {
+      const truth = cube2.scramble(15).reduce((s, m) => cube2.applyMove(s, m), cube2.solvedState());
+      // o usuário segurou o cubo de um jeito qualquer
+      const held = Array.from({ length: 4 }, () => ['Rw', 'Uw', 'Fw'][Math.floor(Math.random() * 3)]).reduce((s, m) => g.apply(s, m), truth);
+      const imgs = cube2.scan.map((f) => f.grid.flat().map((i) => held[i]));
+      for (const [name, fn] of mistakes) {
+        const wrongImgs = fn(imgs);
+        const wrong = [...held];
+        cube2.scan.forEach((f, k) => f.grid.flat().forEach((i, j) => (wrong[i] = wrongImgs[k][j])));
+        stats[name] ??= [0, 0, 0];
+        const before = cube2.validate(cube2.normalize!(wrong)).ok;
+        const fixed = cube2.normalize!(cube2.repairScan!(wrong));
+        if (before) stats[name][2]++; // o engano por acaso ainda forma um cubo válido
+        else if (fixed.join('') === truth.join('')) stats[name][0]++;
+        stats[name][1]++;
+      }
+    }
+    console.log(Object.entries(stats).map(([k, [ok, n, val]]) => `${k}: recuperou ${ok}/${n - val} (${val} enganos que já davam um cubo válido)`).join('\n'));
+    for (const [, [ok, n, val]] of Object.entries(stats)) expect(ok / (n - val)).toBeGreaterThan(0.97);
+  });
+});
