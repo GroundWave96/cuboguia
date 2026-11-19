@@ -242,16 +242,21 @@ export const PYRA_ROTATIONS: Int32Array[] = (() => {
  * câmera segurando de qualquer jeito.
  */
 export function normalizePyra(state: string[]): string[] {
-  if (state.some((c) => !(FACE_KEYS as readonly string[]).includes(c))) return state;
+  return normalizePyraOrder(state).map((j) => state[j]);
+}
+
+/** como normalizePyra, mas diz de onde vem cada adesivo (resultado[i] = estado[ordem[i]]) */
+export function normalizePyraOrder(state: string[]): number[] {
+  const ids = state.map((_, i) => i);
+  if (state.some((c) => !(FACE_KEYS as readonly string[]).includes(c))) return ids;
   const key = (i: number) => FACE_KEYS[Math.floor(i / 9)];
   const fits = (s: string[]) =>
     pyraGeo.centers.every((pos) => [...pos.map(key)].sort().join() === [...pos.map((i) => s[i])].sort().join());
-  if (fits(state)) return state;
+  if (fits(state)) return ids;
   for (const p of PYRA_ROTATIONS) {
-    const s = Array.from(p, (j) => state[j]);
-    if (fits(s)) return s;
+    if (fits(Array.from(p, (j) => state[j]))) return Array.from(p);
   }
-  return state;
+  return ids;
 }
 
 export const invertPyraMove = (m: string) => (m.endsWith("'") ? m.slice(0, -1) : m + "'");

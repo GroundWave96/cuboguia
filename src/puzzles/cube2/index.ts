@@ -40,14 +40,18 @@ const ROTATIONS: string[][] = (() => {
  * A câmera pode começar por qualquer face; depois disso, gira o cubo lido até o canto
  * de referência (branco-azul-vermelho) ficar atrás-embaixo-esquerda com o branco embaixo.
  */
-function normalizeScan(state: string[]): string[] {
+function normalizeOrder(state: string[]): number[] {
   const solved = geo.solved();
+  const ids = state.map((_, i) => String(i));
   for (const seq of ROTATIONS) {
     const s = seq.reduce((acc, m) => geo.apply(acc, m), state);
-    if (REFERENCE.every((i) => s[i] === solved[i])) return s;
+    if (REFERENCE.every((i) => s[i] === solved[i])) return seq.reduce((acc, m) => geo.apply(acc, m), ids).map(Number);
   }
-  return state; // não achou o canto: a validação explica o que está errado
+  return ids.map(Number); // não achou o canto: a validação explica o que está errado
 }
+/** de onde vem cada adesivo (resultado[j] = estado[ordem[j]]) */
+const pick = <T>(state: T[], order: number[]) => order.map((i) => state[i]);
+const normalizeScan = (state: string[]) => pick(state, normalizeOrder(state));
 
 const validate2 = makeValidate2(geo);
 
@@ -64,18 +68,20 @@ const SCAN = buildScan(geo, CUBE3_COLORS, {
 });
 
 /** gira a imagem 2x2 de uma face ¼ de volta (sentido horário na tela) */
-const turnImage = (img: string[]) => [img[2], img[0], img[3], img[1]];
+const turnImage = <T>(img: T[]) => [img[2], img[0], img[3], img[1]];
 
 /**
  * Se a leitura não formar um 2x2 possível, testa os enganos mais comuns — girou para a
  * direita (2ª e 4ª faces trocadas), mostrou o topo/a base girados ou trocados — do que
  * muda menos para o que muda mais, e fica com a primeira montagem válida.
  */
-function repairScan(state: string[]): string[] {
+function repairOrder(state: string[]): number[] {
+  const ids = state.map((_, i) => i);
   const ok = (s: string[]) => validate2(normalizeScan(s)).ok;
-  if (ok(state)) return state;
-  const images = SCAN.map((f) => f.grid.flat().map((i) => state[i]));
-  const tries: { cost: number; slots: string[][] }[] = [];
+  if (ok(state)) return ids;
+  // cada "imagem" é a lista de adesivos lidos numa face (a cor sai do estado)
+  const images = SCAN.map((f) => f.grid.flat());
+  const tries: { cost: number; slots: number[][] }[] = [];
   for (const sides of [false, true])
     for (const swapUD of [false, true])
       for (let ru = 0; ru < 4; ru++)
@@ -90,11 +96,18 @@ function repairScan(state: string[]): string[] {
           tries.push({ cost: +sides + +swapUD + +(ru > 0) + +(rd > 0), slots });
         }
   for (const t of tries.sort((a, b) => a.cost - b.cost)) {
-    const s = [...state];
-    SCAN.forEach((f, k) => f.grid.flat().forEach((i, j) => (s[i] = t.slots[k][j])));
-    if (ok(s)) return s;
+    const order = [...ids];
+    SCAN.forEach((f, k) => f.grid.flat().forEach((i, j) => (order[i] = t.slots[k][j])));
+    if (ok(pick(state, order))) return order;
   }
-  return state;
+  return ids;
+}
+const repairScan = (state: string[]) => pick(state, repairOrder(state));
+
+/** leitura da câmera → posição de referência, dizendo de onde veio cada adesivo */
+function scanOrder(state: string[]): number[] {
+  const first = repairOrder(state);
+  return pick(first, normalizeOrder(pick(state, first)));
 }
 
 const cube2: PuzzleImpl = {
@@ -142,6 +155,7 @@ const cube2: PuzzleImpl = {
     'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
   normalize: normalizeScan,
   repairScan,
+  scanOrder,
   notationHelp: [
     { move: 'U', text: 'Cima' },
     { move: 'R', text: 'Direita' },

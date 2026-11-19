@@ -1,6 +1,6 @@
 import type { PuzzleImpl } from '../../core/types';
 import { PolyView } from '../poly/PolyView';
-import { LAYER_CUT, TIP_CUT, VERTS, invertPyraMove, normalizePyra, pyraGeo as geo, type V3 } from './geometry';
+import { LAYER_CUT, TIP_CUT, VERTS, invertPyraMove, normalizePyra, normalizePyraOrder, pyraGeo as geo, type V3 } from './geometry';
 import { PYRA_COLORS, PYRA_COLOR_HEX } from './colors';
 import { buildPyraNet, buildPyraScan, pyraPieces } from './layout';
 import { solvePyraBeginner, solvePyraOptimal } from './solver';
@@ -16,9 +16,10 @@ const SCAN = buildPyraScan(PYRA_COLORS);
  * imagens 2, 3 e 4 em outras posições e giradas (a 1ª fica fixa — a posição do puzzle
  * inteiro é ajustada depois) e fica com a primeira montagem válida.
  */
-function repairScan(state: string[]): string[] {
+function repairOrder(state: string[]): number[] {
+  const ids = state.map((_, i) => i);
   const ok = (s: string[]) => validatePyraminx(normalizePyra(s)).ok;
-  if (ok(state)) return state;
+  if (ok(state)) return ids;
   const centroid = (slot: number) => {
     const cs = SCAN[slot].cells!;
     return [cs.reduce((a, c) => a + c.center[0], 0) / 9, cs.reduce((a, c) => a + c.center[1], 0) / 9];
@@ -37,7 +38,8 @@ function repairScan(state: string[]): string[] {
     }
     return out;
   };
-  const image = (slot: number) => SCAN[slot].grid.flat().map((i) => state[i]);
+  /** adesivos lidos numa face (a cor sai do estado) */
+  const image = (slot: number) => SCAN[slot].grid.flat();
   const perms = [[1, 2, 3], [2, 1, 3], [1, 3, 2], [3, 2, 1], [2, 3, 1], [3, 1, 2]];
   const angles = [0, 1, 2, 3, 4, 5].map((k) => (k * Math.PI) / 3);
   for (const perm of perms)
@@ -45,7 +47,7 @@ function repairScan(state: string[]): string[] {
     for (const rots of angles.flatMap((a) => angles.flatMap((b) => angles.map((c) => [a, b, c]))).sort(
       (x, y) => x.filter(Boolean).length - y.filter(Boolean).length,
     )) {
-      const s = [...state];
+      const order = [...ids];
       let fine = true;
       for (let t = 0; t < 3 && fine; t++) {
         const to = t + 1, from = perm[t];
@@ -55,11 +57,18 @@ function repairScan(state: string[]): string[] {
           break;
         }
         const img = image(from);
-        SCAN[to].grid.flat().forEach((idx, k) => (s[idx] = img[m[k]]));
+        SCAN[to].grid.flat().forEach((idx, k) => (order[idx] = img[m[k]]));
       }
-      if (fine && ok(s)) return s;
+      if (fine && ok(order.map((i) => state[i]))) return order;
     }
-  return state;
+  return ids;
+}
+const repairScan = (state: string[]) => repairOrder(state).map((i) => state[i]);
+
+/** leitura da câmera → posição de referência, dizendo de onde veio cada adesivo */
+function scanOrder(state: string[]): number[] {
+  const first = repairOrder(state);
+  return normalizePyraOrder(first.map((i) => state[i])).map((j) => first[j]);
 }
 
 const pyraminx: PuzzleImpl = {
@@ -70,6 +79,7 @@ const pyraminx: PuzzleImpl = {
     'Pode começar com <b>qualquer face</b> de frente para a câmera e <b>qualquer ponta</b> para cima — no fim o site descobre sozinho como o pyraminx estava. Depois é só girar como as setas mandam.',
   normalize: normalizePyra,
   repairScan,
+  scanOrder,
   stickerCount: 36,
   solvedState: () => geo.solved(),
   fixedStickers: [],

@@ -179,5 +179,7 @@ describe('pyraminx — câmera com faces mostradas fora de ordem ou giradas', ()
       expect(impl.validate(impl.normalize!(wrong)).ok).toBe(false); // antes: "não existe esse padrão"
       const fixed = impl.normalize!(impl.repairScan!(wrong));
       expect(fixed.join('')).toBe(USER.join(''));
+      // a ordem (de onde veio cada adesivo) monta exatamente o mesmo resultado
+      expect(impl.scanOrder!(wrong).map((i) => wrong[i]).join('')).toBe(fixed.join(''));
     });
 });

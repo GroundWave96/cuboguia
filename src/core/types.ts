@@ -155,6 +155,12 @@ export interface PuzzleImpl {
    * que forma um puzzle de verdade.
    */
   repairScan?: (state: PuzzleState) => PuzzleState;
+  /**
+   * repairScan + normalize juntos, dizendo de onde veio cada adesivo:
+   * resultado[j] = leitura[ordem[j]]. A câmera usa para levar correções feitas à mão
+   * de volta à face onde o adesivo foi lido (refazer uma face, amostras de treino).
+   */
+  scanOrder?: (state: PuzzleState) => number[];
   /** como classificar as cores da câmera: pelo matiz (6 cores do cubo) ou pela cor mais próxima */
   scanColorModel?: 'hue6' | 'nearest';
   /** explicação da notação (HTML) mostrada no tutorial, se diferente da do cubo */

@@ -1,9 +1,17 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
 import { encodeState, loadMethod, loadState, saveMethod, saveState } from '../core/store';
 import { UNKNOWN, type PuzzleImpl, type PuzzleState, type PuzzleView } from '../core/types';
-import { CameraScanner } from './scanner';
+import { CameraScanner, faceLabel, faceThumb } from './scanner';
+import { dropSession, getSession, isActive, isComplete, peekSession, recordEdit, sampleCode, toReadPositions } from './scansession';
 import { toast } from './toast';
 import { icon } from './icons';
+
+/** luz do ambiente nas amostras de treino (mesmos nomes das fotos marcadas à mão) */
+const LIGHTS = [
+  ['claro', 'Clara'],
+  ['medio', 'Média'],
+  ['escuro', 'Escura'],
+];
 
 export async function renderInput(app: HTMLElement, puzzleId: string) {
   const def = getPuzzle(puzzleId);
@@ -20,6 +28,16 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   let tab: 'paint' | 'camera' = 'paint';
   let method = loadMethod(impl.methods.map((m) => m.id));
   let scanner: CameraScanner | null = null;
+  const debug = /[?&]debug/.test(location.hash) || /[?&]debug/.test(location.search);
+  let light = 'claro';
+
+  // uma leitura completa só continua valendo se o editor ainda mostra o que ela montou
+  {
+    const s = peekSession(puzzleId);
+    if (s && isComplete(s) && !isActive(s, state)) dropSession(puzzleId);
+  }
+  /** o editor mudou por outro caminho (limpar, exemplo...): a leitura da câmera não vale mais */
+  const forgetScan = () => dropSession(puzzleId);
 
   app.innerHTML = `
   <section class="page workspace">
@@ -56,7 +74,14 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       toast('Esta peça é a referência: ela define a cor de cada face e já vem pintada.');
       return;
     }
+    const scan = peekSession(puzzleId);
+    const fromScan = isActive(scan, state);
     state[i] = state[i] === selected ? UNKNOWN : selected;
+    if (fromScan) {
+      // guarda a correção: se uma face for escaneada de novo, as correções nas outras continuam
+      recordEdit(scan, i, state[i]);
+      scan.result = [...state];
+    }
     commit();
   };
   view.onStickerClick((i) => tab === 'paint' && paint(i));
@@ -96,6 +121,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
           </div>`;
         })();
     body.innerHTML = `
+      <div class="scan-card-host"></div>
       <div class="palette" role="radiogroup" aria-label="Cor do pincel">
         ${impl.colors
           .map(
@@ -134,14 +160,17 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     );
     body.querySelectorAll<HTMLElement>('.st').forEach((b) => b.addEventListener('click', () => paint(Number(b.dataset.i))));
     body.querySelector('[data-act="clear"]')!.addEventListener('click', () => {
+      forgetScan();
       state = blank();
       commit();
     });
     body.querySelector('[data-act="solved"]')!.addEventListener('click', () => {
+      forgetScan();
       state = impl.solvedState();
       commit();
     });
     body.querySelector('[data-act="random"]')!.addEventListener('click', () => {
+      forgetScan();
       state = impl.scramble().reduce((s, m) => impl.applyMove(s, m), impl.solvedState());
       commit();
     });
@@ -177,6 +206,94 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     });
     const errBox = body.querySelector('.errors');
     if (errBox) errBox.innerHTML = '';
+    updateScanCard();
+  }
+
+  // ---- cartão "Leitura da câmera": refazer uma face depois de já ter lido todas
+  function updateScanCard() {
+    const host = body.querySelector<HTMLElement>('.scan-card-host');
+    if (!host) return;
+    const scan = peekSession(puzzleId);
+    if (!isActive(scan, state)) {
+      host.innerHTML = '';
+      return;
+    }
+    if (!host.firstElementChild) {
+      host.innerHTML = `
+        <div class="scan-card">
+          <div class="scan-card-head">${icon('camera')}<div><b>Leitura da câmera</b><small>Alguma face errada? Toque nela para escanear só ela de novo.</small></div></div>
+          <div class="scan-thumbs ${impl.scan.length > 6 ? 'many' : ''}"></div>
+          ${
+            debug
+              ? `<details class="debug-sample">
+                  <summary>Amostra para treino <small>modo debug</small></summary>
+                  <p>Corrija antes as cores erradas pintando: o código usa as cores de agora como as certas.</p>
+                  <label class="dbg-light">Luz do ambiente
+                    <select>${LIGHTS.map(([v, t]) => `<option value="${v}" ${v === light ? 'selected' : ''}>${t}</option>`).join('')}</select>
+                  </label>
+                  <textarea readonly rows="4" spellcheck="false" aria-label="Código da amostra"></textarea>
+                  <div class="row-actions">
+                    <button class="btn primary sm" data-dbg="copy">Copiar código</button>
+                    <button class="btn ghost sm" data-dbg="download">Baixar .txt</button>
+                  </div>
+                </details>`
+              : ''
+          }
+        </div>`;
+      host.onclick = onScanCardClick;
+      host.querySelector('select')?.addEventListener('change', (e) => {
+        light = (e.target as HTMLSelectElement).value;
+        updateSample();
+      });
+      host.querySelector('details')?.addEventListener('toggle', updateSample);
+    }
+    const read = toReadPositions(state, scan.order!);
+    host.querySelector('.scan-thumbs')!.innerHTML = impl.scan
+      .map(
+        (f, i) => `<button class="thumb" data-rescan="${i}" title="Escanear de novo: ${f.title}" aria-label="Escanear de novo: ${f.title}">
+          ${faceThumb(impl, i, f.grid.flat().map((idx) => read[idx]))}<span>${faceLabel(impl, i)}</span></button>`,
+      )
+      .join('');
+    updateSample();
+  }
+
+  const currentSample = () => {
+    const scan = peekSession(puzzleId);
+    return isActive(scan, state) ? sampleCode(impl, puzzleId, scan, state, light) : '';
+  };
+
+  function updateSample() {
+    const box = body.querySelector<HTMLTextAreaElement>('.debug-sample textarea');
+    if (box && box.closest('details')!.open) box.value = currentSample();
+  }
+
+  async function onScanCardClick(e: Event) {
+    const t = e.target as HTMLElement;
+    const face = t.closest<HTMLElement>('[data-rescan]')?.dataset.rescan;
+    if (face !== undefined) return setTab('camera', Number(face));
+    const act = t.closest<HTMLElement>('[data-dbg]')?.dataset.dbg;
+    const code = act ? currentSample() : '';
+    if (!code) return;
+    if (act === 'copy') {
+      const box = body.querySelector<HTMLTextAreaElement>('.debug-sample textarea')!;
+      box.value = code;
+      let ok = false;
+      try {
+        await navigator.clipboard.writeText(code);
+        ok = true;
+      } catch {
+        // sem acesso à área de transferência: seleciona o texto e tenta o jeito antigo
+        box.select();
+        ok = document.execCommand('copy');
+      }
+      toast(ok ? 'Código copiado! Cole no chat para usar no treino da câmera.' : 'Não deu para copiar sozinho — o código está selecionado, copie na mão.');
+    } else if (act === 'download') {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([code + '\n'], { type: 'text/plain' }));
+      a.download = `amostra-${puzzleId}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.txt`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
   }
 
   function goSolve() {
@@ -197,21 +314,31 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     location.hash = `/p/${puzzleId}/solve?m=${method}&s=${encodeState(state, impl.colors.map((c) => c.key))}`;
   }
 
-  function renderCamera() {
+  function renderCamera(startFace?: number) {
     body.innerHTML = '';
-    scanner = new CameraScanner(body, impl, (scanned) => {
-      state = scanned;
-      scanner = null;
-      setTab('paint');
-      commit();
-      toast('Cores lidas! Confira no cubo e corrija o que estiver errado.', 5000);
-    }, (stickers) => {
-      view.setHighlight(stickers);
-      view.focusCamera?.(stickers);
+    scanner = new CameraScanner(body, impl, getSession(puzzleId, impl), {
+      startFace,
+      onDone: (scanned) => {
+        state = scanned;
+        scanner = null;
+        setTab('paint');
+        commit();
+        toast('Cores lidas! Se algo estiver errado, pinte por cima ou refaça só a face.', 5000);
+      },
+      onFace: (stickers) => {
+        view.setHighlight(stickers);
+        view.focusCamera?.(stickers);
+      },
+      // na revisão, o 3D mostra o puzzle montado com a leitura
+      onPreview: (preview) => {
+        view.setHighlight([]);
+        view.setState(preview);
+        view.resetCamera();
+      },
     });
   }
 
-  function setTab(t: typeof tab) {
+  function setTab(t: typeof tab, startFace?: number) {
     tab = t;
     scanner?.dispose();
     scanner = null;
@@ -223,16 +350,17 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     app.querySelector('.workspace')?.classList.toggle('scanning', t === 'camera');
     if (t === 'camera' && matchMedia('(max-width: 900px)').matches) window.scrollTo(0, 0);
     if (t === 'paint') {
+      view.setState(state); // a revisão da câmera pode ter mostrado outra montagem
       view.setHighlight([]);
       view.resetCamera();
       renderPaint();
-    }
-    else renderCamera();
+    } else renderCamera(startFace);
   }
   app.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab as typeof tab)));
 
   const onKey = (e: KeyboardEvent) => {
     if (tab !== 'paint') return;
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA' || (e.target as HTMLElement).tagName === 'SELECT') return;
     const k = Number(e.key);
     if (k >= 1 && k <= impl.colors.length) {
       selected = impl.colors[k - 1].key;

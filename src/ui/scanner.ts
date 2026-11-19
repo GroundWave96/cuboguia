@@ -1,9 +1,9 @@
 import type { PuzzleImpl } from '../core/types';
 import { scanShortName } from '../puzzles/nxn/layout';
 import { rgbToHsv, type RGB } from '../core/color';
-import { ColorModel, assignAll } from '../core/scancolor';
 import { cellNeighbors, isFlat, puzzleInView } from '../core/scanpresence';
 import { icon } from './icons';
+import { clearFaceEdits, compose, isComplete, resetSession, type ScanSession } from './scansession';
 
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
@@ -51,6 +51,39 @@ function hull(pts: Pt[]): Pt[] {
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
+/** miniatura de uma face: `colors[k]` = cor (chave) da célula k, ou null se ainda não foi lida */
+export function faceThumb(impl: PuzzleImpl, i: number, colors: (string | null | undefined)[]): string {
+  const s = impl.scan[i];
+  const hex = (k: string | null | undefined) => (k ? impl.colors.find((c) => c.key === k)?.hex : undefined);
+  if (s.cells)
+    return `<svg class="mini-svg" viewBox="0.12 0.14 0.76 0.76">${s.cells
+      .map((c, k) => `<polygon points="${c.poly.map((p) => p.join(',')).join(' ')}" fill="${hex(colors[k]) ?? '#1b2030'}"/>`)
+      .join('')}</svg>`;
+  const n = s.grid.length;
+  return `<div class="mini" style="grid-template-columns:repeat(${n},1fr)">${Array.from(
+    { length: n * n },
+    (_, k) => `<i style="background:${hex(colors[k]) ?? 'transparent'}"></i>`,
+  ).join('')}</div>`;
+}
+
+/** rótulo curto de uma face (bolinha com a cor do centro, ou o nome) */
+export function faceLabel(impl: PuzzleImpl, i: number): string {
+  const s = impl.scan[i];
+  const hex = impl.colors.find((c) => c.key === s.faceColor)?.hex;
+  return s.faceColor && hex ? `<i class="dot" style="background:${hex}"></i>` : `<small>${scanShortName(s.face)}</small>`;
+}
+
+export interface ScannerOptions {
+  /** leitura confirmada pelo usuário (a sessão já guarda o resultado e a ordem) */
+  onDone: (state: string[]) => void;
+  /** adesivos da face mostrada agora (para destacar no 3D) */
+  onFace?: (stickers: number[]) => void;
+  /** puzzle montado com a leitura, mostrado na revisão */
+  onPreview?: (state: string[]) => void;
+  /** abre direto nesta face (escanear de novo só ela) */
+  startFace?: number;
+}
+
 export class CameraScanner {
   readonly root: HTMLElement;
   private video!: HTMLVideoElement;
@@ -60,7 +93,12 @@ export class CameraScanner {
   private devices: MediaDeviceInfo[] = [];
   private deviceIdx = -1;
   private current = 0;
-  private captured: (RGB[] | null)[];
+  /** 'review': todas as faces lidas, o usuário confere antes de usar */
+  private mode: 'scan' | 'review' = 'scan';
+  private review: ReturnType<typeof compose> | null = null;
+  private get captured() {
+    return this.session.captured;
+  }
   private live: RGB[] = [];
   /** últimos quadros, para capturar a mediana (menos borrão/ruído) */
   private history: RGB[][] = [];
@@ -96,15 +134,18 @@ export class CameraScanner {
   constructor(
     container: HTMLElement,
     private impl: PuzzleImpl,
-    private onDone: (state: string[]) => void,
-    private onFace?: (stickers: number[]) => void,
+    private session: ScanSession,
+    private opts: ScannerOptions,
   ) {
     impl.scan.forEach((f, fi) => f.grid.flat().forEach((st, k) => this.where.set(st, [fi, k])));
-    this.model = new ColorModel(impl.colors, impl.scanColorModel === 'nearest' ? 'nearest' : 'hue6');
-    this.captured = impl.scan.map(() => null);
     this.root = document.createElement('div');
     this.root.className = 'scanner';
     container.appendChild(this.root);
+    if (opts.startFace !== undefined) this.current = opts.startFace;
+    else if (isComplete(session)) {
+      this.showReview();
+      return;
+    } else this.current = Math.max(0, session.captured.findIndex((c) => !c));
     this.render();
   }
 
@@ -129,7 +170,9 @@ export class CameraScanner {
   }
 
   /** cores aprendidas com os centros capturados (se adapta à luz e ao puzzle) */
-  private model: ColorModel;
+  private get model() {
+    return this.session.model;
+  }
   /** pixels espalhados pelos adesivos de cor conhecida (centro), para aceitar logo */
   private fixedPixels = new Map<number, RGB[]>();
 
@@ -143,14 +186,16 @@ export class CameraScanner {
   }
 
   private render() {
+    if (this.mode === 'review') return this.renderReview();
     const face = this.impl.scan[this.current];
     const done = this.captured.filter(Boolean).length;
-    this.onFace?.(face.grid.flat());
+    this.opts.onFace?.(face.grid.flat());
     const upHex = face.upColor ? this.hex(face.upColor) : 'var(--accent-2)';
     this.lastWarn = ''; // o aviso é recriado junto com o HTML
     this.autoMsg = '';
     this.root.innerHTML = `
       <div class="scan-head">
+        ${isComplete(this.session) ? '<button class="btn ghost sm back-review" data-act="review">← Voltar à revisão</button>' : ''}
         <div class="scan-progress"><span style="width:${(done / this.captured.length) * 100}%"></span></div>
         <div class="scan-title">
           <span class="scan-step">${this.current + 1}/${this.impl.scan.length}</span>
@@ -182,22 +227,15 @@ export class CameraScanner {
         ${this.impl.scan
           .map(
             (s, i) => `<button class="thumb ${i === this.current ? 'active' : ''} ${this.captured[i] ? 'ok' : ''}" data-face="${i}" title="${s.title}">
-              ${
-                s.cells
-                  ? `<svg class="mini-svg" viewBox="0.12 0.14 0.76 0.76">${this.cellsOf(i)
-                      .map((c, k) => {
-                        const rgb = this.captured[i]?.[k];
-                        const fx = s.fixedCells.find((f) => f.cell === k)?.color;
-                        return `<polygon points="${c.poly.map((p) => p.join(',')).join(' ')}" fill="${rgb ? this.hex(fx ?? this.classify(rgb)) : '#1b2030'}"/>`;
-                      })
-                      .join('')}</svg>`
-                  : `<div class="mini" style="grid-template-columns:repeat(${s.grid.length},1fr)">${Array.from({ length: s.grid.length ** 2 }, (_, k) => {
-                      const c = this.captured[i]?.[k];
-                      const fx = s.fixedCells.find((f) => f.cell === k)?.color;
-                      return `<i style="background:${c ? this.hex(fx ?? this.classify(c)) : 'transparent'}"></i>`;
-                    }).join('')}</div>`
-              }
-              <span>${s.faceColor ? `<i class="dot" style="background:${this.hex(s.faceColor)}"></i>` : `<small>${scanShortName(s.face)}</small>`}</span>
+              ${faceThumb(
+                this.impl,
+                i,
+                s.grid.flat().map((_, k) => {
+                  const rgb = this.captured[i]?.[k];
+                  return rgb ? s.fixedCells.find((f) => f.cell === k)?.color ?? this.classify(rgb) : null;
+                }),
+              )}
+              <span>${faceLabel(this.impl, i)}</span>
             </button>`,
           )
           .join('')}
@@ -212,6 +250,7 @@ export class CameraScanner {
     this.root.querySelector('[data-act="start"]')?.addEventListener('click', () => this.start());
     this.root.querySelector('[data-act="capture"]')?.addEventListener('click', () => this.capture());
     this.root.querySelector('[data-act="switch"]')?.addEventListener('click', () => this.switchCamera());
+    this.root.querySelector('[data-act="review"]')?.addEventListener('click', () => this.showReview());
     this.root.querySelector('[data-act="auto"]')?.addEventListener('click', () => {
       this.auto = !this.auto;
       saveAuto(this.auto);
@@ -661,6 +700,9 @@ export class CameraScanner {
       const learnRgb = this.classify(rgb) === fc.color ? rgb : this.model.logoPart(this.fixedPixels.get(fc.cell), fc.color);
       this.model.learn(`${this.current}:${fc.cell}`, fc.color, learnRgb);
     }
+    this.session.fixedPx[this.current] = Object.fromEntries(this.fixedPixels);
+    // a face foi lida de novo: correções feitas à mão nela não valem mais
+    clearFaceEdits(this.session, this.impl, this.current);
     // lembra as cores: só volta a contar depois que o cubo for girado
     this.lastSig = this.majoritySig();
     this.armed = false;
@@ -672,29 +714,87 @@ export class CameraScanner {
     const next = this.captured.findIndex((c, i) => !c && i > this.current);
     const anyMissing = this.captured.findIndex((c) => !c);
     if (anyMissing < 0) {
-      this.finish();
+      // todas lidas: o usuário confere antes de usar (e pode refazer só uma face)
+      setTimeout(() => this.showReview(), 180);
       return;
     }
     this.current = next >= 0 ? next : anyMissing;
     setTimeout(() => this.render(), 180);
   }
 
-  private finish() {
-    const rgbs: RGB[] = new Array(this.impl.stickerCount);
-    const fixed = new Map<number, string>();
-    this.impl.scan.forEach((face, fi) => {
-      face.grid.flat().forEach((idx, k) => (rgbs[idx] = this.captured[fi]![k]));
-      for (const fc of face.fixedCells) fixed.set(face.grid.flat()[fc.cell], fc.color);
+  // ---- revisão: todas as faces lidas
+
+  private showReview() {
+    this.mode = 'review';
+    clearInterval(this.timer); // a câmera continua aberta, mas sem ler (volta ao refazer uma face)
+    this.countStart = 0;
+    // cada cor aparece exatamente N vezes; puzzles sem centro descobrem como estavam virados
+    this.review = compose(this.impl, this.session);
+    this.opts.onFace?.([]);
+    this.opts.onPreview?.(this.review.state);
+    this.renderReview();
+  }
+
+  private renderReview() {
+    const r = this.review!;
+    const res = this.impl.validate(r.state);
+    this.root.innerHTML = `
+      <div class="scan-review">
+        <div class="review-head">
+          <h3>${icon('camera')}Confira as faces lidas</h3>
+          <p>Alguma saiu errada? <b>Toque na face</b> para escanear só ela de novo.</p>
+        </div>
+        <div class="review-faces ${this.impl.scan.length > 6 ? 'many' : ''}">
+          ${this.impl.scan
+            .map(
+              (s, i) => `<button class="review-face" data-face="${i}" title="Escanear de novo: ${s.title}" aria-label="Escanear de novo: ${s.title}">
+                ${faceThumb(this.impl, i, s.grid.flat().map((idx) => r.keys[idx]))}
+                <span class="rf-label">${faceLabel(this.impl, i)}<span class="rf-redo">${icon('camera')}Refazer</span></span>
+              </button>`,
+            )
+            .join('')}
+        </div>
+        ${
+          res.ok
+            ? `<div class="review-status ok">${icon('checkCircle')}<span>Tudo certo: as cores formam um puzzle possível.</span></div>`
+            : `<div class="review-status bad">${icon('warning')}<div><b>Algo não bate:</b>${res.errors
+                .slice(0, 3)
+                .map((e) => `<p>${e}</p>`)
+                .join('')}${res.errors.length > 3 ? `<p>… e mais ${res.errors.length - 3} problemas.</p>` : ''}
+                <p class="hint">Refaça a face que parece errada — ou use as cores assim e corrija pintando.</p></div></div>`
+        }
+        <div class="review-actions">
+          <button class="btn ghost" data-act="restart">Escanear tudo de novo</button>
+          <button class="btn primary big" data-act="use">Usar estas cores →</button>
+        </div>
+      </div>`;
+    this.root.querySelectorAll<HTMLButtonElement>('[data-face]').forEach((b) => b.addEventListener('click', () => this.rescan(Number(b.dataset.face))));
+    this.root.querySelector('[data-act="use"]')!.addEventListener('click', () => this.use());
+    this.root.querySelector('[data-act="restart"]')!.addEventListener('click', () => {
+      resetSession(this.session, this.impl);
+      this.rescan(0);
     });
-    // cada cor aparece exatamente N vezes; parte do que foi aprendido com os centros
-    const keys = assignAll(this.model, rgbs, Math.round(this.impl.stickerCount / this.impl.colors.length), fixed);
-    let state = keys.map((k) => k || '?');
-    if (this.debug) (window as unknown as { __scan: unknown }).__scan = { rgbs, fixed: [...fixed], keys, captured: this.captured };
-    // puzzles sem centro (2x2): descobre como o cubo estava virado
-    if (this.impl.repairScan) state = this.impl.repairScan(state);
-    if (this.impl.normalize) state = this.impl.normalize(state);
+  }
+
+  /** volta à câmera numa face (as outras continuam lidas) */
+  private rescan(face: number) {
+    this.mode = 'scan';
+    this.review = null;
+    this.current = face;
+    this.armed = true;
+    this.countStart = 0;
+    this.history = [];
+    this.render();
+    if (this.running) this.loop();
+  }
+
+  private use() {
+    const r = this.review ?? compose(this.impl, this.session);
+    this.session.result = [...r.state];
+    this.session.order = r.order;
+    if (this.debug) (window as unknown as { __scan: unknown }).__scan = { keys: r.keys, order: r.order, captured: this.captured };
     this.stop();
-    this.onDone(state);
+    this.opts.onDone(r.state);
   }
 
   private stopStream() {

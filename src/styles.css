@@ -442,6 +442,52 @@ body.no-scroll { overflow: hidden; }
 .scan-thumbs.many .thumb span { display: none; }
 .mini-svg { width: 100%; max-width: 40px; aspect-ratio: 1; display: block; }
 .mini-svg polygon { stroke: #05070c; stroke-width: 0.012; stroke-linejoin: round; }
+.back-review { margin-bottom: 10px; }
+
+/* revisão: todas as faces lidas, toque numa para escanear só ela de novo */
+.scan-review { display: flex; flex-direction: column; gap: 14px; }
+.review-head h3 { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; margin: 0 0 4px; }
+.review-head h3 .ico { color: var(--accent-2); }
+.review-head p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.review-faces { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.review-faces.many { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.review-face { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
+.review-face:hover { border-color: var(--accent); background: rgba(124,140,255,0.1); }
+.review-face:active { transform: scale(0.97); }
+.review-face .mini, .review-face .mini-svg { max-width: 84px; }
+.review-face .mini { gap: 2px; padding: 2px; border-radius: 6px; }
+.rf-label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; }
+.rf-label .dot { width: 11px; height: 11px; }
+.rf-redo { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 600; }
+.rf-redo .ico { width: 14px; height: 14px; }
+.review-face:hover .rf-redo { color: var(--accent-2); }
+.review-status { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; }
+.review-status .ico { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+.review-status p { margin: 4px 0 0; }
+.review-status .hint { color: var(--muted); }
+.review-status.ok { background: rgba(61,220,132,0.1); border: 1px solid rgba(61,220,132,0.3); color: var(--ok); font-weight: 600; }
+.review-status.bad { background: rgba(255,181,71,0.08); border: 1px solid rgba(255,181,71,0.4); }
+.review-status.bad .ico { color: var(--warn); }
+.review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.review-actions .big { flex: 1 1 200px; }
+
+/* aba Pintar: refazer uma face da leitura da câmera */
+.scan-card { border: 1px solid rgba(63,208,201,0.35); background: rgba(63,208,201,0.06); border-radius: 14px; padding: 12px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+.scan-card-head { display: flex; gap: 10px; align-items: flex-start; }
+.scan-card-head > .ico { width: 22px; height: 22px; color: var(--accent-2); margin-top: 1px; }
+.scan-card-head b { display: block; font-size: 0.95rem; }
+.scan-card-head small { color: var(--muted); font-size: 0.82rem; line-height: 1.35; display: block; }
+.scan-card .thumb:hover { border-color: var(--accent-2); }
+
+/* modo debug: código da amostra de treino */
+.debug-sample { border-top: 1px dashed var(--border-strong); padding-top: 8px; font-size: 0.85rem; }
+.debug-sample summary { cursor: pointer; font-weight: 600; }
+.debug-sample summary small { color: var(--warn); font-weight: 600; margin-left: 6px; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.06em; }
+.debug-sample p { color: var(--muted); margin: 8px 0; }
+.dbg-light { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--muted); }
+.dbg-light select { background: var(--bg-2); color: var(--text); border: 1px solid var(--border-strong); border-radius: 8px; padding: 4px 8px; font: inherit; }
+.debug-sample textarea { width: 100%; resize: vertical; background: #05070c; color: #b8c1ff; border: 1px solid var(--border-strong); border-radius: 10px; padding: 8px; font: 0.72rem/1.4 ui-monospace, Consolas, monospace; word-break: break-all; margin-bottom: 8px; }
+.debug-sample .row-actions { margin-bottom: 0; }
 
 /* durante a leitura pela câmera, tudo precisa caber na tela sem rolar */
 .workspace.scanning .ws-header p { display: none; }

@@ -54,6 +54,23 @@ tests/             testes (vitest)
 
 A interface (pintura, câmera e tutorial) funciona com qualquer puzzle que implemente essas interfaces.
 
+## Treino da câmera
+
+As cores da câmera são testadas com amostras reais (`tests/fixtures/`):
+
+- **Fotos marcadas à mão** — ficam em `tests/cube images/` (fora do Git);
+  `python tools/extract-camera-samples.py` gera `camera-samples.json`.
+- **Leituras feitas no próprio site (modo debug)** — abra o site com `?debug` no fim
+  do endereço (ex.: `https://cuboguia.pages.dev/#/p/cube3?debug`), leia o cubo pela
+  câmera, corrija as cores erradas pintando e, no cartão "Leitura da câmera", abra
+  **Amostra para treino**: escolha a luz do ambiente e use **Copiar código** (ou
+  **Baixar .txt**). Cole os códigos num arquivo de texto (pode ter outras coisas no meio,
+  como a conversa do chat) e rode `node tools/import-app-samples.mjs arquivo.txt` —
+  as faces vão para `app-samples.json`, no mesmo formato das fotos.
+
+Nada é coletado dos usuários: o código só existe no modo debug e só sai do
+aparelho se você copiar.
+
 ## Publicação (Cloudflare Pages)
 
 O site está em **https://cuboguia.pages.dev** e é publicado **automaticamente**:

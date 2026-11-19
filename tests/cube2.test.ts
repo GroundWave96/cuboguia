@@ -147,6 +147,8 @@ describe('2x2 — câmera com faces mostradas fora de ordem ou giradas', () => {
         stats[name] ??= [0, 0, 0];
         const before = cube2.validate(cube2.normalize!(wrong)).ok;
         const fixed = cube2.normalize!(cube2.repairScan!(wrong));
+        // a ordem (de onde veio cada adesivo) monta exatamente o mesmo resultado
+        expect(cube2.scanOrder!(wrong).map((i) => wrong[i]).join('')).toBe(fixed.join(''));
         if (before) stats[name][2]++; // o engano por acaso ainda forma um cubo válido
         else if (fixed.join('') === truth.join('')) stats[name][0]++;
         stats[name][1]++;
