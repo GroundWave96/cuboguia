@@ -44,6 +44,25 @@ export function loadMethod(valid: string[]): string {
   return valid[0];
 }
 
+/** Velocidade do tutorial (conveniência por navegador). */
+export function loadSpeed(): number {
+  try {
+    const v = Number(localStorage.getItem('cubo:speed'));
+    if (v >= 0.4 && v <= 2.5) return v;
+  } catch {
+    /* ignore */
+  }
+  return 1;
+}
+
+export function saveSpeed(v: number) {
+  try {
+    localStorage.setItem('cubo:speed', String(v));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function saveMethod(id: string) {
   try {
     localStorage.setItem('cubo:method', id);

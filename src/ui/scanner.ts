@@ -3,6 +3,7 @@ import { scanShortName } from '../puzzles/nxn/layout';
 import { rgbToHsv, type RGB } from '../core/color';
 import { ColorModel, assignAll } from '../core/scancolor';
 import { cellNeighbors, isFlat, puzzleInView } from '../core/scanpresence';
+import { icon } from './icons';
 
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
@@ -165,7 +166,7 @@ export class CameraScanner {
         <div class="scan-warn" aria-live="polite"></div>
         <div class="scan-auto ${this.running && this.auto ? '' : 'hidden'}"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
-          <div class="cam-icon">📷</div>
+          <div class="cam-icon">${icon('camera')}</div>
           <p>${this.impl.scanHint ?? `${this.impl.holdHint} Em cada face, as marcas ao redor da grade mostram como segurar o cubo.`}${this.auto ? ' Com a captura automática ligada, é só segurar cada face parada por 2 segundos.' : ''}</p>
           <button class="btn primary" data-act="start">Ativar câmera</button>
           <p class="scan-info"></p>
@@ -173,7 +174,7 @@ export class CameraScanner {
         </div>
       </div>
       <div class="scan-actions">
-        <button class="btn ghost icon-only" data-act="switch" title="Trocar câmera" aria-label="Trocar câmera" ${this.running ? '' : 'disabled'}>🔄</button>
+        <button class="btn ghost icon-only" data-act="switch" title="Trocar câmera" aria-label="Trocar câmera" ${this.running ? '' : 'disabled'}>${icon('switchCamera')}</button>
         <button class="btn ghost auto-btn ${this.auto ? 'on' : ''}" data-act="auto" aria-pressed="${this.auto}" title="Capturar sozinho quando as cores ficarem paradas"><span class="sw" aria-hidden="true"></span>Auto</button>
         <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>${this.auto && this.running ? 'Capturar agora' : `Capturar ${face.title.toLowerCase()}`}</button>
       </div>

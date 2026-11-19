@@ -1,5 +1,6 @@
 import { PUZZLES, loadPuzzle } from '../core/registry';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
+import { icon } from './icons';
 
 const short = (name: string) => name.replace('Cubo ', '');
 
@@ -35,9 +36,9 @@ export function renderHome(app: HTMLElement) {
           <a class="btn ghost big" href="#/" data-scroll="como-funciona">Como funciona</a>
         </div>
         <ul class="hero-badges">
-          <li>🎨 Pinte ou use a câmera</li>
-          <li>🧠 Iniciante e avançado</li>
-          <li>💸 100% grátis</li>
+          <li>${icon('palette')}Pinte ou use a câmera</li>
+          <li>${icon('levels')}Iniciante e avançado</li>
+          <li>${icon('heart')}100% grátis</li>
         </ul>
       </div>
       <div class="showcase">
@@ -54,9 +55,9 @@ export function renderHome(app: HTMLElement) {
             .join('')}
         </div>
         <div class="showcase-actions">
-          <button class="btn ghost sm" data-act="scramble">🔀 Embaralhar</button>
-          <button class="btn primary sm" data-act="solve">✨ Resolver</button>
-          <button class="btn ghost sm icon-only-sm" data-act="auto" title="Pausar a demonstração" aria-label="Demonstração automática">⏸</button>
+          <button class="btn ghost sm" data-act="scramble">${icon('shuffle')}Embaralhar</button>
+          <button class="btn primary sm" data-act="solve">${icon('sparkles')}Resolver</button>
+          <button class="btn ghost sm icon-only-sm" data-act="auto" title="Pausar a demonstração" aria-label="Demonstração automática">${icon('pause')}</button>
         </div>
       </div>
     </div>
@@ -75,7 +76,7 @@ export function renderHome(app: HTMLElement) {
       <div class="how-card reveal">
         <div class="how-art art-paint" aria-hidden="true">
           <div class="mini-face">${Array.from({ length: 9 }, (_, i) => `<i style="--d:${i}"></i>`).join('')}</div>
-          <div class="brush">🖌️</div>
+          <div class="brush">${icon('brush')}</div>
         </div>
         <b>1</b><h3>Informe as cores</h3>
         <p>Pinte os adesivos no modelo 3D ou na planificação — ou aponte a câmera do celular/computador para ler cada face.</p>
@@ -89,7 +90,7 @@ export function renderHome(app: HTMLElement) {
       </div>
       <div class="how-card reveal">
         <div class="how-art art-steps" aria-hidden="true">
-          <div class="play">▶</div>
+          <div class="play">${icon('play')}</div>
           <div class="steps">${'<i></i>'.repeat(6)}</div>
         </div>
         <b>3</b><h3>Siga o tutorial</h3>
@@ -177,7 +178,7 @@ export function renderHome(app: HTMLElement) {
   const status = (t: string) => (hudStatus.textContent = t);
   const setAuto = (on: boolean) => {
     auto = on;
-    autoBtn.textContent = on ? '⏸' : '▶';
+    autoBtn.innerHTML = icon(on ? 'pause' : 'play');
     autoBtn.title = on ? 'Pausar a demonstração' : 'Retomar a demonstração';
     clearTimeout(autoTimer);
     if (on && !busy) autoTimer = window.setTimeout(autoStep, 900);

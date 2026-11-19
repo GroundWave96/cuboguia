@@ -3,6 +3,7 @@ import { encodeState, loadMethod, loadState, saveMethod, saveState } from '../co
 import { UNKNOWN, type PuzzleImpl, type PuzzleState, type PuzzleView } from '../core/types';
 import { CameraScanner } from './scanner';
 import { toast } from './toast';
+import { icon } from './icons';
 
 export async function renderInput(app: HTMLElement, puzzleId: string) {
   const def = getPuzzle(puzzleId);
@@ -30,13 +31,13 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     <div class="ws-grid">
       <div class="ws-view card">
         <div class="view-host" id="view-host"></div>
-        <div class="view-hint">Arraste para girar · clique num adesivo para pintar</div>
-        <button class="icon-btn view-reset" title="Voltar à vista inicial" aria-label="Voltar à vista inicial">⟲</button>
+        <div class="view-hint">${matchMedia('(pointer: coarse)').matches ? 'Arraste para girar · toque num adesivo para pintar' : 'Arraste para girar · clique num adesivo para pintar'}</div>
+        <button class="icon-btn view-reset" title="Voltar à vista inicial" aria-label="Voltar à vista inicial">${icon('resetView')}</button>
       </div>
       <div class="ws-panel card">
         <div class="tabs" role="tablist">
-          <button role="tab" data-tab="paint">🎨 Pintar</button>
-          <button role="tab" data-tab="camera">📷 Câmera</button>
+          <button role="tab" data-tab="paint">${icon('palette')}Pintar</button>
+          <button role="tab" data-tab="camera">${icon('camera')}Câmera</button>
         </div>
         <div class="tab-body"></div>
       </div>
@@ -189,7 +190,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
     const res = impl.validate(state);
     const errBox = body.querySelector('.errors');
     if (!res.ok) {
-      if (errBox) errBox.innerHTML = `<div class="alert">${res.errors.map((e) => `<p>⚠️ ${e}</p>`).join('')}</div>`;
+      if (errBox) errBox.innerHTML = `<div class="alert">${res.errors.map((e) => `<p>${icon('warning')}<span>${e}</span></p>`).join('')}</div>`;
       return;
     }
     saveState(puzzleId, state);
