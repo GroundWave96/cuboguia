@@ -1,3 +1,4 @@
+import { i18nMap } from '../../core/i18n';
 /** Peças 3D, planificação (rede em cruz) e moldes da câmera do Skewb. */
 import type { PuzzleImpl, ScanFace } from '../../core/types';
 import { neighborMarks } from '../../core/scanmarks';
@@ -66,16 +67,23 @@ export function buildSkewbNet(): NonNullable<PuzzleImpl['netSvg']> {
 
 // ---------------------------------------------------------------------------
 // Câmera: como no 2x2 (sem centro fixo), começa por qualquer face e o site acha a posição no fim
-const HINTS: Record<FaceId, string> = {
-  F: 'Comece por <b>qualquer face</b>',
-  R: 'Gire o Skewb ¼ de volta para a esquerda',
-  B: 'Mais ¼ para a esquerda',
-  L: 'Mais ¼ para a esquerda',
-  U: 'Volte à primeira face e incline: topo para a câmera',
-  D: 'Agora a base para a câmera',
-};
-const TITLE: Record<FaceId, string> = { F: 'Frente', R: 'Direita', B: 'Trás', L: 'Esquerda', U: 'Topo', D: 'Base' };
-const UP_LABEL: Record<FaceId, string> = { F: 'TOPO', R: 'TOPO', B: 'TOPO', L: 'TOPO', U: 'LADO DE TRÁS', D: 'LADO DA FRENTE' };
+const HINTS = i18nMap({
+  F: ['Comece por <b>qualquer face</b>', 'Start with <b>any face</b>'],
+  R: ['Gire o Skewb ¼ de volta para a esquerda', 'Turn the Skewb ¼ to the left'],
+  B: ['Mais ¼ para a esquerda', 'Another ¼ to the left'],
+  L: ['Mais ¼ para a esquerda', 'Another ¼ to the left'],
+  U: ['Volte à primeira face e incline: topo para a câmera', 'Back to the first face, then tilt: top toward the camera'],
+  D: ['Agora a base para a câmera', 'Now the bottom toward the camera'],
+}) as Record<FaceId, string>;
+const TITLE = i18nMap({ F: ['Frente', 'Front'], R: ['Direita', 'Right'], B: ['Trás', 'Back'], L: ['Esquerda', 'Left'], U: ['Topo', 'Top'], D: ['Base', 'Bottom'] }) as Record<FaceId, string>;
+const UP_LABEL = i18nMap({
+  F: ['TOPO', 'TOP'],
+  R: ['TOPO', 'TOP'],
+  B: ['TOPO', 'TOP'],
+  L: ['TOPO', 'TOP'],
+  U: ['LADO DE TRÁS', 'BACK SIDE'],
+  D: ['LADO DA FRENTE', 'FRONT SIDE'],
+}) as Record<FaceId, string>;
 
 export function buildSkewbScan(): ScanFace[] {
   const box = 0.66, x0 = (1 - box) / 2;
@@ -93,10 +101,16 @@ export function buildSkewbScan(): ScanFace[] {
     return {
       face: fk,
       grid: [[0, 1, 2, 3, 4].map((k) => f * 5 + k)],
-      title: TITLE[fk],
+      get title() {
+        return TITLE[fk];
+      },
       faceColor: '',
-      hint: HINTS[fk],
-      upLabel: UP_LABEL[fk],
+      get hint() {
+        return HINTS[fk];
+      },
+      get upLabel() {
+        return UP_LABEL[fk];
+      },
       arrow: fk === 'U' || fk === 'D' || fk === 'F' ? '▲' : '↶',
       edges: { up: [], down: [], left: [], right: [] },
       fixedCells: [],

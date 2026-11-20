@@ -1,3 +1,4 @@
+import { i18nMap, tr } from '../../core/i18n';
 import type { PuzzleImpl } from '../../core/types';
 import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
 import { PolyView } from '../poly/PolyView';
@@ -60,19 +61,27 @@ function scanOrder(state: string[]): number[] {
   return pick(first, normalizeOrder(pick(state, first)));
 }
 
-const CORNER_TEXT: Record<string, string> = {
-  R: 'Canto de baixo-trás-direita',
-  U: 'Canto de cima-trás-esquerda',
-  L: 'Canto de baixo-frente-esquerda',
-  B: 'Canto de baixo-trás-esquerda',
-};
+const CORNER_TEXT = i18nMap({
+  R: ['Canto de baixo-trás-direita', 'Bottom-back-right corner'],
+  U: ['Canto de cima-trás-esquerda', 'Top-back-left corner'],
+  L: ['Canto de baixo-frente-esquerda', 'Bottom-front-left corner'],
+  B: ['Canto de baixo-trás-esquerda', 'Bottom-back-left corner'],
+});
 
 const skewb: PuzzleImpl = {
   colors: CUBE3_COLORS,
-  holdHint:
-    'Segure o Skewb com o canto <b>amarelo-verde-laranja</b> em cima, na frente, à direita — <b>amarelo em cima</b> e <b>verde na frente</b>. Ele é a referência: nenhum movimento do tutorial mexe nele.',
-  scanHint:
-    'Pode começar por <b>qualquer face</b>, segurando o Skewb do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como ele estava virado.',
+  get holdHint() {
+    return tr(
+      'Segure o Skewb com o canto <b>amarelo-verde-laranja</b> em cima, na frente, à direita — <b>amarelo em cima</b> e <b>verde na frente</b>. Ele é a referência: nenhum movimento do tutorial mexe nele.',
+      'Hold the Skewb with the <b>yellow-green-orange</b> corner at the top front right — <b>yellow on top</b> and <b>green in front</b>. It’s the reference: no move in the tutorial touches it.',
+    );
+  },
+  get scanHint() {
+    return tr(
+      'Pode começar por <b>qualquer face</b>, segurando o Skewb do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como ele estava virado.',
+      'You can start with <b>any face</b>, holding the Skewb however you like — just don’t change your grip between faces: turn it to the left as the arrows show. At the end, the site works out by itself how it was held.',
+    );
+  },
   stickerCount: geo.stickers.length,
   solvedState: () => geo.solved(),
   fixedStickers: REFERENCE_CORNER.stickers,
@@ -84,20 +93,22 @@ const skewb: PuzzleImpl = {
   normalize,
   repairScan: (state) => pick(state, repairOrder(state)),
   scanOrder,
-  methods: [
-    {
-      id: 'beginner',
-      name: 'Iniciante (camadas)',
-      tagline: 'Para aprender · ~25 movimentos',
-      description: 'Face branca (o centro e um canto por vez), depois os cantos de cima e por fim os centros.',
-    },
-    {
-      id: 'optimal',
-      name: 'Avançado (ótimo)',
-      tagline: 'A menor solução · ≤ 11 movimentos',
-      description: 'O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.',
-    },
-  ],
+  get methods() {
+    return [
+      {
+        id: 'beginner',
+        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
+        tagline: tr('Para aprender · ~25 movimentos', 'To learn · ~25 moves'),
+        description: tr('Face branca (o centro e um canto por vez), depois os cantos de cima e por fim os centros.', 'White face (the center, then one corner at a time), then the top corners and finally the centers.'),
+      },
+      {
+        id: 'optimal',
+        name: tr('Avançado (ótimo)', 'Advanced (optimal)'),
+        tagline: tr('A menor solução · ≤ 11 movimentos', 'The shortest solution · ≤ 11 moves'),
+        description: tr('O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.', 'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.'),
+      },
+    ];
+  },
   solve: (state, methodId) => (methodId === 'optimal' ? solveSkewbOptimal(state) : solveSkewbBeginner(state)),
   createView: (container) =>
     new PolyView(container, {
@@ -130,13 +141,24 @@ const skewb: PuzzleImpl = {
   netSvg: buildSkewbNet(),
   scan: SCAN,
   describeMove: (m) => {
-    const dir = m.endsWith("'") ? 'anti-horário ↺' : 'horário ↻';
-    return `${CORNER_TEXT[m[0]]} · ${dir} (⅓ de volta)`;
+    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺') : tr('horário ↻', 'clockwise ↻');
+    return `${CORNER_TEXT[m[0]]} · ${dir} (${tr('⅓ de volta', '⅓ turn')})`;
   },
-  notationIntro: 'Cada letra é um <b>canto</b>. Gire a metade do Skewb que tem esse canto, olhando o canto <b>de fora</b>:',
-  notationNote:
-    '<p>Cada giro é <b>⅓ de volta</b>. Sem apóstrofo = horário · <code>\'</code> = anti-horário. Nenhum giro mexe no canto amarelo-verde-laranja (cima-frente-direita).</p>',
-  notationHelp: Object.keys(MOVE_CORNERS).map((k) => ({ move: k, text: CORNER_TEXT[k].replace('Canto de ', 'canto de ') })),
+  get notationIntro() {
+    return tr(
+      'Cada letra é um <b>canto</b>. Gire a metade do Skewb que tem esse canto, olhando o canto <b>de fora</b>:',
+      'Each letter is a <b>corner</b>. Turn the half of the Skewb that has that corner, looking at the corner <b>from outside</b>:',
+    );
+  },
+  get notationNote() {
+    return tr(
+      "<p>Cada giro é <b>⅓ de volta</b>. Sem apóstrofo = horário · <code>'</code> = anti-horário. Nenhum giro mexe no canto amarelo-verde-laranja (cima-frente-direita).</p>",
+      "<p>Each turn is <b>⅓ of a rotation</b>. No apostrophe = clockwise · <code>'</code> = counterclockwise. No turn touches the yellow-green-orange corner (top-front-right).</p>",
+    );
+  },
+  get notationHelp() {
+    return Object.keys(MOVE_CORNERS).map((k) => ({ move: k, text: CORNER_TEXT[k] }));
+  },
 };
 
 export default skewb;

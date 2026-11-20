@@ -1,3 +1,4 @@
+import { i18nMap, tr } from '../../core/i18n';
 /**
  * Solucionadores do Skewb.
  *
@@ -172,21 +173,34 @@ const cornerName = (c: { stickers: number[] }) =>
     .sort((a, b) => 'UDFBRL'.indexOf(SOLVED[a]) - 'UDFBRL'.indexOf(SOLVED[b]))
     .map(cname)
     .join('-');
-const PLACE: Record<string, string> = { '1,1': 'na frente, à direita', '-1,1': 'na frente, à esquerda', '-1,-1': 'atrás, à esquerda', '1,-1': 'atrás, à direita' };
+const PLACE = i18nMap({
+  '1,1': ['na frente, à direita', 'front right'],
+  '-1,1': ['na frente, à esquerda', 'front left'],
+  '-1,-1': ['atrás, à esquerda', 'back left'],
+  '1,-1': ['atrás, à direita', 'back right'],
+});
 const placeOf = (c: { vertex: number[] }) => PLACE[`${c.vertex[0]},${c.vertex[2]}`];
 
-export const SKEWB_STAGES: SolutionStage[] = [
-  { id: 'face', name: 'Face branca', goal: 'Montar a face branca embaixo: o centro branco e os 4 cantos brancos, cada um com as cores laterais certas.' },
-  { id: 'top', name: 'Cantos de cima', goal: 'Colocar os cantos de cima no lugar, com o amarelo para cima. O canto amarelo-verde-laranja nunca sai do lugar.' },
-  { id: 'centers', name: 'Centros', goal: 'Com todos os cantos certos, trocar os centros de lugar até cada face ter uma cor só.' },
+export const SKEWB_STAGES = (): SolutionStage[] => [
+  {
+    id: 'face',
+    name: tr('Face branca', 'White face'),
+    goal: tr('Montar a face branca embaixo: o centro branco e os 4 cantos brancos, cada um com as cores laterais certas.', 'Build the white face on the bottom: the white center and the 4 white corners, each with the right side colors.'),
+  },
+  {
+    id: 'top',
+    name: tr('Cantos de cima', 'Top corners'),
+    goal: tr('Colocar os cantos de cima no lugar, com o amarelo para cima. O canto amarelo-verde-laranja nunca sai do lugar.', 'Put the top corners in place, with yellow facing up. The yellow-green-orange corner never moves.'),
+  },
+  { id: 'centers', name: tr('Centros', 'Centers'), goal: tr('Com todos os cantos certos, trocar os centros de lugar até cada face ter uma cor só.', 'With all corners right, swap the centers until each face has a single color.') },
 ];
-export const OPTIMAL_STAGES: SolutionStage[] = [{ id: 'optimal', name: 'Solução ótima', goal: 'Resolver com o menor número de movimentos possível.' }];
+export const OPTIMAL_STAGES = (): SolutionStage[] => [{ id: 'optimal', name: tr('Solução ótima', 'Optimal solution'), goal: tr('Resolver com o menor número de movimentos possível.', 'Solve it in the fewest possible moves.') }];
 
 const stepOf = (stageId: string, title: string, description: string, moves: string[], focus: number[]): SolutionStep => ({
   stageId,
   title,
   description,
-  segments: [{ label: 'Movimentos', moves }],
+  segments: [{ label: tr('Movimentos', 'Moves'), moves }],
   focus,
 });
 
@@ -205,15 +219,26 @@ export function solveSkewbBeginner(state: PuzzleState): Solution {
 
   // 1. face branca: o centro e depois um canto por vez (cada passo sem desmontar o anterior)
   const sel = [D_CENTER];
-  run('face', 'Centro branco embaixo', 'Leve o <b>centro branco</b> para a face de baixo. Os cantos ainda não importam.', [table([...sel])], [D_CENTER]);
+  run(
+    'face',
+    tr('Centro branco embaixo', 'White center on the bottom'),
+    tr('Leve o <b>centro branco</b> para a face de baixo. Os cantos ainda não importam.', 'Bring the <b>white center</b> to the bottom face. The corners don’t matter yet.'),
+    [table([...sel])],
+    [D_CENTER],
+  );
   for (const c of D_CORNERS) {
     sel.push(cornerRef(c));
     run(
       'face',
-      `Canto ${cornerName(c)}`,
-      `Encaixe o canto <b>${cornerName(c)}</b> embaixo, ${placeOf(c)}, com o <b>branco para baixo</b>. ` +
-        'As cores do lado precisam combinar com o canto de referência (amarelo-verde-laranja, em cima, na frente, à direita). ' +
-        'Os movimentos mantêm o que já está pronto na face branca.',
+      tr(`Canto ${cornerName(c)}`, `${cornerName(c)} corner`),
+      tr(
+        `Encaixe o canto <b>${cornerName(c)}</b> embaixo, ${placeOf(c)}, com o <b>branco para baixo</b>. ` +
+          'As cores do lado precisam combinar com o canto de referência (amarelo-verde-laranja, em cima, na frente, à direita). ' +
+          'Os movimentos mantêm o que já está pronto na face branca.',
+        `Insert the <b>${cornerName(c)}</b> corner at the bottom ${placeOf(c)}, with <b>white facing down</b>. ` +
+          'Its side colors must match the reference corner (yellow-green-orange, top front right). ' +
+          'The moves keep what’s already done on the white face.',
+      ),
       [table([...sel])],
       c.stickers,
     );
@@ -221,22 +246,28 @@ export function solveSkewbBeginner(state: PuzzleState): Solution {
   // 2. cantos de cima (sem perder a face branca no fim)
   run(
     'top',
-    'Cantos de cima',
-    `Agora os cantos de cima: ${TOP_CORNERS.map((c) => `<b>${cornerName(c)}</b>`).join(', ')}. ` +
-      'Cada um vai para o seu lugar com o <b>amarelo para cima</b>. A face branca se desmonta no meio da sequência, mas volta inteira no fim.',
+    tr('Cantos de cima', 'Top corners'),
+    tr(
+      `Agora os cantos de cima: ${TOP_CORNERS.map((c) => `<b>${cornerName(c)}</b>`).join(', ')}. ` +
+        'Cada um vai para o seu lugar com o <b>amarelo para cima</b>. A face branca se desmonta no meio da sequência, mas volta inteira no fim.',
+      `Now the top corners: ${TOP_CORNERS.map((c) => `<b>${cornerName(c)}</b>`).join(', ')}. ` +
+        'Each goes to its spot with <b>yellow facing up</b>. The white face breaks apart during the sequence, but comes back whole at the end.',
+    ),
     [cornerTable(), table([D_CENTER])],
     TOP_CORNERS.flatMap((c) => c.stickers),
   );
   // 3. centros
   run(
     'centers',
-    'Trocar os centros',
-    'Todos os cantos estão certos; faltam os <b>centros</b> (o quadrado do meio de cada face). ' +
-      'A sequência mexe nos cantos no meio do caminho e devolve tudo no lugar no final.',
+    tr('Trocar os centros', 'Swap the centers'),
+    tr(
+      'Todos os cantos estão certos; faltam os <b>centros</b> (o quadrado do meio de cada face). A sequência mexe nos cantos no meio do caminho e devolve tudo no lugar no final.',
+      'All corners are right; only the <b>centers</b> are left (the square in the middle of each face). The sequence moves the corners along the way and puts everything back at the end.',
+    ),
     [cornerTable(), centerTable()],
     geo.centers,
   );
-  return { method: 'Método de iniciante (face branca, cantos, centros)', stages: SKEWB_STAGES, steps };
+  return { method: tr('Método de iniciante (face branca, cantos, centros)', 'Beginner method (white face, corners, centers)'), stages: SKEWB_STAGES(), steps };
 }
 
 export function solveSkewbOptimal(state: PuzzleState): Solution {
@@ -247,14 +278,17 @@ export function solveSkewbOptimal(state: PuzzleState): Solution {
     ? [
         stepOf(
           'optimal',
-          `Resolver em ${moves.length} movimento${moves.length > 1 ? 's' : ''}`,
-          'Este é o <b>caminho mais curto possível</b> para o seu Skewb (nenhum tem mais de 11). Siga os movimentos com calma: no Skewb, cada giro mexe em metade do puzzle.',
+          tr(`Resolver em ${moves.length} movimento${moves.length > 1 ? 's' : ''}`, `Solve in ${moves.length} move${moves.length > 1 ? 's' : ''}`),
+          tr(
+            'Este é o <b>caminho mais curto possível</b> para o seu Skewb (nenhum tem mais de 11). Siga os movimentos com calma: no Skewb, cada giro mexe em metade do puzzle.',
+            'This is the <b>shortest possible path</b> for your Skewb (none is longer than 11). Follow the moves calmly: on a Skewb, every turn moves half the puzzle.',
+          ),
           moves,
           [],
         ),
       ]
     : [];
-  return { method: 'Solução ótima', stages: OPTIMAL_STAGES, steps };
+  return { method: tr('Solução ótima', 'Optimal solution'), stages: OPTIMAL_STAGES(), steps };
 }
 
 export { SOLVED as SKEWB_SOLVED };

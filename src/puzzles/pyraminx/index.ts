@@ -1,3 +1,4 @@
+import { i18nMap, tr } from '../../core/i18n';
 import type { PuzzleImpl } from '../../core/types';
 import { PolyView } from '../poly/PolyView';
 import { LAYER_CUT, TIP_CUT, VERTS, invertPyraMove, normalizePyra, normalizePyraOrder, pyraGeo as geo, type V3 } from './geometry';
@@ -6,7 +7,7 @@ import { buildPyraNet, buildPyraScan, pyraPieces } from './layout';
 import { solvePyraBeginner, solvePyraOptimal } from './solver';
 import { validatePyraminx } from './validate';
 
-const VERT_TEXT: Record<string, string> = { U: 'Cima', L: 'Esquerda', R: 'Direita', B: 'Trás' };
+const VERT_TEXT = i18nMap({ U: ['Cima', 'Top'], L: ['Esquerda', 'Left'], R: ['Direita', 'Right'], B: ['Trás', 'Back'] });
 
 const SCAN = buildPyraScan(PYRA_COLORS);
 
@@ -73,10 +74,18 @@ function scanOrder(state: string[]): number[] {
 
 const pyraminx: PuzzleImpl = {
   colors: PYRA_COLORS,
-  holdHint:
-    'Segure o pyraminx igual ao desenho 3D: em cima, a <b>ponta sem amarelo</b>; atrás, a <b>ponta sem verde</b> (cada ponta tem 3 cores). Assim a face da frente é a verde e a base, a amarela.',
-  scanHint:
-    'Pode começar com <b>qualquer face</b> de frente para a câmera e <b>qualquer ponta</b> para cima — no fim o site descobre sozinho como o pyraminx estava. Depois é só girar como as setas mandam.',
+  get holdHint() {
+    return tr(
+      'Segure o pyraminx igual ao desenho 3D: em cima, a <b>ponta sem amarelo</b>; atrás, a <b>ponta sem verde</b> (cada ponta tem 3 cores). Assim a face da frente é a verde e a base, a amarela.',
+      'Hold the Pyraminx like the 3D drawing: on top, the <b>tip without yellow</b>; at the back, the <b>tip without green</b> (each tip has 3 colors). That makes the front face green and the bottom yellow.',
+    );
+  },
+  get scanHint() {
+    return tr(
+      'Pode começar com <b>qualquer face</b> de frente para a câmera e <b>qualquer ponta</b> para cima — no fim o site descobre sozinho como o pyraminx estava. Depois é só girar como as setas mandam.',
+      'You can start with <b>any face</b> toward the camera and <b>any tip</b> pointing up — at the end the site works out by itself how the Pyraminx was held. Then just turn it as the arrows say.',
+    );
+  },
   normalize: normalizePyra,
   repairScan,
   scanOrder,
@@ -88,20 +97,22 @@ const pyraminx: PuzzleImpl = {
   locationMap: (m) => geo.locationMap(m),
   scramble: (len = 11) => geo.randomScramble(len),
   validate: validatePyraminx,
-  methods: [
-    {
-      id: 'beginner',
-      name: 'Iniciante (camadas)',
-      tagline: 'Para aprender · ~20 movimentos',
-      description: 'Pontas, centros, a base amarela e por fim o topo com poucos algoritmos.',
-    },
-    {
-      id: 'optimal',
-      name: 'Avançado (ótimo)',
-      tagline: 'A menor solução · ≤ 11 + pontas',
-      description: 'O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.',
-    },
-  ],
+  get methods() {
+    return [
+      {
+        id: 'beginner',
+        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
+        tagline: tr('Para aprender · ~20 movimentos', 'To learn · ~20 moves'),
+        description: tr('Pontas, centros, a base amarela e por fim o topo com poucos algoritmos.', 'Tips, centers, the yellow bottom and finally the top with few algorithms.'),
+      },
+      {
+        id: 'optimal',
+        name: tr('Avançado (ótimo)', 'Advanced (optimal)'),
+        tagline: tr('A menor solução · ≤ 11 + pontas', 'The shortest solution · ≤ 11 + tips'),
+        description: tr('O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.', 'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.'),
+      },
+    ];
+  },
   solve: (state, methodId) => (methodId === 'optimal' ? solvePyraOptimal(state) : solvePyraBeginner(state)),
   createView: (container) =>
     new PolyView(container, {
@@ -130,18 +141,27 @@ const pyraminx: PuzzleImpl = {
   scan: SCAN,
   describeMove: (m) => {
     const { vert, tip } = geo.parse(m);
-    const dir = m.endsWith("'") ? 'anti-horário ↺' : 'horário ↻';
-    return `${tip ? 'Só a ponta' : 'Camada'} ${VERT_TEXT[VERTS[vert]].toLowerCase()} · ${dir} (120°)`;
+    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺') : tr('horário ↻', 'clockwise ↻');
+    const where = VERT_TEXT[VERTS[vert]].toLowerCase();
+    return `${tip ? tr(`Só a ponta ${where}`, `Just the ${where} tip`) : tr(`Camada ${where}`, `${VERT_TEXT[VERTS[vert]]} layer`)} · ${dir} (120°)`;
   },
-  notationIntro: 'Cada letra é um <b>vértice</b> (uma ponta). Gire olhando a ponta <b>de fora</b>:',
-  notationNote:
-    '<p><code>U L R B</code> = camada grande do vértice (ponta + centro + 3 arestas) · <code>u l r b</code> = só a ponta · <code>\'</code> = anti-horário. Cada giro é ⅓ de volta (120°), olhando o vértice de fora.</p>',
-  notationHelp: [
-    { move: 'U', text: 'vértice de cima' },
-    { move: 'L', text: 'vértice da frente-esquerda' },
-    { move: 'R', text: 'vértice da frente-direita' },
-    { move: 'B', text: 'vértice de trás' },
-  ],
+  get notationIntro() {
+    return tr('Cada letra é um <b>vértice</b> (uma ponta). Gire olhando a ponta <b>de fora</b>:', 'Each letter is a <b>vertex</b> (a tip). Turn it while looking at the tip <b>from outside</b>:');
+  },
+  get notationNote() {
+    return tr(
+      "<p><code>U L R B</code> = camada grande do vértice (ponta + centro + 3 arestas) · <code>u l r b</code> = só a ponta · <code>'</code> = anti-horário. Cada giro é ⅓ de volta (120°), olhando o vértice de fora.</p>",
+      "<p><code>U L R B</code> = the vertex’s big layer (tip + center + 3 edges) · <code>u l r b</code> = just the tip · <code>'</code> = counterclockwise. Each turn is ⅓ of a rotation (120°), looking at the vertex from outside.</p>",
+    );
+  },
+  get notationHelp() {
+    return [
+      { move: 'U', text: tr('vértice de cima', 'top vertex') },
+      { move: 'L', text: tr('vértice da frente-esquerda', 'front-left vertex') },
+      { move: 'R', text: tr('vértice da frente-direita', 'front-right vertex') },
+      { move: 'B', text: tr('vértice de trás', 'back vertex') },
+    ];
+  },
 };
 
 export default pyraminx;

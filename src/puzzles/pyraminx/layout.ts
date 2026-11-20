@@ -1,3 +1,4 @@
+import { tr } from '../../core/i18n';
 /** Peças 3D, rede 2D (triângulo dividido em 4) e moldes da câmera do Pyraminx. */
 import type { ColorInfo, PuzzleImpl, ScanFace } from '../../core/types';
 import { clipPolyhedron, shrinkPolyhedron } from '../poly/clip';
@@ -115,19 +116,25 @@ export function buildPyraScan(_colors: ColorInfo[]): ScanFace[] {
       poly,
       center: [(poly[0][0] + poly[1][0] + poly[2][0]) / 3, (poly[0][1] + poly[1][1] + poly[2][1]) / 3] as [number, number],
     }));
-    const hints = [
-      '<b>Qualquer face</b> de frente, uma ponta para cima',
-      'Gire ⅓ de volta para a <b>esquerda</b> (a ponta de cima fica parada): a face da direita vem para a frente',
-      'Mais ⅓ para a <b>esquerda</b>, do mesmo jeito',
-      'Volte à 1ª face e <b>tombe o pyraminx para trás</b>: a base fica de frente, com a 1ª face em cima',
+    const hints = (): [string, string][] => [
+      ['<b>Qualquer face</b> de frente, uma ponta para cima', '<b>Any face</b> toward you, one tip pointing up'],
+      ['Gire ⅓ de volta para a <b>esquerda</b> (a ponta de cima fica parada): a face da direita vem para a frente', 'Turn ⅓ to the <b>left</b> (the top tip stays put): the right face comes to the front'],
+      ['Mais ⅓ para a <b>esquerda</b>, do mesmo jeito', 'Another ⅓ to the <b>left</b>, the same way'],
+      ['Volte à 1ª face e <b>tombe o pyraminx para trás</b>: a base fica de frente, com a 1ª face em cima', 'Go back to the 1st face and <b>tip the Pyraminx backward</b>: the bottom faces you, with the 1st face on top'],
     ];
     return {
       face: fk,
       grid: [Array.from({ length: 9 }, (_, s) => f * 9 + s)],
-      title: ['1ª face', '2ª face', '3ª face', 'Base'][i],
+      get title() {
+        return tr(['1ª face', '2ª face', '3ª face', 'Base'][i], ['1st face', '2nd face', '3rd face', 'Bottom'][i]);
+      },
       faceColor: '',
-      hint: hints[i],
-      upLabel: fk === 'D' ? '1ª FACE PARA CIMA' : 'PONTA DE CIMA',
+      get hint() {
+        return tr(...hints()[i]);
+      },
+      get upLabel() {
+        return fk === 'D' ? tr('1ª FACE PARA CIMA', '1ST FACE UP') : tr('PONTA DE CIMA', 'TOP TIP');
+      },
       arrow: fk === 'D' ? '▲' : i === 0 ? '▲' : '↶',
       edges: { up: [], down: [], left: [], right: [] },
       fixedCells: [],

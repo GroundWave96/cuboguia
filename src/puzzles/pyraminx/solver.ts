@@ -1,3 +1,4 @@
+import { tr } from '../../core/i18n';
 /**
  * Solucionadores do Pyraminx. A referência é a POSIÇÃO dos centros (cada centro
  * fica sempre no seu vértice; eles só giram). Usa os 4 eixos: U, L, R, B (+ pontas).
@@ -57,7 +58,7 @@ function solveTips(ctx: Ctx, stageId: string) {
     for (const mv of ['', VERTS[v].toLowerCase(), VERTS[v].toLowerCase() + "'"]) {
       const s2 = mv ? applyPerm(ctx.s, geo.permutation(mv)) : ctx.s;
       if (want(s2)) {
-        if (mv) segs.push({ label: `Ponta ${VERTS[v]}`, moves: [mv] });
+        if (mv) segs.push({ label: tr(`Ponta ${VERTS[v]}`, `Tip ${VERTS[v]}`), moves: [mv] });
         break;
       }
     }
@@ -65,8 +66,11 @@ function solveTips(ctx: Ctx, stageId: string) {
   push(
     ctx,
     stageId,
-    'Alinhar as pontas',
-    'As pontas são as pecinhas da quina e giram sozinhas. Gire cada ponta (letra minúscula) até as cores dela combinarem com o centro logo abaixo. Depois disso elas acompanham os centros e nunca mais desalinham.',
+    tr('Alinhar as pontas', 'Line up the tips'),
+    tr(
+      'As pontas são as pecinhas da quina e giram sozinhas. Gire cada ponta (letra minúscula) até as cores dela combinarem com o centro logo abaixo. Depois disso elas acompanham os centros e nunca mais desalinham.',
+      'The tips are the little corner pieces and turn on their own. Turn each tip (lowercase letter) until its colors match the center right below it. After that they move with the centers and never get out of line again.',
+    ),
     segs,
     geo.tips.flat(),
   );
@@ -162,6 +166,18 @@ function placeEdge(s: S, piece: number[], macros: Macro[]): Macro[] | null {
   return path.reverse();
 }
 
+/** rótulos guardados em português nos macros; traduzidos ao mostrar */
+const LABEL_PARTS: [string, string][] = [
+  ['Ciclo de arestas (direita)', 'Edge cycle (right)'],
+  ['Ciclo de arestas (esquerda)', 'Edge cycle (left)'],
+  ['Ciclo de arestas', 'Edge cycle'],
+  ['Virar duas arestas', 'Flip two edges'],
+  ['Gatilho', 'Trigger'],
+  ['Posicionar', 'Setup'],
+  ['Ajuste U', 'U adjustment'],
+];
+const segLabel = (l: string) => tr(l, LABEL_PARTS.reduce((s, [pt, en]) => s.split(pt).join(en), l));
+
 function segmentsOf(path: Macro[]): StepSegment[] {
   const segs: StepSegment[] = [];
   for (const m of path) {
@@ -169,6 +185,7 @@ function segmentsOf(path: Macro[]): StepSegment[] {
     if (m.label === 'Posicionar' && last?.label === 'Posicionar') last.moves.push(...m.moves);
     else segs.push({ label: m.label, moves: [...m.moves] });
   }
+  for (const s of segs) s.label = segLabel(s.label);
   return segs;
 }
 
@@ -245,7 +262,7 @@ function solveBeginnerCore(ctx: Ctx) {
       const s2 = mv ? applyPerm(ctx.s, geo.permutation(mv)) : ctx.s;
       if (s2[dSticker] === D) {
         if (mv) {
-          centerSegs.push({ label: `Centro ${VERTS[v]}`, moves: [mv] });
+          centerSegs.push({ label: tr(`Centro ${VERTS[v]}`, `Center ${VERTS[v]}`), moves: [mv] });
           ctx.s = s2;
         }
         break;
@@ -257,8 +274,11 @@ function solveBeginnerCore(ctx: Ctx) {
     push(
       ctx,
       'centers',
-      'Alinhar os centros da base',
-      `Os centros são as peças logo abaixo das pontas: eles só giram no lugar. Gire as camadas L, R e B até os três centros de baixo mostrarem <b>${cname(D)}</b> na base.`,
+      tr('Alinhar os centros da base', 'Line up the bottom centers'),
+      tr(
+        `Os centros são as peças logo abaixo das pontas: eles só giram no lugar. Gire as camadas L, R e B até os três centros de baixo mostrarem <b>${cname(D)}</b> na base.`,
+        `The centers are the pieces right below the tips: they only turn in place. Turn the L, R and B layers until the three lower centers show <b>${cname(D)}</b> on the bottom.`,
+      ),
       centerSegs,
       geo.centers.flat(),
     );
@@ -281,8 +301,11 @@ function solveBeginnerCore(ctx: Ctx) {
     push(
       ctx,
       'base',
-      `Aresta ${pieceName(best.e)}`,
-      `Leve a aresta <b>${pieceName(best.e)}</b> para a base ${cname(D)}, com as cores combinando com os centros. Os gatilhos (como <code>R U R'</code>) colocam a peça sem desmontar o que já está pronto.`,
+      tr(`Aresta ${pieceName(best.e)}`, `${pieceName(best.e)} edge`),
+      tr(
+        `Leve a aresta <b>${pieceName(best.e)}</b> para a base ${cname(D)}, com as cores combinando com os centros. Os gatilhos (como <code>R U R'</code>) colocam a peça sem desmontar o que já está pronto.`,
+        `Bring the <b>${pieceName(best.e)}</b> edge to the ${cname(D)} bottom, with its colors matching the centers. The triggers (like <code>R U R'</code>) insert the piece without breaking what’s already done.`,
+      ),
       segmentsOf(best.path),
       cur,
     );
@@ -303,8 +326,11 @@ function solveBeginnerCore(ctx: Ctx) {
   push(
     ctx,
     'top',
-    'Terminar o topo',
-    'Agora só falta o topo: gire U para alinhar e aplique os algoritmos indicados. Eles trocam ou viram as arestas de cima sem mexer na base.',
+    tr('Terminar o topo', 'Finish the top'),
+    tr(
+      'Agora só falta o topo: gire U para alinhar e aplique os algoritmos indicados. Eles trocam ou viram as arestas de cima sem mexer na base.',
+      'Only the top is left: turn U to line things up and apply the algorithms shown. They swap or flip the top edges without touching the bottom.',
+    ),
     segmentsOf(ll),
     [...geo.centers[VU], ...topEdges.flat()],
   );
@@ -374,11 +400,11 @@ export function optimalCore(state: S): string[] {
 }
 
 // ---------------------------------------------------------------------------
-export const PYRA_BEGINNER_STAGES: SolutionStage[] = [
-  { id: 'tips', name: 'Pontas', goal: 'Alinhar as 4 pontas com os centros.' },
-  { id: 'centers', name: 'Centros', goal: 'Girar os 3 centros de baixo até o amarelo ficar na base.' },
-  { id: 'base', name: 'Base amarela', goal: 'Encaixar as 3 arestas da base.' },
-  { id: 'top', name: 'Topo', goal: 'Terminar as 3 arestas de cima.' },
+export const PYRA_BEGINNER_STAGES = (): SolutionStage[] => [
+  { id: 'tips', name: tr('Pontas', 'Tips'), goal: tr('Alinhar as 4 pontas com os centros.', 'Line up the 4 tips with the centers.') },
+  { id: 'centers', name: tr('Centros', 'Centers'), goal: tr('Girar os 3 centros de baixo até o amarelo ficar na base.', 'Turn the 3 lower centers until yellow is on the bottom.') },
+  { id: 'base', name: tr('Base amarela', 'Yellow bottom'), goal: tr('Encaixar as 3 arestas da base.', 'Insert the 3 bottom edges.') },
+  { id: 'top', name: tr('Topo', 'Top'), goal: tr('Terminar as 3 arestas de cima.', 'Finish the 3 top edges.') },
 ];
 
 /** cada centro precisa estar no seu vértice (o puzzle foi segurado na posição certa) */
@@ -399,7 +425,7 @@ export function solvePyraBeginner(state: PuzzleState): Solution {
   solveTips(ctx, 'tips');
   solveBeginnerCore(ctx);
   if (!allSolved(ctx.s, ALL)) throw new Error('O solucionador não terminou o pyraminx.');
-  return { method: 'Método de iniciante (camadas)', stages: PYRA_BEGINNER_STAGES, steps: ctx.steps };
+  return { method: tr('Método de iniciante (camadas)', 'Beginner method (layers)'), stages: PYRA_BEGINNER_STAGES(), steps: ctx.steps };
 }
 
 export function solvePyraOptimal(state: PuzzleState): Solution {
@@ -413,19 +439,26 @@ export function solvePyraOptimal(state: PuzzleState): Solution {
     push(
       ctx,
       'opt',
-      `Parte ${i + 1} de ${parts.length}`,
-      (i === 0 ? `Esta é a <b>menor solução possível</b> depois das pontas: <b>${moves.length} movimentos</b> (nunca passa de 11). ` : '') +
-        (i === parts.length - 1 ? 'Último trecho!' : 'Faça com calma, sempre segurando o pyraminx na mesma posição.'),
-      [{ label: `Movimentos ${i * 4 + 1}–${i * 4 + mv.length}`, moves: mv }],
+      tr(`Parte ${i + 1} de ${parts.length}`, `Part ${i + 1} of ${parts.length}`),
+      (i === 0
+        ? tr(
+            `Esta é a <b>menor solução possível</b> depois das pontas: <b>${moves.length} movimentos</b> (nunca passa de 11). `,
+            `This is the <b>shortest possible solution</b> after the tips: <b>${moves.length} moves</b> (never more than 11). `,
+          )
+        : '') +
+        (i === parts.length - 1
+          ? tr('Último trecho!', 'Last stretch!')
+          : tr('Faça com calma, sempre segurando o pyraminx na mesma posição.', 'Take your time, always holding the Pyraminx in the same position.')),
+      [{ label: tr(`Movimentos ${i * 4 + 1}–${i * 4 + mv.length}`, `Moves ${i * 4 + 1}–${i * 4 + mv.length}`), moves: mv }],
       [],
     ),
   );
   if (!allSolved(ctx.s, ALL)) throw new Error('A solução ótima não terminou o pyraminx.');
   return {
-    method: 'Solução ótima (computador)',
+    method: tr('Solução ótima (computador)', 'Optimal solution (computer)'),
     stages: [
-      { id: 'tips', name: 'Pontas', goal: 'Alinhar as 4 pontas com os centros.' },
-      { id: 'opt', name: 'Solução ótima', goal: 'Resolver o resto com o menor número possível de movimentos.' },
+      { id: 'tips', name: tr('Pontas', 'Tips'), goal: tr('Alinhar as 4 pontas com os centros.', 'Line up the 4 tips with the centers.') },
+      { id: 'opt', name: tr('Solução ótima', 'Optimal solution'), goal: tr('Resolver o resto com o menor número possível de movimentos.', 'Solve the rest in the fewest possible moves.') },
     ],
     steps: ctx.steps,
   };
