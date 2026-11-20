@@ -94,6 +94,34 @@ export class ColorModel {
     return nearestKey(rgbToLab(n), this.refs());
   }
 
+  /** cor pelas referências fixas (sem o que já foi aprendido), na luz atual */
+  classifyBase(rgb: RGB): string {
+    const n = this.norm(rgb);
+    if (this.kind === 'hue6') {
+      const c = this.colors.find((x) => x.name === classifyCubeColor(n));
+      if (c) return c.key;
+    }
+    return nearestKey(rgbToLab(n), this.colors.map((c) => ({ key: c.key, lab: rgbToLab(this.base.get(c.key)!) })));
+  }
+
+  /**
+   * O que aprender com o centro capturado (cor conhecida): a própria cor quando ela parece
+   * a esperada — pelas cores já aprendidas OU pelas referências fixas (uma cor aprendida
+   * numa face com exposição muito diferente não pode impedir de aprender as outras) — ou,
+   * com logo, só o fundo. null = não aprende (provavelmente a face errada).
+   */
+  centerSample(rgb: RGB, pixels: RGB[] | undefined, expected: string): RGB | null {
+    if (this.classify(rgb) === expected || this.classifyBase(rgb) === expected) return rgb;
+    // cores parecidas (azul × azul-claro, verde × verde-claro): cada puzzle tem um tom
+    // diferente; se a cor esperada é a 2ª mais próxima, o centro é dela mesmo
+    const lab = rgbToLab(this.norm(rgb));
+    const near = this.refs()
+      .map((r) => ({ key: r.key, d: colorDist(lab, r.lab) }))
+      .sort((a, b) => a.d - b.d);
+    if (near[1]?.key === expected && near[1].d < near[0].d * 1.6) return rgb;
+    return this.logoPart(pixels, expected);
+  }
+
   /**
    * O centro mostra a cor esperada? Aceita centro com logo: se a cor esperada é clara e
    * sem cor (branco/cinza), basta uma parte boa do centro ter essa cor.
@@ -102,7 +130,11 @@ export class ColorModel {
     // centro com logo: o fundo (branco/cinza) decide, não a mistura de cores do logo
     const logo = this.logoColor(pixels);
     if (logo) return logo === expected;
-    return this.classify(median) === expected;
+    // vale se as cores aprendidas OU as cores de referência concordam: o celular ajusta a
+    // exposição a cada face, e numa face bem mais clara que as outras (ex.: toda vermelha) um
+    // vermelho clareado lembra o laranja — recusar o centro certo travaria a captura, e uma
+    // face trocada aparece na revisão, onde dá para escanear só ela de novo
+    return this.classify(median) === expected || (this.kind === 'hue6' && this.classifyBase(median) === expected);
   }
 
   /** cores claras e sem saturação (branco, cinza): as que costumam levar logo */

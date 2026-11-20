@@ -698,7 +698,7 @@ export class CameraScanner {
     this.captured[this.current] = this.stableSample();
     for (const fc of this.impl.scan[this.current].fixedCells) {
       const rgb = this.captured[this.current]![fc.cell];
-      const learnRgb = this.classify(rgb) === fc.color ? rgb : this.model.logoPart(this.fixedPixels.get(fc.cell), fc.color);
+      const learnRgb = this.model.centerSample(rgb, this.fixedPixels.get(fc.cell), fc.color);
       this.model.learn(`${this.current}:${fc.cell}`, fc.color, learnRgb);
     }
     this.session.fixedPx[this.current] = Object.fromEntries(this.fixedPixels);

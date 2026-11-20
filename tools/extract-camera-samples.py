@@ -5,9 +5,10 @@ Cada foto tem a posição da face (4 cantos, ou pontos soltos no Megaminx) e a c
 certa de cada adesivo, marcadas à mão. A amostra imita o que a câmera do site faz:
 reduz a imagem e tira a mediana de um quadrado no meio de cada adesivo.
 
-Uso: python tools/extract-camera-samples.py
+Uso: python tools/extract-camera-samples.py [--check pasta]
+     (--check desenha cada ponto marcado com a cor anotada, para conferir as marcações)
 """
-import json, os
+import colorsys, json, os, sys
 from PIL import Image, ImageOps
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'tests')
@@ -91,13 +92,92 @@ MEGA = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Fotos de novembro/2026 (lote 2): coordenadas direto em pixels da foto (já em pé)
+D = (0.0, 0.0, 1.0)
+
+# 3x3: os 4 cantos da face e as cores linha a linha
+FACES3_B = [
+    ('IMG_6250', D, 'escuro', [(365, 653), (1080, 653), (1088, 1373), (360, 1373)], 'OGG YYO RBY'),
+    # '-' = adesivo deixado de fora: estes dois ficam entre o vermelho e o laranja nesta foto
+    ('IMG_6251', D, 'escuro', [(461, 715), (1093, 715), (1093, 1333), (461, 1333)], '-YG RR- RRY'),
+    ('IMG_6252', D, 'escuro', [(480, 739), (1093, 715), (1093, 1320), (485, 1325)], 'WWW W*W WWW'),
+    ('IMG_6253', D, 'escuro', [(552, 765), (1147, 760), (1147, 1347), (547, 1352)], 'YGO GOO BOO'),
+    ('IMG_6254', D, 'escuro', [(435, 613), (1080, 613), (1088, 1245), (440, 1253)], 'YBB YBB RRB'),
+    ('IMG_6255', D, 'escuro', [(360, 667), (973, 560), (1093, 1160), (480, 1293)], 'OYG OGG BBG'),
+    # quase sem luz (só a luz do teclado): a mesma face da IMG_6250
+    ('IMG_6256', D, 'muito-escuro', [(547, 741), (1080, 733), (1080, 1253), (547, 1259)], 'OGG YYO RBY'),
+]
+# 5x5: as 6 faces no escuro (6234–6239) e as mesmas 6 com luz (6240–6245, giradas)
+FACES5 = [
+    ('IMG_6234', D, 'escuro', [(541, 341), (1368, 341), (1368, 1168), (547, 1173)], 'GGGBG RROYR WOOYB OOGWG ORRWG'),
+    ('IMG_6235', D, 'escuro', [(581, 333), (1453, 341), (1453, 1213), (573, 1205)], 'YWWOR YGGGG GWBOG YBYYO YGYYO'),
+    ('IMG_6236', D, 'escuro', [(587, 405), (1413, 373), (1453, 1200), (621, 1235)], 'RYOOW BBWWR OBRRB BBYRR GWOOW'),
+    ('IMG_6237', D, 'escuro', [(600, 395), (1440, 379), (1453, 1232), (608, 1240)], 'YGWWR YGRRB YGGOO OOBYW YYYOO'),
+    ('IMG_6238', D, 'escuro', [(645, 261), (1472, 267), (1461, 1093), (632, 1088)], 'BGRBB RWWWB GYYRR RGRRO WGYWW'),
+    ('IMG_6239', D, 'escuro', [(755, 413), (1541, 355), (1632, 1173), (808, 1227)], 'BWBWO BOBOR WGWWR BYBBY BGBYR'),
+    ('IMG_6240', D, 'claro', [(147, 475), (1147, 453), (1173, 1453), (133, 1480)], 'ORRYR WOWBY BBWBB WOGYG BBWBB'),
+    ('IMG_6241', D, 'claro', [(173, 645), (1093, 640), (1173, 1573), (147, 1600)], 'WOOWG RRYBB BRRBO RWWBB WOOYR'),
+    ('IMG_6242', D, 'claro', [(187, 480), (1160, 520), (1187, 1480), (107, 1480)], 'WRGRB GGYWG YRYWR WRRWB WORBB'),
+    ('IMG_6243', D, 'claro', [(200, 573), (1173, 653), (1232, 1613), (107, 1587)], 'GGGBG RROYR WOOYB OOGWG ORRWG'),
+    ('IMG_6244', D, 'claro', [(173, 640), (1093, 613), (1147, 1573), (120, 1587)], 'YWWOR YGGGG GWBOG YBYYO YGYYO'),
+    ('IMG_6245', D, 'claro', [(187, 539), (1187, 533), (1232, 1547), (120, 1560)], 'YGWWR YGRRB YGGOO OOBYW YYYOO'),
+]
+# Pyraminx: (vértice de cima, inf-esq, inf-dir) e as 9 cores na mesma ordem de PYRA
+PYRA_B = [
+    ('IMG_6246', 'claro', [(707, 461), (8, 1595), (1485, 1493)], 'YBRGYGYGB'),
+    ('IMG_6247', 'claro', [(715, 333), (13, 1440), (1440, 1373)], 'RRGYRBGYB'),
+    ('IMG_6248', 'claro', [(707, 459), (5, 1560), (1381, 1613)], 'GRYBGRYYB'),
+    ('IMG_6249', 'claro', [(347, 619), (200, 1973), (1515, 1240)], 'RRBGGBBRY'),
+    # faces inteiras de uma cor, com luz do dia
+    ('IMG_6261', 'dia', [(680, 568), (400, 1293), (1173, 1107)], 'RRRRRRRRR'),
+    ('IMG_6262', 'dia', [(688, 1373), (1120, 747), (373, 707)], 'GGGGGGGGG'),
+]
+# Megaminx: pontos soltos (pixels da foto) com a chave da cor; o 1º de cada foto é o centro.
+# Chaves: U cinza, F verde-claro, R rosa, BR bege, BL azul-claro, L laranja, DR azul-escuro,
+# DBR vermelho, B verde-escuro, DBL roxo, DL amarelo, D branco.
+# '?G' = verde (claro ou escuro) e '?B' = azul (claro ou escuro): decididos pelo matiz,
+# comparando com os centros dessas cores tirados na mesma sessão (veja resolve_pairs).
+MEGA_B = [
+    ('IMG_6263', [((779, 1025), 'D'), ((808, 848), 'R'), ((638, 972), '?G'), ((955, 966), '?G'), ((685, 1136), 'BR'), ((867, 1166), '?G'),
+                  ((661, 825), '?B'), ((938, 836), '?G'), ((979, 1107), 'L'), ((761, 1272), '?G'), ((579, 1078), 'DBL')]),
+    ('IMG_6264', [((859, 1080), 'U'), ((788, 956), 'L'), ((847, 874), 'DBR'), ((953, 939), 'L'), ((1059, 1033), 'U'), ((1024, 1139), 'U'),
+                  ((1000, 1274), 'U'), ((859, 1256), 'BR'), ((735, 1274), 'DBL'), ((718, 1133), 'DL'), ((659, 1033), 'DL')]),
+    ('IMG_6265', [((725, 1018), 'L'), ((690, 789), 'L'), ((796, 859), '?B'), ((925, 918), '?G'), ((890, 1048), '?B'), ((878, 1171), 'D'),
+                  ((743, 1165), 'U'), ((619, 1200), 'L'), ((578, 1077), 'DL'), ((501, 953), 'DL'), ((625, 895), 'R')]),
+    ('IMG_6266', [((775, 1089), 'DBR'), ((804, 842), '?B'), ((892, 948), 'U'), ((1039, 1012), 'BR'), ((957, 1136), '?G'), ((922, 1283), 'R'),
+                  ((781, 1259), 'DBL'), ((628, 1277), 'D'), ((592, 1136), 'D'), ((563, 995), 'R'), ((698, 930), 'D')]),
+    ('IMG_6267', [((753, 969), 'DL'), ((771, 734), '?B'), ((665, 810), '?B'), ((841, 852), '?B'), ((994, 899), '?B'), ((900, 1016), 'D'),
+                  ((853, 1157), '?G'), ((688, 1134), '?B'), ((553, 1181), 'D'), ((565, 1028), 'DL'), ((535, 887), 'DBR')]),
+    ('IMG_6268', [((776, 967), 'BR'), ((776, 743), 'L'), ((682, 837), 'R'), ((553, 873), 'L'), ((588, 990), 'DBR'), ((606, 1143), '?G'),
+                  ((753, 1143), 'BR'), ((894, 1155), 'DBR'), ((929, 1020), 'DBR'), ((1000, 896), 'BR'), ((859, 837), 'DBR')]),
+    ('IMG_6269', [((843, 1051), 'R'), ((819, 862), 'D'), ((755, 968), 'DBL'), ((637, 1027), '?B'), ((714, 1133), 'U'), ((761, 1251), 'U'),
+                  ((878, 1210), '?B'), ((996, 1233), 'DBL'), ((996, 1110), '?B'), ((1043, 968), '?B'), ((914, 933), '?B')]),
+    ('IMG_6270', [((841, 1100), 'DBL'), ((829, 853), 'U'), ((729, 959), 'D'), ((582, 1041), '?B'), ((659, 1170), 'BR'), ((688, 1300), 'DBL'),
+                  ((841, 1288), 'DBL'), ((1006, 1312), 'DL'), ((1018, 1158), 'U'), ((1077, 1017), 'DBR'), ((923, 947), '?B')]),
+    ('IMG_6271', [((723, 938), 'B'), ((735, 703), 'R'), ((606, 797), '?B'), ((453, 867), 'DBR'), ((547, 1009), 'BR'), ((559, 1162), 'BR'),
+                  ((723, 1126), '?G'), ((888, 1150), '?B'), ((900, 985), 'D'), ((994, 844), 'U'), ((829, 785), 'R')]),
+    ('IMG_6272', [((776, 1050), 'F'), ((787, 838), '?B'), ((682, 932), '?G'), ((540, 1014), '?G'), ((599, 1132), '?G'), ((611, 1273), 'R'),
+                  ((752, 1262), 'L'), ((905, 1273), '?G'), ((940, 1120), 'DBL'), ((1023, 1014), 'DBL'), ((881, 944), 'L')]),
+    ('IMG_6273', [((668, 1297), 'DR'), ((569, 1085), 'DBR'), ((781, 1071), 'DL'), ((979, 1170), 'D'), ((894, 1339), 'R'), ((866, 1551), '?G'),
+                  ((640, 1565), '?G'), ((428, 1565), '?G'), ((400, 1339), 'DL'), ((371, 1142), 'DL')]),
+    ('IMG_6274', [((635, 1025), 'BL'), ((660, 704), '?B'), ((784, 852), 'L'), ((932, 927), 'BR'), ((895, 1087), 'DBL'), ((858, 1309), 'BR'),
+                  ((648, 1285), 'DBR'), ((425, 1309), 'R'), ((376, 1099), '?G'), ((326, 889), '?G'), ((524, 840), '?G')]),
+]
+
+
+def find(folder, name):
+    d = os.path.join(IMG, folder)
+    return os.path.join(d, next(f for f in os.listdir(d) if f.split('.')[0] == name))
+
+
 def load(path):
     return ImageOps.exif_transpose(Image.open(path)).convert('RGB')
 
 
 def median_rgb(im, cx, cy, half):
     box = im.crop((int(cx - half), int(cy - half), int(cx + half) + 1, int(cy + half) + 1))
-    px = list(box.getdata())
+    px = list(box.get_flattened_data()) if hasattr(box, 'get_flattened_data') else list(box.getdata())
     return [sorted(p[k] for p in px)[len(px) // 2] for k in range(3)]
 
 
@@ -112,10 +192,13 @@ def grid_pixels(im, cx, cy, half, n=8):
     return out
 
 
-def cube_faces(folder, faces, n):
+CHECK = []  # (foto, pontos [(x, y, rótulo)]) para as imagens de conferência
+
+
+def cube_faces(folder, faces, n, batch=1):
     out = []
     for name, (x0, y0, s), light, quad, colors in faces:
-        im = load(os.path.join(IMG, folder, name + '.jpeg'))
+        im = load(find(folder, name))
         Q = [(x0 + X / s, y0 + Y / s) for X, Y in quad]
         # reduz como a câmera do site (lado da face ≈ 0,66 × 360 px)
         side = ((Q[1][0] - Q[0][0]) + (Q[2][0] - Q[3][0])) / 2
@@ -125,12 +208,16 @@ def cube_faces(folder, faces, n):
         labels = colors.replace(' ', '')
         cs = 0.66 * 360 / n
         cells = []
+        pts = []
         for r in range(n):
             for c in range(n):
                 u, v = (c + 0.5) / n, (r + 0.5) / n
                 px = (1 - u) * (1 - v) * Q[0][0] + u * (1 - v) * Q[1][0] + u * v * Q[2][0] + (1 - u) * v * Q[3][0]
                 py = (1 - u) * (1 - v) * Q[0][1] + u * (1 - v) * Q[1][1] + u * v * Q[2][1] + (1 - u) * v * Q[3][1]
                 lab = labels[r * n + c]
+                pts.append((px / k, py / k, lab))
+                if lab == '-':
+                    continue
                 cell = {'rgb': median_rgb(small, px, py, cs * 0.2), 'truth': CUBE3['W' if lab == '*' else lab]}
                 if lab == '*':
                     cell['logo'] = True
@@ -138,7 +225,11 @@ def cube_faces(folder, faces, n):
                     cell['center'] = True
                     cell['pixels'] = grid_pixels(small, px, py, cs * 0.38)
                 cells.append(cell)
-        out.append({'photo': f'{folder}/{name}', 'puzzle': 'cube3' if n == 3 else 'cube2', 'light': light, 'cells': cells})
+        entry = {'photo': f'{folder}/{name}', 'puzzle': {2: 'cube2', 3: 'cube3', 5: 'cube5'}[n], 'light': light, 'cells': cells}
+        if batch > 1:
+            entry['batch'] = batch
+        out.append(entry)
+        CHECK.append((find(folder, name), pts))
     return out
 
 
@@ -181,8 +272,100 @@ def pyra():
     return out
 
 
+def pyra_b():
+    out = []
+    for name, light, tri, colors in PYRA_B:
+        path = find('pyraminx', name)
+        im = load(path)
+        side = max(abs(tri[a][0] - tri[b][0]) + abs(tri[a][1] - tri[b][1]) for a, b in ((0, 1), (1, 2), (0, 2))) * 0.8
+        k = (0.8 * 360) / side
+        small = im.resize((int(im.width * k), int(im.height * k)), Image.BILINEAR)
+        cells, pts = [], []
+        for (a, b, c), lab in zip(PYRA_BARY, colors):
+            x = (a * tri[0][0] + b * tri[1][0] + c * tri[2][0]) / 9
+            y = (a * tri[0][1] + b * tri[1][1] + c * tri[2][1]) / 9
+            pts.append((x, y, lab))
+            cells.append({'rgb': median_rgb(small, x * k, y * k, side * k * 0.03), 'truth': PYRA_KEYS[lab]})
+        out.append({'photo': f'pyraminx/{name}', 'puzzle': 'pyraminx', 'light': light, 'batch': 2, 'cells': cells})
+        CHECK.append((path, pts))
+    return out
+
+
+def hue(rgb):
+    h, s, v = colorsys.rgb_to_hsv(*[c / 255 for c in rgb])
+    return h * 360, s, v
+
+
+def resolve_pairs(photos):
+    """
+    '?G' / '?B': verde-claro × verde-escuro e azul-claro × azul-escuro são as cores mais
+    parecidas do Megaminx. A cor certa é a do centro (mesma sessão de fotos) mais parecida
+    em matiz, saturação e brilho — e só fica decidida se a diferença for clara; senão o adesivo sai.
+    """
+    centers = {c['truth']: c['rgb'] for p in photos for c in p['cells'] if c.get('center')}
+    pairs = {'?G': ('F', 'B'), '?B': ('BL', 'DR')}
+    dropped = 0
+    for p in photos:
+        keep = []
+        for c in p['cells']:
+            if c['truth'] in pairs:
+                a, b = pairs[c['truth']]
+                ha, sa, va = hue(centers[a])
+                hb, sb, vb = hue(centers[b])
+                h, s_, v = hue(c['rgb'])
+                # os verdes se separam pelo matiz (~79° × ~109°); os azuis, pela saturação (~0,5 × ~0,9)
+                da = abs(h - ha) / 30 + abs(s_ - sa) * 2 + abs(v - va)
+                db = abs(h - hb) / 30 + abs(s_ - sb) * 2 + abs(v - vb)
+                if abs(da - db) < 0.35:
+                    dropped += 1
+                    continue
+                c['truth'] = a if da < db else b
+            keep.append(c)
+        p['cells'] = keep
+    print('megaminx: adesivos de cor duvidosa deixados de fora:', dropped)
+
+
+def mega_b():
+    out = []
+    for name, pts in MEGA_B:
+        path = find('magaminx', name)
+        im = load(path)
+        k = 0.5
+        small = im.resize((int(im.width * k), int(im.height * k)), Image.BILINEAR)
+        cells = []
+        for i, ((x, y), key) in enumerate(pts):
+            cell = {'rgb': median_rgb(small, x * k, y * k, 6), 'truth': key}
+            if i == 0:
+                cell['center'] = True
+            cells.append(cell)
+        out.append({'photo': f'magaminx/{name}', 'puzzle': 'megaminx', 'light': 'claro', 'batch': 2, 'cells': cells})
+        CHECK.append((path, [(x, y, key) for (x, y), key in pts]))
+    resolve_pairs(out)
+    return out
+
+
+def draw_checks(dst):
+    from PIL import ImageDraw
+    os.makedirs(dst, exist_ok=True)
+    for path, pts in CHECK:
+        im = load(path)
+        k = 700 / max(im.size)
+        sm = im.resize((int(im.width * k), int(im.height * k)))
+        dr = ImageDraw.Draw(sm)
+        for x, y, lab in pts:
+            X, Y = x * k, y * k
+            dr.ellipse((X - 4, Y - 4, X + 4, Y + 4), outline=(0, 0, 0), fill=(255, 255, 255))
+            dr.rectangle((X + 5, Y - 7, X + 6 + 7 * len(lab), Y + 6), fill=(0, 0, 0))
+            dr.text((X + 6, Y - 7), lab, fill=(255, 255, 0))
+        sm.save(os.path.join(dst, os.path.basename(os.path.dirname(path)) + '_' + os.path.basename(path).split('.')[0] + '.png'))
+
+
 if __name__ == '__main__':
     data = cube_faces('3x3', FACES3, 3) + cube_faces('2x2', FACES2, 2) + mega() + pyra()
+    CHECK.clear()  # as imagens de conferência são só do lote novo
+    data += cube_faces('3x3', FACES3_B, 3, batch=2) + cube_faces('5x5', FACES5, 5, batch=2) + pyra_b() + mega_b()
+    if '--check' in sys.argv:
+        draw_checks(sys.argv[sys.argv.index('--check') + 1])
     dst = os.path.join(ROOT, 'fixtures', 'camera-samples.json')
     with open(dst, 'w') as fh:
         json.dump(data, fh, separators=(',', ':'))

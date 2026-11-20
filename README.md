@@ -73,7 +73,11 @@ A interface (pintura, câmera e tutorial) funciona com qualquer puzzle que imple
 As cores da câmera são testadas com amostras reais (`tests/fixtures/`):
 
 - **Fotos marcadas à mão** — ficam em `tests/cube images/` (fora do Git);
-  `python tools/extract-camera-samples.py` gera `camera-samples.json`.
+  `python tools/extract-camera-samples.py` gera `camera-samples.json`
+  (`--check pasta` desenha cada ponto marcado com a cor anotada, para conferir).
+  Lote 1: as fotos originais. Lote 2 (nov/2026): 3x3 no escuro, as 6 faces de um 5x5
+  no escuro e com luz, Pyraminx e um segundo Megaminx (de outra fábrica, com cores
+  bem diferentes). Os testes simulam o site: cada lote só aprende com os próprios centros.
 - **Leituras feitas no próprio site (modo debug)** — abra o site com `?debug` no fim
   do endereço (ex.: `https://cuboguia.pages.dev/#/p/cube3?debug`), leia o cubo pela
   câmera, corrija as cores erradas pintando e, no cartão "Leitura da câmera", abra

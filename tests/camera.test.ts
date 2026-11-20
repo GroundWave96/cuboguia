@@ -10,8 +10,12 @@ import { CUBE3_COLORS } from '../src/puzzles/cube3/colors';
 import { MEGA_COLORS } from '../src/puzzles/megaminx/colors';
 
 interface Cell { rgb: RGB; truth: string; center?: boolean; logo?: boolean; pixels?: RGB[] }
-interface Photo { photo: string; puzzle: string; light: string; cells: Cell[] }
-const photos = samples as unknown as Photo[];
+interface Photo { photo: string; puzzle: string; light: string; cells: Cell[]; batch?: number }
+const all = samples as unknown as Photo[];
+/** lote 1: as fotos originais; lote 2: fotos de nov/2026 (outro Megaminx, 5x5 e mais luzes) */
+const batchOf = (p: Photo) => p.batch ?? 1;
+const photos = all.filter((p) => batchOf(p) === 1);
+const batch2 = all.filter((p) => batchOf(p) === 2);
 const find = (name: string) => photos.find((p) => p.photo.includes(name))!;
 const centerOf = (p: Photo) => p.cells.find((c) => c.center)!;
 
@@ -33,7 +37,7 @@ function scanCube3(names: string[]) {
       if (model.classify(cell.rgb) === cell.truth) live++;
     }
     // captura: o centro (cor conhecida) vira referência — com logo, só a parte do fundo
-    const learnRgb = model.classify(c.rgb) === expected ? c.rgb : model.logoPart(c.pixels, expected);
+    const learnRgb = model.centerSample(c.rgb, c.pixels, expected);
     model.learn(`face${fi}`, expected, learnRgb);
     p.cells.forEach((cell) => {
       if (cell.center) fixed.set(all.length, expected);
@@ -68,7 +72,7 @@ describe('câmera — cubo 3x3 com fotos reais', () => {
       const model = new ColorModel(CUBE3_COLORS, 'hue6');
       for (const q of photos.filter((x) => x.puzzle === 'cube3' && x.light === 'medio' && x !== p)) {
         const c = centerOf(q);
-        model.learn(q.photo, c.truth, model.classify(c.rgb) === c.truth ? c.rgb : model.logoPart(c.pixels, c.truth));
+        model.learn(q.photo, c.truth, model.centerSample(c.rgb, c.pixels, c.truth));
       }
       for (const cell of p.cells) {
         if (cell.center) continue;
@@ -141,7 +145,7 @@ describe('câmera — conferência do centro (face certa)', () => {
       const model = new ColorModel(colors, p.puzzle === 'megaminx' ? 'nearest' : 'hue6');
       for (const q of photos.filter((x) => x.puzzle === p.puzzle && x.light === p.light && x !== p)) {
         const c = centerOf(q);
-        model.learn(q.photo, c.truth, model.classify(c.rgb) === c.truth ? c.rgb : model.logoPart(c.pixels, c.truth));
+        model.learn(q.photo, c.truth, model.centerSample(c.rgb, c.pixels, c.truth));
       }
       const c = centerOf(p);
       expect(model.centerMatches(c.rgb, c.pixels, c.truth)).toBe(true);
@@ -182,5 +186,122 @@ describe('câmera — pyraminx com fotos reais', () => {
     const ok = final.filter((k, i) => k === cells[i].truth).length;
     console.log(`pyraminx: ao vivo ${live}/${cells.length}, final ${ok}/${cells.length}`);
     expect(ok).toBe(cells.length);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lote 2 (nov/2026). No site, a câmera só aprende com os centros do puzzle que está sendo
+// lido (mesma sessão, mesma luz) — os testes simulam isso.
+
+/** leitura ao vivo de cada foto, tendo aprendido os centros das OUTRAS fotos do mesmo grupo */
+function liveWithOthers(group: Photo[], colors: typeof CUBE3_COLORS, kind: 'hue6' | 'nearest') {
+  let ok = 0, n = 0;
+  const errs: string[] = [];
+  for (const p of group) {
+    const model = new ColorModel(colors, kind);
+    for (const q of group) {
+      if (q === p) continue;
+      const c = q.cells.find((x) => x.center);
+      if (c) model.learn(q.photo, c.truth, model.centerSample(c.rgb, c.pixels, c.truth));
+    }
+    for (const cell of p.cells) {
+      if (cell.center) continue;
+      n++;
+      const got = model.classify(cell.rgb);
+      if (got === cell.truth) ok++;
+      else errs.push(`${p.photo.split('/')[1]} ${cell.truth}→${got}`);
+    }
+  }
+  return { ok, n, errs };
+}
+
+/** como o site: face por face, aprendendo cada centro, e no fim cada cor exatamente N vezes */
+function scanCube(group: Photo[], perColor: number) {
+  const model = new ColorModel(CUBE3_COLORS, 'hue6');
+  const rgbs: RGB[] = [], truth: string[] = [];
+  const fixed = new Map<number, string>();
+  let centersOk = 0;
+  for (const p of group) {
+    const c = centerOf(p);
+    if (model.centerMatches(c.rgb, c.pixels, c.truth)) centersOk++;
+    model.learn(p.photo, c.truth, model.centerSample(c.rgb, c.pixels, c.truth));
+    for (const cell of p.cells) {
+      if (cell.center) fixed.set(rgbs.length, cell.truth);
+      rgbs.push(cell.rgb);
+      truth.push(cell.truth);
+    }
+  }
+  const final = assignAll(model, rgbs, perColor, fixed);
+  const wrong = final.map((k, i) => (k === truth[i] ? '' : `${truth[i]}→${k}`)).filter(Boolean);
+  return { centersOk, wrong, n: rgbs.length };
+}
+
+describe('câmera — lote 2 (nov/2026)', () => {
+  it('3x3 no escuro: cada adesivo com os centros de todas as faces capturados', () => {
+    const group = batch2.filter((p) => p.puzzle === 'cube3' && p.light === 'escuro');
+    const pess = liveWithOthers(group, CUBE3_COLORS, 'hue6');
+    console.log(`3x3 lote 2 (escuro), antes de capturar a própria face: ${pess.ok}/${pess.n}`, pess.errs.join(', '));
+    const model = new ColorModel(CUBE3_COLORS, 'hue6');
+    for (const q of group) {
+      const c = centerOf(q);
+      model.learn(q.photo, c.truth, model.centerSample(c.rgb, c.pixels, c.truth));
+    }
+    const cells = group.flatMap((p) => p.cells.filter((c) => !c.center));
+    const errs = cells.filter((c) => model.classify(c.rgb) !== c.truth).map((c) => `${c.truth}→${model.classify(c.rgb)}`);
+    console.log(`3x3 lote 2 (escuro), com todos os centros: ${cells.length - errs.length}/${cells.length}`, errs.join(', '));
+    expect(errs.length / cells.length).toBeLessThan(0.05);
+  });
+  it('3x3 quase sem luz: a face lida com os centros do escuro', () => {
+    // a IMG_6256 é a mesma face da IMG_6250, só que com pouquíssima luz
+    const group = batch2.filter((p) => p.puzzle === 'cube3' && p.light !== 'claro');
+    const r = liveWithOthers(group, CUBE3_COLORS, 'hue6');
+    console.log(`3x3 lote 2 com a foto quase sem luz: ${r.ok}/${r.n}`, r.errs.join(', '));
+  });
+  for (const light of ['escuro', 'claro'])
+    it(`5x5 com ${light === 'escuro' ? 'pouca luz' : 'luz boa'}: centros certos e resultado final 100%`, () => {
+      const r = scanCube(batch2.filter((p) => p.puzzle === 'cube5' && p.light === light), 25);
+      console.log(`5x5 ${light}: centros ${r.centersOk}/6, final ${r.n - r.wrong.length}/${r.n}`, r.wrong.join(', '));
+      expect(r.centersOk).toBe(6);
+      expect(r.wrong).toEqual([]);
+    });
+  it('pyraminx: leitura ao vivo sem erro', async () => {
+    const { PYRA_COLORS } = await import('../src/puzzles/pyraminx/colors');
+    const model = new ColorModel(PYRA_COLORS, 'hue6');
+    const cells = batch2.filter((p) => p.puzzle === 'pyraminx').flatMap((p) => p.cells);
+    const ok = cells.filter((c) => model.classify(c.rgb) === c.truth).length;
+    console.log(`pyraminx lote 2: ${ok}/${cells.length}`);
+    expect(ok).toBe(cells.length);
+  });
+  it('megaminx (outro cubo): lê as 12 cores com os centros da sessão', () => {
+    const r = liveWithOthers(batch2.filter((p) => p.puzzle === 'megaminx'), MEGA_COLORS, 'nearest');
+    console.log(`megaminx lote 2: ${r.ok}/${r.n}`, r.errs.join(', '));
+    expect(r.ok / r.n).toBeGreaterThan(0.97);
+  });
+  it('megaminx (outro cubo): sem nenhum centro aprendido ainda (primeira face)', () => {
+    const model = new ColorModel(MEGA_COLORS, 'nearest');
+    const cells = batch2.filter((p) => p.puzzle === 'megaminx').flatMap((p) => p.cells);
+    const errs = cells.filter((c) => model.classify(c.rgb) !== c.truth).map((c) => `${c.truth}→${model.classify(c.rgb)}`);
+    console.log(`megaminx lote 2 sem calibrar: ${cells.length - errs.length}/${cells.length}`, errs.join(', '));
+    expect(1 - errs.length / cells.length).toBeGreaterThan(0.9);
+  });
+  it('nunca recusa o centro certo; face trocada só no par vermelho × laranja', () => {
+    const wrongs: string[] = [];
+    const accepted: string[] = [];
+    for (const p of batch2.filter((x) => x.puzzle !== 'pyraminx')) {
+      const colors = p.puzzle === 'megaminx' ? MEGA_COLORS : CUBE3_COLORS;
+      const model = new ColorModel(colors, p.puzzle === 'megaminx' ? 'nearest' : 'hue6');
+      for (const q of batch2.filter((x) => x.puzzle === p.puzzle && x.light === p.light && x !== p)) {
+        const c = centerOf(q);
+        model.learn(q.photo, c.truth, model.centerSample(c.rgb, c.pixels, c.truth));
+      }
+      const c = centerOf(p);
+      if (!model.centerMatches(c.rgb, c.pixels, c.truth)) wrongs.push(`${p.photo}: centro ${c.truth} recusado`);
+      for (const o of colors) if (o.key !== c.truth && model.centerMatches(c.rgb, c.pixels, o.key)) accepted.push(`${p.photo}: ${c.truth} aceito como ${o.key}`);
+    }
+    console.log('lote 2, centro aceito como outra cor:', accepted.join(', ') || 'nenhum');
+    expect(wrongs).toEqual([]);
+    // a face toda vermelha (IMG_6251) saiu muito mais clara que as outras: vermelho e laranja
+    // ficam ambíguos — aparece na revisão, e o resultado final (9 de cada cor) acerta
+    expect(accepted.every((a) => /(L aceito como R|R aceito como L)/.test(a))).toBe(true);
   });
 });
