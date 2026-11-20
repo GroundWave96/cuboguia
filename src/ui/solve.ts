@@ -1,6 +1,7 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
 import { decodeState, encodeState, loadSpeed, loadState, saveMethod, saveSpeed } from '../core/store';
 import { navigate, puzzlePath, solvePath } from '../core/router';
+import { plural, tr } from '../core/i18n';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
 import { notationHtml } from './notation';
@@ -14,7 +15,7 @@ interface FlatMove {
 
 export async function renderSolve(app: HTMLElement, puzzleId: string, params: URLSearchParams) {
   const def = getPuzzle(puzzleId);
-  if (!def?.available) throw new Error('Este puzzle ainda não está disponível.');
+  if (!def?.available) throw new Error(tr('Este puzzle ainda não está disponível.', 'This puzzle isn’t available yet.'));
   const impl: PuzzleImpl = await loadPuzzle(puzzleId);
 
   const initial: PuzzleState | null = decodeState(params.get('s') ?? '', impl.stickerCount, impl.colors.map((c) => c.key)) ?? loadState(puzzleId);
@@ -23,11 +24,11 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     return () => {};
   }
   const valid = impl.validate(initial);
-  if (!valid.ok) throw new Error('O cubo informado não é válido: ' + valid.errors.join(' '));
+  if (!valid.ok) throw new Error(tr('O cubo informado não é válido: ', 'The puzzle you entered isn’t valid: ') + valid.errors.join(' '));
 
   const methodId = impl.methods.some((m) => m.id === params.get('m')) ? params.get('m')! : impl.methods[0].id;
   // aviso enquanto calcula (o Megaminx leva 1–3 s)
-  app.innerHTML = `<section class="page narrow"><div class="card loading-card"><div class="spinner" aria-hidden="true"></div><h2>Calculando a solução…</h2><p>Montando o passo a passo para o seu ${def.name}.</p></div></section>`;
+  app.innerHTML = `<section class="page narrow"><div class="card loading-card"><div class="spinner" aria-hidden="true"></div><h2>${tr('Calculando a solução…', 'Working out the solution…')}</h2><p>${tr(`Montando o passo a passo para o seu ${def.name}.`, `Building the step-by-step guide for your ${def.name}.`)}</p></div></section>`;
   await new Promise((r) => setTimeout(r, 40));
   const sol: Solution = impl.solve(initial, methodId);
   saveMethod(methodId);
@@ -52,8 +53,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const describeMove = (m: string) => {
     if (impl.describeMove) return impl.describeMove(m);
     const wide = m[0] !== m[0].toUpperCase() || m.includes('w');
-    const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? ' + meio (2 camadas)' : '');
-    const dir = m.endsWith("'") ? 'anti-horário ↺' : m.endsWith('2') ? 'meia volta (180°)' : 'horário ↻';
+    const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? tr(' + meio (2 camadas)', ' + middle (2 layers)') : '');
+    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺') : m.endsWith('2') ? tr('meia volta (180°)', 'half turn (180°)') : tr('horário ↻', 'clockwise ↻');
     return `${f} · ${dir}`;
   };
 
@@ -68,10 +69,10 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   app.innerHTML = `
   <section class="page workspace solve">
     <div class="ws-header">
-      <a class="back" href="${puzzlePath(puzzleId)}">← Editar cores</a>
-      <h1>Tutorial: resolvendo seu ${def.name.replace('Cubo ', '')}</h1>
-      <p>${sol.method} · <b>${steps.length}</b> passo${steps.length === 1 ? '' : 's'} · <b>${flat.length}</b> movimento${flat.length === 1 ? '' : 's'}. ${impl.holdHint} Mantenha essa posição o tempo todo.</p>
-      <div class="method-switch" role="group" aria-label="Método">
+      <a class="back" href="${puzzlePath(puzzleId)}">← ${tr('Editar cores', 'Edit colors')}</a>
+      <h1>${tr(`Tutorial: resolvendo seu ${def.short}`, `Tutorial: solving your ${def.short}`)}</h1>
+      <p>${sol.method} · <b>${steps.length}</b> ${plural(steps.length, 'passo', 'passos', 'step', 'steps')} · <b>${flat.length}</b> ${plural(flat.length, 'movimento', 'movimentos', 'move', 'moves')}. ${impl.holdHint} ${tr('Mantenha essa posição o tempo todo.', 'Keep it in this position the whole time.')}</p>
+      <div class="method-switch" role="group" aria-label="${tr('Método', 'Method')}">
         ${impl.methods
           .map(
             (m) =>
@@ -89,25 +90,25 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <div class="ws-view card">
         <div class="view-host" id="view-host"></div>
         <div class="move-badge" aria-live="polite"><strong></strong><span></span></div>
-        <button class="icon-btn view-reset" title="Voltar à vista inicial" aria-label="Voltar à vista inicial">${icon('resetView')}</button>
+        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view')}">${icon('resetView')}</button>
       </div>
       <div class="ws-panel card step-panel">
         <div class="step-body"></div>
-        <div class="step-ok" hidden>${icon('checkCircle')}<span>Passo concluído! Avance para o <b>próximo passo</b>.</span></div>
+        <div class="step-ok" hidden>${icon('checkCircle')}<span>${tr('Passo concluído! Avance para o <b>próximo passo</b>.', 'Step done! Move on to the <b>next step</b>.')}</span></div>
         <!-- controles: ficam presos na parte de baixo da tela enquanto o painel passa por ela -->
         <div class="step-dock">
           <div class="controls">
-            <button class="ctl" data-act="prevStep" title="Passo anterior (PageUp)" aria-label="Passo anterior">${icon('stepPrev')}</button>
-            <button class="ctl" data-act="prevMove" title="Desfazer movimento (←)" aria-label="Desfazer movimento">${icon('movePrev')}</button>
+            <button class="ctl" data-act="prevStep" title="${tr('Passo anterior', 'Previous step')} (PageUp)" aria-label="${tr('Passo anterior', 'Previous step')}">${icon('stepPrev')}</button>
+            <button class="ctl" data-act="prevMove" title="${tr('Desfazer movimento', 'Undo move')} (←)" aria-label="${tr('Desfazer movimento', 'Undo move')}">${icon('movePrev')}</button>
             <button class="ctl main" data-act="main"></button>
-            <button class="ctl" data-act="nextMove" title="Próximo movimento (→)" aria-label="Próximo movimento">${icon('moveNext')}</button>
-            <button class="ctl" data-act="nextStep" title="Próximo passo (PageDown)" aria-label="Próximo passo">${icon('stepNext')}</button>
+            <button class="ctl" data-act="nextMove" title="${tr('Próximo movimento', 'Next move')} (→)" aria-label="${tr('Próximo movimento', 'Next move')}">${icon('moveNext')}</button>
+            <button class="ctl" data-act="nextStep" title="${tr('Próximo passo', 'Next step')} (PageDown)" aria-label="${tr('Próximo passo', 'Next step')}">${icon('stepNext')}</button>
           </div>
         </div>
         <div class="step-foot">
-          <label class="speed">Velocidade <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
+          <label class="speed">${tr('Velocidade', 'Speed')} <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
           <details class="notation">
-            <summary>Como ler os movimentos?</summary>
+            <summary>${tr('Como ler os movimentos?', 'How to read the moves?')}</summary>
             ${notationHtml(impl)}
           </details>
         </div>
@@ -245,7 +246,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       })
       .join('');
     body.innerHTML = `
-      <div class="step-meta"><span class="pill">Etapa ${stageIndex(st.stageId) + 1} · ${stage.name}</span><span>Passo ${cur + 1} de ${steps.length}</span></div>
+      <div class="step-meta"><span class="pill">${tr('Etapa', 'Stage')} ${stageIndex(st.stageId) + 1} · ${stage.name}</span><span>${tr(`Passo ${cur + 1} de ${steps.length}`, `Step ${cur + 1} of ${steps.length}`)}</span></div>
       <div class="progress"><span></span></div>
       <h2 class="step-title">${st.title}</h2>
       <p class="stage-goal">${icon('target')}<span>${stage.goal}</span></p>
@@ -277,11 +278,18 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <div class="done-panel">
         <div class="confetti" aria-hidden="true">${'<i></i>'.repeat(24)}</div>
         <div class="trophy">${icon('trophy')}</div>
-        <h2>${steps.length ? 'Cubo resolvido!' : 'Seu cubo já está resolvido!'}</h2>
-        <p>${steps.length ? `Foram ${steps.length} passos e ${flat.length} movimentos. Com a prática, os algoritmos ficam automáticos — tente de novo embaralhando o cubo!` : 'Embaralhe o cubo e informe as cores de novo para ver o tutorial.'}</p>
+        <h2>${steps.length ? tr('Cubo resolvido!', 'Solved!') : tr('Seu cubo já está resolvido!', 'Your puzzle is already solved!')}</h2>
+        <p>${
+          steps.length
+            ? tr(
+                `Foram ${steps.length} passos e ${flat.length} movimentos. Com a prática, os algoritmos ficam automáticos — tente de novo embaralhando o cubo!`,
+                `That was ${steps.length} steps and ${flat.length} moves. With practice the algorithms become automatic — scramble it and try again!`,
+              )
+            : tr('Embaralhe o cubo e informe as cores de novo para ver o tutorial.', 'Scramble it and enter the colors again to see the tutorial.')
+        }</p>
         <div class="row-actions center">
-          ${steps.length ? '<button class="btn ghost" data-act="restart">Rever do início</button>' : ''}
-          <a class="btn primary" href="${puzzlePath(puzzleId)}">Resolver outro cubo</a>
+          ${steps.length ? `<button class="btn ghost" data-act="restart">${tr('Rever do início', 'Watch again from the start')}</button>` : ''}
+          <a class="btn primary" href="${puzzlePath(puzzleId)}">${tr('Resolver outro cubo', 'Solve another one')}</a>
         </div>
       </div>`;
   }
@@ -315,7 +323,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       badge.classList.add('show', 'active');
     } else if (pos < stepEnd(cur)) {
       badge.querySelector('strong')!.textContent = flat[pos].move;
-      badge.querySelector('span')!.textContent = 'Próximo: ' + describeMove(flat[pos].move);
+      badge.querySelector('span')!.textContent = tr('Próximo: ', 'Next: ') + describeMove(flat[pos].move);
       badge.classList.add('show');
       badge.classList.remove('active');
     } else {
@@ -337,9 +345,10 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     const done = stepDone();
     stepOk.hidden = !done;
     prevMoveBtn.disabled = pos === 0;
-    if (playing) setMain('pause', 'Pausar (espaço)', icon('pause'));
-    else if (done) setMain('play', 'Próximo passo (espaço)', `${icon('stepNext')}<span>Próximo passo</span>`, true);
-    else setMain('play', 'Animar o passo (espaço)', icon('play'));
+    const space = tr('espaço', 'space');
+    if (playing) setMain('pause', `${tr('Pausar', 'Pause')} (${space})`, icon('pause'));
+    else if (done) setMain('play', `${tr('Próximo passo', 'Next step')} (${space})`, `${icon('stepNext')}<span>${tr('Próximo passo', 'Next step')}</span>`, true);
+    else setMain('play', `${tr('Animar o passo', 'Play the step')} (${space})`, icon('play'));
   }
 
   // um só ouvinte para os botões do painel (os botões do passo são recriados a cada passo)

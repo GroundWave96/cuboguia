@@ -693,6 +693,15 @@ body.timing .tm-pad { position: fixed; inset: 0; z-index: 30; border-radius: 0; 
   .tm-times { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ---------- Idioma ---------- */
+.lang-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); margin-left: 4px; }
+.lang-switch a { padding: 3px 9px; border-radius: 999px; font: 700 0.72rem var(--font); letter-spacing: 0.04em; color: var(--muted); text-decoration: none; }
+.lang-switch a:hover { color: var(--text); }
+.lang-switch a.on { background: var(--surface-2); color: var(--text); }
+.drawer-lang { align-self: flex-start; margin: 0 0 8px; }
+.lang-offer { position: fixed; z-index: 65; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; border-radius: 14px; background: #1b2133; border: 1px solid var(--border-strong); box-shadow: var(--shadow); font-size: 0.9rem; animation: tin 0.25s ease-out; }
+body.timing .lang-offer { display: none; }
+
 /* ---------- Aplicativo (instalar, versão nova) ---------- */
 .nav-install { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--accent-2); font: 600 0.9rem var(--font); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
 .nav-install:hover { background: rgba(63,208,201,0.1); }

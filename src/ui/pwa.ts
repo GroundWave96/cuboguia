@@ -2,6 +2,7 @@
  * Aplicativo: o service worker (site sem internet), o aviso de versão nova e o botão
  * "Instalar app" (Android/computador pelo navegador; no iPhone, com as instruções).
  */
+import { tr } from '../core/i18n';
 import { icon } from './icons';
 import { toast } from './toast';
 
@@ -16,7 +17,7 @@ const isIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.p
 let deferred: InstallPrompt | null = null;
 
 /** mostra/esconde os botões "Instalar app" do menu */
-function refreshInstall() {
+export function refreshInstall() {
   const can = !standalone() && (deferred !== null || isIos());
   document.querySelectorAll<HTMLElement>('[data-install]').forEach((b) => (b.hidden = !can));
 }
@@ -26,13 +27,13 @@ function iosHelp() {
   box.className = 'pwa-sheet';
   box.innerHTML = `
     <div class="pwa-sheet-box card" role="dialog" aria-modal="true" aria-labelledby="pwa-t">
-      <h3 id="pwa-t">${icon('download')}Instalar o CuboGuia</h3>
+      <h3 id="pwa-t">${icon('download')}${tr('Instalar o CuboGuia', 'Install CuboGuia')}</h3>
       <ol>
-        <li>No Safari, toque em <b>Compartilhar</b> ${icon('shareIos')} (na barra de baixo ou de cima).</li>
-        <li>Role e toque em <b>Adicionar à Tela de Início</b>.</li>
-        <li>Toque em <b>Adicionar</b>. O CuboGuia aparece como um app, e funciona até sem internet.</li>
+        <li>${tr(`No Safari, toque em <b>Compartilhar</b> ${icon('shareIos')} (na barra de baixo ou de cima).`, `In Safari, tap <b>Share</b> ${icon('shareIos')} (in the bottom or top bar).`)}</li>
+        <li>${tr('Role e toque em <b>Adicionar à Tela de Início</b>.', 'Scroll down and tap <b>Add to Home Screen</b>.')}</li>
+        <li>${tr('Toque em <b>Adicionar</b>. O CuboGuia aparece como um app, e funciona até sem internet.', 'Tap <b>Add</b>. CuboGuia shows up as an app, and it even works offline.')}</li>
       </ol>
-      <button class="btn primary full" data-close>Entendi</button>
+      <button class="btn primary full" data-close>${tr('Entendi', 'Got it')}</button>
     </div>`;
   const close = () => box.remove();
   box.addEventListener('click', (e) => {
@@ -47,7 +48,7 @@ async function install() {
     const { outcome } = await deferred.userChoice;
     deferred = null;
     refreshInstall();
-    if (outcome === 'accepted') toast('Instalando o CuboGuia…');
+    if (outcome === 'accepted') toast(tr('Instalando o CuboGuia…', 'Installing CuboGuia…'));
   } else if (isIos()) iosHelp();
 }
 
@@ -56,7 +57,7 @@ function updateBanner(worker: ServiceWorker) {
   const bar = document.createElement('div');
   bar.className = 'pwa-update';
   bar.setAttribute('role', 'status');
-  bar.innerHTML = `<span>Há uma <b>nova versão</b> do CuboGuia.</span><button class="btn primary sm" data-up>Atualizar</button><button class="btn ghost sm" data-later aria-label="Depois">Depois</button>`;
+  bar.innerHTML = `<span>${tr('Há uma <b>nova versão</b> do CuboGuia.', 'A <b>new version</b> of CuboGuia is available.')}</span><button class="btn primary sm" data-up>${tr('Atualizar', 'Update')}</button><button class="btn ghost sm" data-later>${tr('Depois', 'Later')}</button>`;
   bar.querySelector('[data-up]')!.addEventListener('click', () => {
     bar.querySelector<HTMLButtonElement>('[data-up]')!.disabled = true;
     worker.postMessage('SKIP_WAITING');
@@ -74,7 +75,7 @@ export function setupApp() {
   window.addEventListener('appinstalled', () => {
     deferred = null;
     refreshInstall();
-    toast('CuboGuia instalado! Ele funciona até sem internet.', 4000);
+    toast(tr('CuboGuia instalado! Ele funciona até sem internet.', 'CuboGuia installed! It even works offline.'), 4000);
   });
   document.addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest('[data-install]')) install();
@@ -116,5 +117,5 @@ export function setupApp() {
       /* sem service worker: o site funciona normalmente, só não fica disponível offline */
     }
   });
-  window.addEventListener('offline', () => toast('Sem internet — o CuboGuia continua funcionando.', 3500));
+  window.addEventListener('offline', () => toast(tr('Sem internet — o CuboGuia continua funcionando.', 'You’re offline — CuboGuia keeps working.'), 3500));
 }

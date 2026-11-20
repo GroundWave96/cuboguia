@@ -1,9 +1,8 @@
+import { tr } from '../core/i18n';
 import { PUZZLES, loadPuzzle } from '../core/registry';
-import { puzzlePath } from '../core/router';
+import { homePath, puzzlePath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
 import { icon } from './icons';
-
-const short = (name: string) => name.replace('Cubo ', '');
 
 /** quantos movimentos de embaralho e a velocidade da vitrine para cada puzzle */
 const SHOW: Record<string, { scramble: number; ms: number }> = {
@@ -31,18 +30,20 @@ export function renderHome(app: HTMLElement) {
     </div>
     <div class="page hero">
       <div class="hero-text">
-        <span class="eyebrow">Tutorial interativo em 3D</span>
-        <h1>Resolva o <em>seu</em> cubo mágico, passo a passo.</h1>
-        <p class="lead">Mostre como o seu puzzle está — pintando as cores no modelo 3D ou apontando a câmera — e receba um tutorial animado,
-        no seu ritmo: do método de iniciante até o CFOP dos speedcubers.</p>
+        <span class="eyebrow">${tr('Tutorial interativo em 3D', 'Interactive 3D tutorial')}</span>
+        <h1>${tr('Resolva o <em>seu</em> cubo mágico, passo a passo.', 'Solve <em>your</em> Rubik’s cube, step by step.')}</h1>
+        <p class="lead">${tr(
+          'Mostre como o seu puzzle está — pintando as cores no modelo 3D ou apontando a câmera — e receba um tutorial animado, no seu ritmo: do método de iniciante até o CFOP dos speedcubers.',
+          'Show how your puzzle looks — by painting the colors on the 3D model or pointing your camera at it — and get an animated tutorial at your own pace: from the beginner method to the speedcubers’ CFOP.',
+        )}</p>
         <div class="hero-cta">
-          <a class="btn primary big" id="hero-go" href="/3x3">Resolver meu <span id="hero-go-name">3x3</span></a>
-          <a class="btn ghost big" href="/" data-scroll="como-funciona">Como funciona</a>
+          <a class="btn primary big" id="hero-go" href="${puzzlePath('cube3')}">${tr('Resolver meu', 'Solve my')} <span id="hero-go-name">3x3</span></a>
+          <a class="btn ghost big" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
         </div>
         <ul class="hero-badges">
-          <li>${icon('palette')}Pinte ou use a câmera</li>
-          <li>${icon('levels')}Iniciante e avançado</li>
-          <li>${icon('heart')}100% grátis</li>
+          <li>${icon('palette')}${tr('Pinte ou use a câmera', 'Paint or use the camera')}</li>
+          <li>${icon('levels')}${tr('Iniciante e avançado', 'Beginner and advanced')}</li>
+          <li>${icon('heart')}${tr('100% grátis', '100% free')}</li>
         </ul>
       </div>
       <div class="showcase">
@@ -56,49 +57,58 @@ export function renderHome(app: HTMLElement) {
 
   <section class="page stats reveal">
     <div class="stat"><b data-count="${available.length}">0</b><span>puzzles</span></div>
-    <div class="stat"><b data-count="" id="stat-methods">0</b><span>métodos de solução</span></div>
-    <div class="stat"><b data-count="2">0</b><span>jeitos de informar as cores</span></div>
-    <div class="stat"><b data-count="100" data-suffix="%">0</b><span>grátis, direto no navegador</span></div>
+    <div class="stat"><b data-count="" id="stat-methods">0</b><span>${tr('métodos de solução', 'solving methods')}</span></div>
+    <div class="stat"><b data-count="2">0</b><span>${tr('jeitos de informar as cores', 'ways to enter the colors')}</span></div>
+    <div class="stat"><b data-count="100" data-suffix="%">0</b><span>${tr('grátis, direto no navegador', 'free, right in your browser')}</span></div>
   </section>
 
   <section class="page" id="como-funciona">
-    <h2 class="section-title reveal">Como funciona</h2>
+    <h2 class="section-title reveal">${tr('Como funciona', 'How it works')}</h2>
     <div class="how">
       <div class="how-card reveal">
         <div class="how-art art-paint" aria-hidden="true">
           <div class="mini-face">${Array.from({ length: 9 }, (_, i) => `<i style="--d:${i}"></i>`).join('')}</div>
           <div class="brush">${icon('brush')}</div>
         </div>
-        <b>1</b><h3>Informe as cores</h3>
-        <p>Pinte os adesivos no modelo 3D ou na planificação — ou aponte a câmera do celular/computador para ler cada face.</p>
+        <b>1</b><h3>${tr('Informe as cores', 'Enter the colors')}</h3>
+        <p>${tr(
+          'Pinte os adesivos no modelo 3D ou na planificação — ou aponte a câmera do celular/computador para ler cada face.',
+          'Paint the stickers on the 3D model or on the flat layout — or point your phone/computer camera to read each face.',
+        )}</p>
       </div>
       <div class="how-card reveal">
         <div class="how-art art-scan" aria-hidden="true">
           <div class="phone"><div class="grid3">${'<i></i>'.repeat(9)}</div><div class="scanline"></div></div>
         </div>
-        <b>2</b><h3>Validamos o puzzle</h3>
-        <p>Conferimos se a combinação existe num puzzle real e apontamos onde pode estar o erro — antes de montar a solução.</p>
+        <b>2</b><h3>${tr('Validamos o puzzle', 'We check the puzzle')}</h3>
+        <p>${tr(
+          'Conferimos se a combinação existe num puzzle real e apontamos onde pode estar o erro — antes de montar a solução.',
+          'We check that the combination can exist on a real puzzle and point out where a mistake may be — before building the solution.',
+        )}</p>
       </div>
       <div class="how-card reveal">
         <div class="how-art art-steps" aria-hidden="true">
           <div class="play">${icon('play')}</div>
           <div class="steps">${'<i></i>'.repeat(6)}</div>
         </div>
-        <b>3</b><h3>Siga o tutorial</h3>
-        <p>Cada passo tem explicação, os movimentos e a animação. Avance, volte e repita no seu ritmo, no iniciante ou no avançado.</p>
+        <b>3</b><h3>${tr('Siga o tutorial', 'Follow the tutorial')}</h3>
+        <p>${tr(
+          'Cada passo tem explicação, os movimentos e a animação. Avance, volte e repita no seu ritmo, no iniciante ou no avançado.',
+          'Every step has an explanation, the moves and an animation. Go forward, back and repeat at your own pace, beginner or advanced.',
+        )}</p>
       </div>
     </div>
   </section>
 
   <section class="page" id="puzzles">
-    <h2 class="section-title reveal">Escolha o puzzle</h2>
+    <h2 class="section-title reveal">${tr('Escolha o puzzle', 'Choose your puzzle')}</h2>
     <div class="puzzles">
       ${[...available, ...PUZZLES.filter((p) => !p.available)].map(
         (p) => `
         <${p.available ? `a href="${puzzlePath(p.id)}"` : 'div'} class="pz-card reveal ${p.available ? '' : 'soon'}">
           ${p.icon}
           <div><h3>${p.name}</h3><p>${p.subtitle}</p></div>
-          ${p.available ? '<span class="tag ok">Disponível</span>' : '<span class="tag">Em breve</span>'}
+          ${p.available ? `<span class="tag ok">${tr('Disponível', 'Available')}</span>` : `<span class="tag">${tr('Em breve', 'Coming soon')}</span>`}
         </${p.available ? 'a' : 'div'}>`,
       ).join('')}
     </div>
@@ -106,10 +116,10 @@ export function renderHome(app: HTMLElement) {
 
   <section class="page final-cta reveal">
     <div class="final-card">
-      <h2>Pronto para resolver o seu?</h2>
-      <p>Escolha o puzzle e comece agora — leva menos de um minuto para informar as cores.</p>
+      <h2>${tr('Pronto para resolver o seu?', 'Ready to solve yours?')}</h2>
+      <p>${tr('Escolha o puzzle e comece agora — leva menos de um minuto para informar as cores.', 'Pick your puzzle and start now — it takes less than a minute to enter the colors.')}</p>
       <div class="final-buttons">
-        ${available.map((p) => `<a class="btn ${p.id === 'cube3' ? 'primary' : 'ghost'} big" href="${puzzlePath(p.id)}">${short(p.name)}</a>`).join('')}
+        ${available.map((p) => `<a class="btn ${p.id === 'cube3' ? 'primary' : 'ghost'} big" href="${puzzlePath(p.id)}">${p.short}</a>`).join('')}
       </div>
     </div>
   </section>`;
@@ -182,7 +192,7 @@ export function renderHome(app: HTMLElement) {
     view = im.createView(stage);
     view.setAutoRotate?.(true);
     caption.textContent = def.name;
-    goName.textContent = short(def.name);
+    goName.textContent = def.short;
     goBtn.href = puzzlePath(id);
     stage.classList.remove('fading', 'celebrate');
     return im;

@@ -1,3 +1,5 @@
+import { tr } from '../../core/i18n';
+import { msg } from '../../core/messages';
 import type { PuzzleState, ValidationResult } from '../../core/types';
 import { UNKNOWN } from '../../core/types';
 import { FACES, megaGeo as geo } from './geometry';
@@ -29,10 +31,10 @@ function parity(p: number[]): number {
 export function validateMegaminx(state: PuzzleState): ValidationResult {
   const errors: string[] = [];
   const unknown = state.filter((c) => c === UNKNOWN).length;
-  if (unknown) return { ok: false, errors: [`Ainda faltam ${unknown} adesivo(s) para pintar.`] };
+  if (unknown) return { ok: false, errors: [msg.missing(unknown)] };
   for (const f of FACES) {
     const n = state.filter((c) => c === f).length;
-    if (n !== 11) errors.push(`A cor ${MEGA_COLOR_NAME[f]} aparece ${n} vez(es) — deveria aparecer 11.`);
+    if (n !== 11) errors.push(msg.colorCount(MEGA_COLOR_NAME[f], n, 11));
   }
   if (errors.length) return { ok: false, errors };
 
@@ -43,10 +45,10 @@ export function validateMegaminx(state: PuzzleState): ValidationResult {
     const cols = pos.map((i) => state[i]);
     const j = solvedCorners.findIndex((sc) => [0, 1, 2].some((r) => sc.every((c, k) => c === cols[(k + r) % 3])));
     if (j < 0) {
-      errors.push(`Existe um canto com as cores ${pieceName(cols)}, que não existe num megaminx real.`);
+      errors.push(msg.noCorner(pieceName(cols)));
       continue;
     }
-    if (usedC.has(j)) errors.push(`O canto ${pieceName(solvedCorners[j])} aparece duas vezes.`);
+    if (usedC.has(j)) errors.push(msg.dupCorner(pieceName(solvedCorners[j])));
     usedC.add(j);
     cp.push(j);
   }
@@ -57,15 +59,15 @@ export function validateMegaminx(state: PuzzleState): ValidationResult {
     const [a, b] = pos.map((i) => state[i]);
     const j = solvedEdges.findIndex((se) => (se[0] === a && se[1] === b) || (se[0] === b && se[1] === a));
     if (j < 0) {
-      errors.push(`Existe uma aresta com as cores ${pieceName([a, b])}, que não existe num megaminx real.`);
+      errors.push(msg.noEdge(pieceName([a, b])));
       continue;
     }
-    if (usedE.has(j)) errors.push(`A aresta ${pieceName(solvedEdges[j])} aparece duas vezes.`);
+    if (usedE.has(j)) errors.push(msg.dupEdge(pieceName(solvedEdges[j])));
     usedE.add(j);
     ep.push(j);
   }
   if (errors.length) return { ok: false, errors };
-  if (parity(cp) !== 0) errors.push('Dois cantos estão trocados de lugar — confira as cores dos cantos.');
-  if (parity(ep) !== 0) errors.push('Duas arestas estão trocadas de lugar — confira as cores das arestas.');
+  if (parity(cp) !== 0) errors.push(tr('Dois cantos estão trocados de lugar — confira as cores dos cantos.', 'Two corners are swapped — check the corner colors.'));
+  if (parity(ep) !== 0) errors.push(tr('Duas arestas estão trocadas de lugar — confira as cores das arestas.', 'Two edges are swapped — check the edge colors.'));
   return { ok: errors.length === 0, errors };
 }

@@ -1,6 +1,7 @@
 import './styles.css';
+import { getLang, setLang, tr } from './core/i18n';
 import { getPuzzle } from './core/registry';
-import { fromLegacyHash, navigate, parseRoute, setRouteHandler } from './core/router';
+import { fromLegacyHash, homePath, navigate, parseRoute, pathInLang, setRouteHandler } from './core/router';
 import { mountHeader } from './ui/header';
 import { setupApp } from './ui/pwa';
 import { renderHome } from './ui/home';
@@ -23,13 +24,57 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--topbar-h'
 const setActiveNav = mountHeader();
 
 const SITE = 'CuboGuia';
-const DEFAULT_DESC = document.querySelector<HTMLMetaElement>('meta[name="description"]')!.content;
+const defaultDesc = () =>
+  tr(
+    'Informe as cores do seu cubo mágico (pintando em 3D ou pela câmera) e siga um tutorial animado, passo a passo, para resolvê-lo.',
+    'Enter your Rubik’s cube colors (painting in 3D or with the camera) and follow an animated step-by-step tutorial to solve it.',
+  );
 
 /** título e descrição de cada página (o que aparece na aba e nos resultados do Google) */
-function setMeta(title: string, desc = DEFAULT_DESC) {
+function setMeta(title: string, desc = defaultDesc()) {
   document.title = title;
   document.querySelector<HTMLMetaElement>('meta[name="description"]')!.content = desc;
   document.querySelector<HTMLLinkElement>('link[rel="canonical"]')!.href = location.origin + location.pathname;
+  // a mesma página no outro idioma (para o Google mostrar a versão certa)
+  for (const [l, hl] of [
+    ['pt', 'pt-BR'],
+    ['en', 'en'],
+    ['pt', 'x-default'],
+  ] as const) {
+    let link = document.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${hl}"]`);
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = hl;
+      document.head.appendChild(link);
+    }
+    link.href = location.origin + pathInLang(location.pathname, '', l);
+  }
+}
+
+/** navegador em inglês, na versão em português, sem ter escolhido idioma: oferece o inglês */
+function offerEnglish() {
+  document.querySelector('.lang-offer')?.remove();
+  if (getLang() !== 'pt' || /^pt\b/i.test(navigator.language || 'pt')) return;
+  try {
+    if (localStorage.getItem('cubo:lang')) return;
+  } catch {
+    return;
+  }
+  const bar = document.createElement('div');
+  bar.className = 'lang-offer';
+  bar.lang = 'en';
+  bar.innerHTML = `<span>Prefer English?</span><a class="btn primary sm" data-lang="en" href="${pathInLang(location.pathname, location.search, 'en')}">Switch to English</a><button class="btn ghost sm" data-close aria-label="Close">✕</button>`;
+  bar.querySelector('[data-close]')!.addEventListener('click', () => {
+    bar.remove();
+    try {
+      localStorage.setItem('cubo:lang', 'pt');
+    } catch {
+      /* sem armazenamento */
+    }
+  });
+  bar.querySelector('a')!.addEventListener('click', () => bar.remove());
+  document.body.appendChild(bar);
 }
 
 async function route() {
@@ -38,34 +83,44 @@ async function route() {
   app.innerHTML = '';
   window.scrollTo(0, 0);
   const r = parseRoute(location.pathname, location.search);
+  setLang(r.lang);
   // o CSS usa para ajustar o layout por página (ex.: celular deitado no tutorial)
   document.body.dataset.page = r.page === 'notfound' ? 'home' : r.page;
   try {
     if (r.page === 'timer') {
       setActiveNav('timer');
-      setMeta(`Cronômetro de cubo mágico (estilo competição) — ${SITE}`, 'Cronômetro de speedcubing no navegador: dois dedos no celular, inspeção de 15 s, embaralhos oficiais, média de 5 e de 12 e desafios com amigos.');
+      setMeta(
+        tr(`Cronômetro de cubo mágico (estilo competição) — ${SITE}`, `Rubik’s cube timer (competition style) — ${SITE}`),
+        tr(
+          'Cronômetro de speedcubing no navegador: dois dedos no celular, inspeção de 15 s, embaralhos oficiais, média de 5 e de 12 e desafios com amigos.',
+          'Speedcubing timer in your browser: two-finger start on phones, 15 s inspection, official-style scrambles, ao5 and ao12, and challenges with friends.',
+        ),
+      );
       cleanup = await renderTimer(app, r.params);
     } else if (r.page === 'input' || r.page === 'solve') {
       const def = getPuzzle(r.id)!;
       setActiveNav(r.id);
-      const name = def.name.replace('Cubo ', '');
+      const name = def.short;
       if (r.page === 'solve') {
-        setMeta(`Tutorial: resolvendo o ${def.name} passo a passo — ${SITE}`);
+        setMeta(tr(`Tutorial: resolvendo o ${def.name} passo a passo — ${SITE}`, `Tutorial: solving the ${def.name} step by step — ${SITE}`));
         cleanup = await renderSolve(app, r.id, r.params);
       } else {
         setMeta(
-          `Como resolver o ${def.name} — tutorial passo a passo em 3D | ${SITE}`,
-          `Aprenda a resolver o ${name}: informe as cores do seu ${name} (pintando em 3D ou pela câmera) e siga um tutorial animado, do iniciante ao avançado. Grátis.`,
+          tr(`Como resolver o ${def.name} — tutorial passo a passo em 3D | ${SITE}`, `How to solve the ${def.name} — step-by-step 3D tutorial | ${SITE}`),
+          tr(
+            `Aprenda a resolver o ${name}: informe as cores do seu ${name} (pintando em 3D ou pela câmera) e siga um tutorial animado, do iniciante ao avançado. Grátis.`,
+            `Learn to solve the ${name}: enter your ${name}’s colors (painting in 3D or with the camera) and follow an animated tutorial, from beginner to advanced. Free.`,
+          ),
         );
         cleanup = await renderInput(app, r.id, r.params);
       }
     } else if (r.page === 'notfound') {
       setActiveNav('');
-      setMeta(`Página não encontrada — ${SITE}`);
-      app.innerHTML = `<section class="page narrow"><div class="card"><h2>Página não encontrada</h2><p>Esse endereço não existe no CuboGuia.</p><a class="btn primary" href="/">Voltar ao início</a></div></section>`;
+      setMeta(tr(`Página não encontrada — ${SITE}`, `Page not found — ${SITE}`));
+      app.innerHTML = `<section class="page narrow"><div class="card"><h2>${tr('Página não encontrada', 'Page not found')}</h2><p>${tr('Esse endereço não existe no CuboGuia.', 'This address doesn’t exist on CuboGuia.')}</p><a class="btn primary" href="${homePath()}">${tr('Voltar ao início', 'Back to home')}</a></div></section>`;
     } else {
       setActiveNav('home');
-      setMeta(`${SITE} — resolva seu cubo mágico passo a passo`);
+      setMeta(tr(`${SITE} — resolva seu cubo mágico passo a passo`, `${SITE} — solve your Rubik’s cube step by step`));
       cleanup = renderHome(app);
       if (pendingScroll) {
         const id = pendingScroll;
@@ -73,9 +128,10 @@ async function route() {
         requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
       }
     }
+    offerEnglish();
   } catch (e) {
     console.error(e);
-    app.innerHTML = `<section class="page narrow"><div class="card"><h2>Ops!</h2><p></p><a class="btn primary" href="/">Voltar ao início</a></div></section>`;
+    app.innerHTML = `<section class="page narrow"><div class="card"><h2>${tr('Ops!', 'Oops!')}</h2><p></p><a class="btn primary" href="${homePath()}">${tr('Voltar ao início', 'Back to home')}</a></div></section>`;
     app.querySelector('p')!.textContent = (e as Error).message;
   }
 }
@@ -90,7 +146,7 @@ document.addEventListener('click', (e) => {
   if (target) target.scrollIntoView({ behavior: 'smooth' });
   else {
     pendingScroll = id;
-    navigate('/');
+    navigate(homePath());
   }
 });
 

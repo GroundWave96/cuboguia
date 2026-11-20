@@ -1,3 +1,4 @@
+import { msg } from '../../core/messages';
 import type { PuzzleState, ValidationResult } from '../../core/types';
 import { UNKNOWN } from '../../core/types';
 import { CORNER_COLORS, CORNER_FACELETS, EDGE_COLORS, EDGE_FACELETS, FACES } from './pieces';
@@ -29,13 +30,13 @@ export function validateCube3(state: PuzzleState): ValidationResult {
 
   const unknown = state.filter((c) => c === UNKNOWN).length;
   if (unknown > 0) {
-    errors.push(`Ainda faltam ${unknown} adesivo(s) para pintar.`);
+    errors.push(msg.missing(unknown));
     return { ok: false, errors };
   }
 
   for (const f of FACES) {
     const n = state.filter((c) => c === f).length;
-    if (n !== 9) errors.push(`A cor ${COLOR_NAME[f]} aparece ${n} vez(es) — deveria aparecer 9.`);
+    if (n !== 9) errors.push(msg.colorCount(COLOR_NAME[f], n, 9));
   }
   if (errors.length) return { ok: false, errors };
 
@@ -48,10 +49,10 @@ export function validateCube3(state: PuzzleState): ValidationResult {
     const rot = ori < 0 ? null : [cols[ori], cols[(ori + 1) % 3], cols[(ori + 2) % 3]];
     const j = rot ? CORNER_COLORS.findIndex((cc) => cc.every((c, k) => c === rot[k])) : -1;
     if (j < 0) {
-      errors.push(`Existe um canto com as cores ${pieceName(cols)}, que não existe num cubo real.`);
+      errors.push(msg.noCorner(pieceName(cols)));
       continue;
     }
-    if (usedC.has(j)) errors.push(`O canto ${pieceName(CORNER_COLORS[j])} aparece duas vezes.`);
+    if (usedC.has(j)) errors.push(msg.dupCorner(pieceName(CORNER_COLORS[j])));
     usedC.add(j);
     cp.push(j);
     twist += ori;
@@ -69,10 +70,10 @@ export function validateCube3(state: PuzzleState): ValidationResult {
       ori = 1;
     }
     if (j < 0) {
-      errors.push(`Existe uma aresta com as cores ${pieceName([a, b])}, que não existe num cubo real.`);
+      errors.push(msg.noEdge(pieceName([a, b])));
       continue;
     }
-    if (usedE.has(j)) errors.push(`A aresta ${pieceName(EDGE_COLORS[j])} aparece duas vezes.`);
+    if (usedE.has(j)) errors.push(msg.dupEdge(pieceName(EDGE_COLORS[j])));
     usedE.add(j);
     ep.push(j);
     flip += ori;
@@ -81,11 +82,11 @@ export function validateCube3(state: PuzzleState): ValidationResult {
   if (errors.length) return { ok: false, errors };
 
   if (twist % 3 !== 0)
-    errors.push('Um canto está girado (torcido) — provavelmente uma cor de canto foi pintada errada ou o cubo foi montado torto.');
+    errors.push(msg.twistedCorner());
   if (flip % 2 !== 0)
-    errors.push('Uma aresta está invertida — confira as cores das arestas (peças de 2 cores).');
+    errors.push(msg.flippedEdge());
   if (parity(cp) !== parity(ep))
-    errors.push('Duas peças estão trocadas de lugar — confira se alguma cor foi pintada na posição errada.');
+    errors.push(msg.swapped());
 
   return { ok: errors.length === 0, errors };
 }

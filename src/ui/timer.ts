@@ -10,9 +10,10 @@
  * Tempos e configurações ficam no aparelho (localStorage), separados por puzzle.
  */
 import { PUZZLES, loadPuzzle } from '../core/registry';
-import { TIMER_PATH } from '../core/router';
+import { homePath, timerPath } from '../core/router';
 import { MAX_NAME, challengeQuery, cleanName, readChallenge, type Challenge } from '../core/challenge';
 import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, value, type Penalty, type Solve } from '../core/timerstats';
+import { tr } from '../core/i18n';
 import type { PuzzleImpl } from '../core/types';
 import { icon } from './icons';
 import { netSvg } from './net';
@@ -66,14 +67,14 @@ function saveSolves(puzzle: string, solves: Solve[]) {
   }
 }
 
-const short = (name: string) => name.replace('Cubo ', '');
 
 /** como segurar o puzzle resolvido antes de embaralhar (a posição do desenho) */
-const SCRAMBLE_HOLD: Record<string, string> = {
-  pyraminx: 'com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo',
-  megaminx: 'com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você',
-};
-const DEFAULT_HOLD = 'com o <b>amarelo</b> em cima e o <b>verde</b> de frente para você';
+const scrambleHold = (puzzle: string) =>
+  puzzle === 'pyraminx'
+    ? tr('com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo', 'with the <b>green</b> face toward you and the <b>yellow</b> one on the bottom')
+    : puzzle === 'megaminx'
+      ? tr('com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você', 'with <b>gray</b> on top and <b>light green</b> facing you')
+      : tr('com o <b>amarelo</b> em cima e o <b>verde</b> de frente para você', 'with <b>yellow</b> on top and <b>green</b> facing you');
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 function loadName(): string {
   try {
@@ -101,52 +102,52 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   app.innerHTML = `
   <section class="page timer-page">
     <div class="tm-top">
-      <a class="back tm-back" href="/">← Início</a>
+      <a class="back tm-back" href="${homePath()}">← ${tr('Início', 'Home')}</a>
       <div class="tm-puzzles" role="tablist" aria-label="Puzzle">
-        ${available.map((p) => `<button role="tab" class="tm-pz" data-pz="${p.id}">${p.icon}<span>${short(p.name)}</span></button>`).join('')}
+        ${available.map((p) => `<button role="tab" class="tm-pz" data-pz="${p.id}">${p.icon}<span>${p.short}</span></button>`).join('')}
       </div>
       <div class="tm-opts">
-        <button class="tm-opt" data-opt="inspection" aria-pressed="false" title="15 s para olhar o cubo antes de começar, como nas competições"><span class="sw" aria-hidden="true"></span>Inspeção 15 s</button>
-        ${touchDevice ? '<button class="tm-opt" data-opt="fingers" aria-pressed="false" title="Quantos dedos para começar e parar"><span class="sw" aria-hidden="true"></span>Dois dedos</button>' : ''}
-        <button class="tm-opt" data-opt="preview" aria-pressed="false" title="Mostrar como o puzzle fica depois de embaralhar"><span class="sw" aria-hidden="true"></span>Desenho</button>
+        <button class="tm-opt" data-opt="inspection" aria-pressed="false" title="${tr('15 s para olhar o cubo antes de começar, como nas competições', '15 s to look at the puzzle before starting, like in competitions')}"><span class="sw" aria-hidden="true"></span>${tr('Inspeção 15 s', '15 s inspection')}</button>
+        ${touchDevice ? `<button class="tm-opt" data-opt="fingers" aria-pressed="false" title="${tr('Quantos dedos para começar e parar', 'How many fingers to start and stop')}"><span class="sw" aria-hidden="true"></span>${tr('Dois dedos', 'Two fingers')}</button>` : ''}
+        <button class="tm-opt" data-opt="preview" aria-pressed="false" title="${tr('Mostrar como o puzzle fica depois de embaralhar', 'Show how the puzzle looks after scrambling')}"><span class="sw" aria-hidden="true"></span>${tr('Desenho', 'Preview')}</button>
       </div>
     </div>
     <div class="tm-challenge card" hidden></div>
     <div class="tm-scramble card">
       <div class="tm-scr-head">
-        <span class="tm-label">Embaralho<button class="tm-info-btn" aria-expanded="false" aria-controls="tm-info" title="O que é o embaralho e como fazer">${icon('info')}<span class="sr-only">O que é o embaralho e como fazer</span></button></span>
-        <button class="btn ghost sm" data-act="new">${icon('shuffle')}Outro</button>
+        <span class="tm-label">${tr('Embaralho', 'Scramble')}<button class="tm-info-btn" aria-expanded="false" aria-controls="tm-info" title="${tr('O que é o embaralho e como fazer', 'What a scramble is and how to do it')}">${icon('info')}<span class="sr-only">${tr('O que é o embaralho e como fazer', 'What a scramble is and how to do it')}</span></button></span>
+        <button class="btn ghost sm" data-act="new">${icon('shuffle')}${tr('Outro', 'New')}</button>
       </div>
       <p class="tm-scr-text" aria-live="polite"></p>
       <div class="tm-preview"></div>
       <div class="tm-info" id="tm-info"><div class="tm-info-in"></div></div>
     </div>
-    <div class="tm-pad" tabindex="0" aria-label="Cronômetro">
+    <div class="tm-pad" tabindex="0" aria-label="${tr('Cronômetro', 'Timer')}">
       <div class="tm-time">0.00</div>
       <div class="tm-hint"></div>
       <div class="tm-last" hidden>
         <button class="btn ghost sm" data-last="2">+2</button>
         <button class="btn ghost sm" data-last="dnf">DNF</button>
-        <button class="btn ghost sm" data-last="del">Apagar</button>
-        <button class="btn primary sm" data-last="share">${icon('share')}Desafiar</button>
+        <button class="btn ghost sm" data-last="del">${tr('Apagar', 'Delete')}</button>
+        <button class="btn primary sm" data-last="share">${icon('share')}${tr('Desafiar', 'Challenge')}</button>
       </div>
     </div>
     <div class="tm-stats card"></div>
     <div class="tm-list card">
-      <div class="tm-list-head"><span class="tm-label">Tempos</span><button class="btn ghost sm" data-act="clear">Limpar sessão</button></div>
+      <div class="tm-list-head"><span class="tm-label">${tr('Tempos', 'Times')}</span><button class="btn ghost sm" data-act="clear">${tr('Limpar sessão', 'Clear session')}</button></div>
       <ol class="tm-times"></ol>
     </div>
     <div class="tm-share" hidden>
       <div class="tm-share-box card" role="dialog" aria-modal="true" aria-labelledby="tm-share-title">
-        <h3 id="tm-share-title">${icon('share')}Desafiar um amigo</h3>
-        <p class="tm-share-sub">Quem abrir o link recebe <b>o mesmo embaralho</b> e vê o seu tempo para tentar bater.</p>
-        <label class="tm-name">Seu nome (opcional)<input type="text" maxlength="${MAX_NAME}" autocomplete="nickname" placeholder="Ex.: Gabriel"></label>
+        <h3 id="tm-share-title">${icon('share')}${tr('Desafiar um amigo', 'Challenge a friend')}</h3>
+        <p class="tm-share-sub">${tr('Quem abrir o link recebe <b>o mesmo embaralho</b> e vê o seu tempo para tentar bater.', 'Whoever opens the link gets <b>the same scramble</b> and sees your time to try to beat it.')}</p>
+        <label class="tm-name">${tr('Seu nome (opcional)', 'Your name (optional)')}<input type="text" maxlength="${MAX_NAME}" autocomplete="nickname" placeholder="${tr('Ex.: Gabriel', 'E.g. Alex')}"></label>
         <p class="tm-share-msg"></p>
-        <input class="tm-share-link" type="text" readonly aria-label="Link do desafio">
+        <input class="tm-share-link" type="text" readonly aria-label="${tr('Link do desafio', 'Challenge link')}">
         <div class="row-actions">
-          ${'share' in navigator ? `<button class="btn primary" data-share="native">${icon('share')}Compartilhar</button>` : ''}
-          <button class="btn ${'share' in navigator ? 'ghost' : 'primary'}" data-share="copy">Copiar link</button>
-          <button class="btn ghost" data-share="close">Fechar</button>
+          ${'share' in navigator ? `<button class="btn primary" data-share="native">${icon('share')}${tr('Compartilhar', 'Share')}</button>` : ''}
+          <button class="btn ${'share' in navigator ? 'ghost' : 'primary'}" data-share="copy">${tr('Copiar link', 'Copy link')}</button>
+          <button class="btn ghost" data-share="close">${tr('Fechar', 'Close')}</button>
         </div>
       </div>
     </div>
@@ -195,11 +196,17 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   function hint() {
     const how = touchDevice
       ? cfg.fingers === 2
-        ? 'Encoste <b>dois dedos</b> aqui e solte para começar · bata os dois para parar'
-        : 'Encoste o dedo aqui e solte para começar · toque para parar'
-      : 'Segure <b>espaço</b> até ficar verde e solte para começar · qualquer tecla para';
-    if (phase === 'inspect') return touchDevice ? 'Inspeção — quando estiver pronto, segure e solte para começar' : 'Inspeção — segure espaço e solte para começar';
-    if (phase === 'idle' && cfg.inspection) return touchDevice ? 'Toque para começar a <b>inspeção</b> (15 s)' : 'Aperte <b>espaço</b> para começar a inspeção (15 s)';
+        ? tr('Encoste <b>dois dedos</b> aqui e solte para começar · bata os dois para parar', 'Put <b>two fingers</b> here and lift them to start · tap both to stop')
+        : tr('Encoste o dedo aqui e solte para começar · toque para parar', 'Put your finger here and lift it to start · tap to stop')
+      : tr('Segure <b>espaço</b> até ficar verde e solte para começar · qualquer tecla para', 'Hold <b>space</b> until it turns green, then release to start · any key stops');
+    if (phase === 'inspect')
+      return touchDevice
+        ? tr('Inspeção — quando estiver pronto, segure e solte para começar', 'Inspection — when you’re ready, hold and release to start')
+        : tr('Inspeção — segure espaço e solte para começar', 'Inspection — hold space and release to start');
+    if (phase === 'idle' && cfg.inspection)
+      return touchDevice
+        ? tr('Toque para começar a <b>inspeção</b> (15 s)', 'Tap to start the <b>inspection</b> (15 s)')
+        : tr('Aperte <b>espaço</b> para começar a inspeção (15 s)', 'Press <b>space</b> to start the inspection (15 s)');
     return how;
   }
 
@@ -370,7 +377,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
         scramble = [...challenge.scramble];
       } catch {
         challenge = null;
-        toast('O link do desafio tem um embaralho inválido — usando um novo.');
+        toast(tr('O link do desafio tem um embaralho inválido — usando um novo.', 'The challenge link has an invalid scramble — using a new one.'));
       }
     }
     scrText.textContent = scramble.join(' ');
@@ -388,12 +395,12 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   function renderStats() {
     const stat = (label: string, v: string, title = '') => `<div class="tm-stat" title="${title}"><span>${label}</span><b>${v}</b></div>`;
     $<HTMLElement>('.tm-stats').innerHTML = [
-      stat('Melhor', fmt(best(solves))),
-      stat('Média de 5', fmt(averageOf(solves, 5)), 'Últimos 5, sem o melhor e o pior (como nas competições)'),
-      stat('Média de 12', fmt(averageOf(solves, 12)), 'Últimos 12, sem o melhor e o pior'),
-      stat('Melhor média de 5', fmt(bestAverage(solves, 5))),
-      stat('Média geral', fmt(mean(solves))),
-      stat('Resoluções', String(solves.length)),
+      stat(tr('Melhor', 'Best'), fmt(best(solves))),
+      stat(tr('Média de 5', 'Ao5'), fmt(averageOf(solves, 5)), tr('Últimos 5, sem o melhor e o pior (como nas competições)', 'Last 5, without the best and the worst (like in competitions)')),
+      stat(tr('Média de 12', 'Ao12'), fmt(averageOf(solves, 12)), tr('Últimos 12, sem o melhor e o pior', 'Last 12, without the best and the worst')),
+      stat(tr('Melhor média de 5', 'Best ao5'), fmt(bestAverage(solves, 5))),
+      stat(tr('Média geral', 'Mean'), fmt(mean(solves))),
+      stat(tr('Resoluções', 'Solves'), String(solves.length)),
     ].join('');
     const list = $<HTMLElement>('.tm-times');
     list.innerHTML = solves.length
@@ -408,13 +415,13 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
               <span class="tm-acts">
                 <button class="${s.pen === 2 ? 'on' : ''}" data-pen="2" aria-pressed="${s.pen === 2}">+2</button>
                 <button class="${s.pen === 'dnf' ? 'on' : ''}" data-pen="dnf" aria-pressed="${s.pen === 'dnf'}">DNF</button>
-                <button data-del aria-label="Apagar este tempo">${icon('trash')}</button>
-                <button data-share-i aria-label="Desafiar um amigo com este tempo" title="Desafiar um amigo">${icon('share')}</button>
+                <button data-del aria-label="${tr('Apagar este tempo', 'Delete this time')}">${icon('trash')}</button>
+                <button data-share-i aria-label="${tr('Desafiar um amigo com este tempo', 'Challenge a friend with this time')}" title="${tr('Desafiar um amigo', 'Challenge a friend')}">${icon('share')}</button>
               </span>
             </li>`,
           )
           .join('')
-      : '<li class="tm-empty">Nenhum tempo ainda — faça a primeira resolução!</li>';
+      : `<li class="tm-empty">${tr('Nenhum tempo ainda — faça a primeira resolução!', 'No times yet — do your first solve!')}</li>`;
   }
 
   function setPenalty(i: number, pen: Penalty) {
@@ -436,13 +443,13 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   }
 
   // ---- desafio: o aviso de quem desafiou e o resultado da sua tentativa
-  const puzzleName = (id = cfg.puzzle) => short(available.find((p) => p.id === id)!.name);
+  const puzzleName = (id = cfg.puzzle) => available.find((p) => p.id === id)!.short;
   function renderChallenge() {
     banner.hidden = !challenge || challenge.puzzle !== cfg.puzzle;
     if (!challenge || banner.hidden) return;
     const c = challenge;
     const key = c.scramble.join(' ');
-    const who = c.name ? `<b>${esc(c.name)}</b>` : 'Um amigo';
+    const who = c.name ? `<b>${esc(c.name)}</b>` : tr('Um amigo', 'A friend');
     const theirs = c.ms;
     const attempt = [...solves].reverse().find((s) => s.scramble === key && s.at >= c.since);
     const onIt = scramble.join(' ') === key;
@@ -450,23 +457,29 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     if (!attempt)
       html = `${icon('target')}<div class="tm-ch-text">${
         theirs === null
-          ? `${who} tentou este embaralho do ${puzzleName()} e <b>não terminou</b>. Termine e ganhe!`
-          : `${who} fez <b>${fmt(theirs)}</b> neste embaralho do ${puzzleName()}. Embaralhe seu cubo igual e tente bater!`
-      }</div><div class="tm-ch-acts">${onIt ? '' : '<button class="btn primary sm" data-ch="retry">Usar o embaralho do desafio</button>'}<button class="btn ghost sm" data-ch="close">Fechar</button></div>`;
+          ? tr(`${who} tentou este embaralho do ${puzzleName()} e <b>não terminou</b>. Termine e ganhe!`, `${who} tried this ${puzzleName()} scramble and <b>didn’t finish</b>. Finish it and you win!`)
+          : tr(
+              `${who} fez <b>${fmt(theirs)}</b> neste embaralho do ${puzzleName()}. Embaralhe seu cubo igual e tente bater!`,
+              `${who} did <b>${fmt(theirs)}</b> on this ${puzzleName()} scramble. Scramble yours the same way and try to beat it!`,
+            )
+      }</div><div class="tm-ch-acts">${onIt ? '' : `<button class="btn primary sm" data-ch="retry">${tr('Usar o embaralho do desafio', 'Use the challenge scramble')}</button>`}<button class="btn ghost sm" data-ch="close">${tr('Fechar', 'Close')}</button></div>`;
     else {
       const mine = value(attempt);
       const diff = (a: number, b: number) => `${(Math.abs(a - b) / 1000).toFixed(2)} s`;
       const result = !Number.isFinite(mine)
         ? theirs === null
-          ? 'Os dois não terminaram — empate!'
-          : `Você não terminou (DNF). ${c.name ? esc(c.name) : 'Seu amigo'} ganhou desta vez.`
+          ? tr('Os dois não terminaram — empate!', 'Neither of you finished — it’s a tie!')
+          : tr(`Você não terminou (DNF). ${c.name ? esc(c.name) : 'Seu amigo'} ganhou desta vez.`, `You didn’t finish (DNF). ${c.name ? esc(c.name) : 'Your friend'} wins this time.`)
         : theirs === null || mine < theirs
-          ? `Você fez <b>${fmt(mine)}</b> — <b class="win">ganhou${theirs === null ? '' : ` por ${diff(mine, theirs)}`}!</b>`
+          ? tr(
+              `Você fez <b>${fmt(mine)}</b> — <b class="win">ganhou${theirs === null ? '' : ` por ${diff(mine, theirs)}`}!</b>`,
+              `You did <b>${fmt(mine)}</b> — <b class="win">you won${theirs === null ? '' : ` by ${diff(mine, theirs)}`}!</b>`,
+            )
           : mine === theirs
-            ? `Você fez <b>${fmt(mine)}</b> — empate!`
-            : `Você fez <b>${fmt(mine)}</b> — faltou ${diff(mine, theirs)}.`;
+            ? tr(`Você fez <b>${fmt(mine)}</b> — empate!`, `You did <b>${fmt(mine)}</b> — it’s a tie!`)
+            : tr(`Você fez <b>${fmt(mine)}</b> — faltou ${diff(mine, theirs)}.`, `You did <b>${fmt(mine)}</b> — ${diff(mine, theirs)} short.`);
       html = `${icon('trophy')}<div class="tm-ch-text">${result} <span class="tm-ch-vs">(${who}: ${theirs === null ? 'DNF' : fmt(theirs)})</span></div>
-        <div class="tm-ch-acts"><button class="btn ghost sm" data-ch="retry">Tentar de novo</button><button class="btn primary sm" data-ch="reply">${icon('share')}Responder</button><button class="btn ghost sm" data-ch="close">Fechar</button></div>`;
+        <div class="tm-ch-acts"><button class="btn ghost sm" data-ch="retry">${tr('Tentar de novo', 'Try again')}</button><button class="btn primary sm" data-ch="reply">${icon('share')}${tr('Responder', 'Reply')}</button><button class="btn ghost sm" data-ch="close">${tr('Fechar', 'Close')}</button></div>`;
     }
     banner.innerHTML = html;
   }
@@ -493,11 +506,17 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     const name = cleanName(nameInput.value);
     const v = value(s);
     const ms = Number.isFinite(v) ? v : null;
-    const url = `${location.origin}${TIMER_PATH}?${challengeQuery({ puzzle: cfg.puzzle, scramble: s.scramble.split(' '), ms, name })}`;
+    const url = `${location.origin}${timerPath()}?${challengeQuery({ puzzle: cfg.puzzle, scramble: s.scramble.split(' '), ms, name })}`;
     const text =
       ms === null
-        ? `${name ? `${name} tentou` : 'Tentei'} este embaralho do ${puzzleName()} no CuboGuia e não terminou. Consegue?`
-        : `${name ? `${name} fez` : 'Fiz'} ${fmt(ms)} neste embaralho do ${puzzleName()} no CuboGuia. Consegue bater? É o mesmo embaralho:`;
+        ? tr(
+            `${name ? `${name} tentou` : 'Tentei'} este embaralho do ${puzzleName()} no CuboGuia e não terminou. Consegue?`,
+            `${name ? `${name} tried` : 'I tried'} this ${puzzleName()} scramble on CuboGuia and didn’t finish. Can you?`,
+          )
+        : tr(
+            `${name ? `${name} fez` : 'Fiz'} ${fmt(ms)} neste embaralho do ${puzzleName()} no CuboGuia. Consegue bater? É o mesmo embaralho:`,
+            `${name ? `${name} did` : 'I did'} ${fmt(ms)} on this ${puzzleName()} scramble on CuboGuia. Can you beat it? Same scramble:`,
+          );
     return { url, text };
   }
   function refreshShare() {
@@ -528,7 +547,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     const { url, text } = shareData();
     if (act === 'native') {
       try {
-        await navigator.share({ title: 'Desafio no CuboGuia', text, url });
+        await navigator.share({ title: tr('Desafio no CuboGuia', 'CuboGuia challenge'), text, url });
         closeShare();
       } catch {
         /* a pessoa cancelou */
@@ -543,7 +562,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       linkInput.select();
       ok = document.execCommand('copy');
     }
-    toast(ok ? 'Link copiado! Mande para o seu amigo.' : 'Não deu para copiar sozinho — o link está selecionado, copie na mão.');
+    toast(ok ? tr('Link copiado! Mande para o seu amigo.', 'Link copied! Send it to your friend.') : tr('Não deu para copiar sozinho — o link está selecionado, copie na mão.', 'Couldn’t copy automatically — the link is selected, copy it by hand.'));
   });
 
   app.querySelector('.tm-times')!.addEventListener('click', (e) => {
@@ -569,7 +588,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     renderChallenge();
   });
   $<HTMLElement>('[data-act="clear"]').addEventListener('click', () => {
-    if (!solves.length || !confirm(`Apagar os ${solves.length} tempos deste puzzle?`)) return;
+    if (!solves.length || !confirm(tr(`Apagar os ${solves.length} tempos deste puzzle?`, `Delete all ${solves.length} times for this puzzle?`))) return;
     solves = [];
     saveSolves(cfg.puzzle, solves);
     timeEl.textContent = '0.00';
@@ -612,7 +631,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     renderOpts();
     renderStats();
     paint();
-    scrText.textContent = 'Carregando…';
+    scrText.textContent = tr('Carregando…', 'Loading…');
     const im = await loadPuzzle(id);
     if (!alive || cfg.puzzle !== id) return;
     impl = im;
@@ -627,17 +646,23 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     info.querySelector('.tm-info-in')!.innerHTML = `
       <div class="tm-info-cols">
         <div>
-          <h4>O que é o embaralho?</h4>
-          <p>É uma sequência de giros sorteada que deixa o ${puzzleName()} bagunçado de um jeito "justo" — o mesmo para todo mundo que fizer a mesma sequência. É assim nas competições, e é o que vai junto quando você desafia um amigo.</p>
-          <h4>Como fazer</h4>
+          <h4>${tr('O que é o embaralho?', 'What is a scramble?')}</h4>
+          <p>${tr(
+            `É uma sequência de giros sorteada que deixa o ${puzzleName()} bagunçado de um jeito "justo" — o mesmo para todo mundo que fizer a mesma sequência. É assim nas competições, e é o que vai junto quando você desafia um amigo.`,
+            `It’s a random sequence of turns that mixes up the ${puzzleName()} in a "fair" way — the same for everyone who does the same sequence. That’s how competitions work, and it’s what gets sent when you challenge a friend.`,
+          )}</p>
+          <h4>${tr('Como fazer', 'How to do it')}</h4>
           <ol>
-            <li>Comece com o ${puzzleName()} <b>resolvido</b>, ${SCRAMBLE_HOLD[cfg.puzzle] ?? DEFAULT_HOLD}.</li>
-            <li>Faça os giros na ordem, da esquerda para a direita, <b>sem virar o puzzle na mão</b> no meio do caminho.</li>
-            <li>Confira com o desenho${cfg.preview ? '' : ' (ligue a opção "Desenho")'}: ele mostra como o puzzle deve ter ficado, visto ${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? 'aberto' : 'aberto em cruz (a face de cima no alto, a da frente no meio)'}.</li>
+            <li>${tr(`Comece com o ${puzzleName()} <b>resolvido</b>, ${scrambleHold(cfg.puzzle)}.`, `Start with the ${puzzleName()} <b>solved</b>, ${scrambleHold(cfg.puzzle)}.`)}</li>
+            <li>${tr('Faça os giros na ordem, da esquerda para a direita, <b>sem virar o puzzle na mão</b> no meio do caminho.', 'Do the turns in order, left to right, <b>without rotating the whole puzzle</b> along the way.')}</li>
+            <li>${tr(
+              `Confira com o desenho${cfg.preview ? '' : ' (ligue a opção "Desenho")'}: ele mostra como o puzzle deve ter ficado, visto ${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? 'aberto' : 'aberto em cruz (a face de cima no alto, a da frente no meio)'}.`,
+              `Check it against the preview${cfg.preview ? '' : ' (turn on the "Preview" option)'}: it shows how the puzzle should look, unfolded${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? '' : ' as a cross (top face at the top, front face in the middle)'}.`,
+            )}</li>
           </ol>
         </div>
         <div>
-          <h4>O que cada movimento quer dizer</h4>
+          <h4>${tr('O que cada movimento quer dizer', 'What each move means')}</h4>
           ${notationHtml(impl)}
         </div>
       </div>`;

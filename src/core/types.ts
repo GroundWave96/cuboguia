@@ -15,7 +15,10 @@ export const UNKNOWN = '?';
 
 export interface ColorInfo {
   key: string;
-  name: string; // nome em português ("verde")
+  /** nome mostrado, no idioma atual ("verde" / "green") */
+  readonly name: string;
+  /** nome fixo em português, usado pela câmera para achar a cor de referência ("verde") */
+  ref?: string;
   hex: string;
   /** como a cor costuma aparecer numa câmera com boa luz (RGB), se diferente do padrão */
   camera?: [number, number, number];
@@ -178,8 +181,11 @@ export interface PuzzleDefinition {
   id: string;
   /** endereço da página do puzzle (/3x3, /pyraminx...) */
   slug: string;
-  name: string;
-  subtitle: string;
+  /** nome completo no idioma atual ("Cubo 3x3" / "3x3 Cube") */
+  readonly name: string;
+  /** nome curto ("3x3", "Pyraminx") */
+  short: string;
+  readonly subtitle: string;
   available: boolean;
   /** SVG decorativo do card */
   icon: string;

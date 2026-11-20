@@ -1,3 +1,4 @@
+import { tr } from '../core/i18n';
 import type { PuzzleImpl } from '../core/types';
 import { scanShortName } from '../puzzles/nxn/layout';
 import { rgbToHsv, type RGB } from '../core/color';
@@ -196,7 +197,7 @@ export class CameraScanner {
     this.autoMsg = '';
     this.root.innerHTML = `
       <div class="scan-head">
-        ${isComplete(this.session) ? '<button class="btn ghost sm back-review" data-act="review">← Voltar à revisão</button>' : ''}
+        ${isComplete(this.session) ? `<button class="btn ghost sm back-review" data-act="review">← ${tr('Voltar à revisão', 'Back to review')}</button>` : ''}
         <div class="scan-progress"><span style="width:${(done / this.captured.length) * 100}%"></span></div>
         <div class="scan-title">
           <span class="scan-step">${this.current + 1}/${this.impl.scan.length}</span>
@@ -213,16 +214,16 @@ export class CameraScanner {
         <div class="scan-auto ${this.running && this.auto ? '' : 'hidden'}"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
           <div class="cam-icon">${icon('camera')}</div>
-          <p>${this.impl.scanHint ?? `${this.impl.holdHint} Em cada face, as marcas ao redor da grade mostram como segurar o cubo.`}${this.auto ? ' Com a captura automática ligada, é só segurar cada face parada por 2 segundos.' : ''}</p>
-          <button class="btn primary" data-act="start">Ativar câmera</button>
+          <p>${this.impl.scanHint ?? `${this.impl.holdHint} ${tr('Em cada face, as marcas ao redor da grade mostram como segurar o cubo.', 'On each face, the marks around the grid show how to hold the cube.')}`}${this.auto ? tr(' Com a captura automática ligada, é só segurar cada face parada por 2 segundos.', ' With auto capture on, just hold each face still for 2 seconds.') : ''}</p>
+          <button class="btn primary" data-act="start">${tr('Ativar câmera', 'Turn on camera')}</button>
           <p class="scan-info"></p>
           <p class="scan-error"></p>
         </div>
       </div>
       <div class="scan-actions">
-        <button class="btn ghost icon-only" data-act="switch" title="Trocar câmera" aria-label="Trocar câmera" ${this.running ? '' : 'disabled'}>${icon('switchCamera')}</button>
-        <button class="btn ghost auto-btn ${this.auto ? 'on' : ''}" data-act="auto" aria-pressed="${this.auto}" title="Capturar sozinho quando as cores ficarem paradas"><span class="sw" aria-hidden="true"></span>Auto</button>
-        <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>${this.auto && this.running ? 'Capturar agora' : `Capturar ${face.title.toLowerCase()}`}</button>
+        <button class="btn ghost icon-only" data-act="switch" title="${tr('Trocar câmera', 'Switch camera')}" aria-label="${tr('Trocar câmera', 'Switch camera')}" ${this.running ? '' : 'disabled'}>${icon('switchCamera')}</button>
+        <button class="btn ghost auto-btn ${this.auto ? 'on' : ''}" data-act="auto" aria-pressed="${this.auto}" title="${tr('Capturar sozinho quando as cores ficarem paradas', 'Capture automatically when the colors hold still')}"><span class="sw" aria-hidden="true"></span>Auto</button>
+        <button class="btn primary big" data-act="capture" ${this.running ? '' : 'disabled'}>${this.auto && this.running ? tr('Capturar agora', 'Capture now') : tr(`Capturar ${face.title.toLowerCase()}`, `Capture ${face.title.toLowerCase()}`)}</button>
       </div>
       <div class="scan-thumbs ${this.impl.scan.length > 6 ? 'many' : ''}">
         ${this.impl.scan
@@ -277,22 +278,24 @@ export class CameraScanner {
 
   async start(deviceId?: string) {
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.showError('Este navegador não liberou a câmera. Ela só funciona em sites com <b>HTTPS</b> (ou localhost).');
+      this.showError(tr('Este navegador não liberou a câmera. Ela só funciona em sites com <b>HTTPS</b> (ou localhost).', 'This browser didn’t allow the camera. It only works on <b>HTTPS</b> sites (or localhost).'));
       return;
     }
     const btn = this.root.querySelector<HTMLButtonElement>('[data-act="start"]');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Aguardando a câmera…';
+      btn.textContent = tr('Aguardando a câmera…', 'Waiting for the camera…');
     }
     this.showError('');
-    this.setInfo('Se o navegador perguntar, clique em <b>Permitir</b> para usar a câmera.');
+    this.setInfo(tr('Se o navegador perguntar, clique em <b>Permitir</b> para usar a câmera.', 'If your browser asks, click <b>Allow</b> to use the camera.'));
     // alguns navegadores embutidos nunca respondem ao pedido de câmera
     const slow = window.setTimeout(
       () =>
         this.setInfo(
-          'A câmera não respondeu. Verifique se apareceu um pedido de permissão na barra de endereço. ' +
-            'Navegadores embutidos em aplicativos costumam bloquear a câmera — abra o site no <b>Chrome</b>, <b>Edge</b> ou <b>Safari</b>.',
+          tr(
+            'A câmera não respondeu. Verifique se apareceu um pedido de permissão na barra de endereço. Navegadores embutidos em aplicativos costumam bloquear a câmera — abra o site no <b>Chrome</b>, <b>Edge</b> ou <b>Safari</b>.',
+            'The camera didn’t respond. Check for a permission request in the address bar. Browsers built into other apps often block the camera — open the site in <b>Chrome</b>, <b>Edge</b> or <b>Safari</b>.',
+          ),
         ),
       6000,
     );
@@ -315,17 +318,19 @@ export class CameraScanner {
       this.setInfo('');
       this.showError(
         name === 'NotAllowedError'
-          ? 'A câmera foi bloqueada. Clique no ícone de cadeado/câmera na barra de endereço, permita a câmera e tente de novo. ' +
-              'Se você está num navegador embutido em outro aplicativo, abra o site no Chrome, Edge ou Safari.'
+          ? tr(
+              'A câmera foi bloqueada. Clique no ícone de cadeado/câmera na barra de endereço, permita a câmera e tente de novo. Se você está num navegador embutido em outro aplicativo, abra o site no Chrome, Edge ou Safari.',
+              'The camera was blocked. Click the lock/camera icon in the address bar, allow the camera and try again. If you’re in a browser built into another app, open the site in Chrome, Edge or Safari.',
+            )
           : name === 'NotFoundError'
-            ? 'Nenhuma câmera encontrada neste dispositivo.'
+            ? tr('Nenhuma câmera encontrada neste dispositivo.', 'No camera found on this device.')
             : name === 'NotReadableError'
-              ? 'A câmera está sendo usada por outro programa (Zoom, Teams, OBS…). Feche-o e tente de novo.'
-              : `Não foi possível abrir a câmera (${name}).`,
+              ? tr('A câmera está sendo usada por outro programa (Zoom, Teams, OBS…). Feche-o e tente de novo.', 'The camera is being used by another program (Zoom, Teams, OBS…). Close it and try again.')
+              : tr(`Não foi possível abrir a câmera (${name}).`, `Couldn’t open the camera (${name}).`),
       );
       if (btn) {
         btn.disabled = false;
-        btn.textContent = 'Tentar de novo';
+        btn.textContent = tr('Tentar de novo', 'Try again');
       }
     } finally {
       clearTimeout(slow);
@@ -467,14 +472,14 @@ export class CameraScanner {
       const need = Math.max(2, Math.ceil(sig.length * 0.25));
       const diff = (s: string[]) => (ref && ref.length === s.length ? s.filter((k, i) => k !== ref[i]).length : s.length);
       const frame = this.live.map((c) => this.classify(c));
-      if (diff(sig) < need && diff(frame) < need) return this.setAutoMsg('Gire o cubo para a próxima face');
+      if (diff(sig) < need && diff(frame) < need) return this.setAutoMsg(tr('Gire o cubo para a próxima face', 'Turn the cube to the next face'));
       this.armed = true;
     }
     // sem puzzle na grade (só o rosto, a parede...), não conta
     if (this.presence.filter(Boolean).length < 3) {
       this.countStart = 0;
       this.stableSince = now;
-      return this.setAutoMsg('Mostre o puzzle dentro da grade');
+      return this.setAutoMsg(tr('Mostre o puzzle dentro da grade', 'Show the puzzle inside the grid'));
     }
     // a face certa: centro (ou canto de referência) com a cor pedida
     const face = this.impl.scan[this.current];
@@ -482,14 +487,14 @@ export class CameraScanner {
       this.countStart = 0;
       return this.setAutoMsg('');
     }
-    if (now - this.stableSince < STABLE_MS) return this.setAutoMsg('Segure a face parada…');
+    if (now - this.stableSince < STABLE_MS) return this.setAutoMsg(tr('Segure a face parada…', 'Hold the face still…'));
     if (!this.countStart) this.countStart = now;
     if (now - this.countStart >= COUNT_MS) {
       this.countStart = 0;
       this.capture();
       return;
     }
-    this.setAutoMsg('Capturando… segure firme');
+    this.setAutoMsg(tr('Capturando… segure firme', 'Capturing… hold steady'));
   }
 
   private setAutoMsg(msg: string) {
@@ -511,8 +516,8 @@ export class CameraScanner {
       const got = this.classify(this.live[fc.cell]);
       msg =
         fc.cell === center
-          ? `O centro está sendo lido como <b>${name(got)}</b>, mas esta etapa pede a face <b>${name(fc.color)}</b>.`
-          : `O adesivo contornado deveria ser <b>${name(fc.color)}</b> (canto de referência) — confira a posição do cubo.`;
+          ? tr(`O centro está sendo lido como <b>${name(got)}</b>, mas esta etapa pede a face <b>${name(fc.color)}</b>.`, `The center reads as <b>${name(got)}</b>, but this step needs the <b>${name(fc.color)}</b> face.`)
+          : tr(`O adesivo contornado deveria ser <b>${name(fc.color)}</b> (canto de referência) — confira a posição do cubo.`, `The outlined sticker should be <b>${name(fc.color)}</b> (reference corner) — check how you’re holding the cube.`);
       break;
     }
     if (msg === this.lastWarn) return;
@@ -743,31 +748,31 @@ export class CameraScanner {
     this.root.innerHTML = `
       <div class="scan-review">
         <div class="review-head">
-          <h3>${icon('camera')}Confira as faces lidas</h3>
-          <p>Alguma saiu errada? <b>Toque na face</b> para escanear só ela de novo.</p>
+          <h3>${icon('camera')}${tr('Confira as faces lidas', 'Check the scanned faces')}</h3>
+          <p>${tr('Alguma saiu errada? <b>Toque na face</b> para escanear só ela de novo.', 'Did one come out wrong? <b>Tap the face</b> to scan just that one again.')}</p>
         </div>
         <div class="review-faces ${this.impl.scan.length > 6 ? 'many' : ''}">
           ${this.impl.scan
             .map(
-              (s, i) => `<button class="review-face" data-face="${i}" title="Escanear de novo: ${s.title}" aria-label="Escanear de novo: ${s.title}">
+              (s, i) => `<button class="review-face" data-face="${i}" title="${tr('Escanear de novo', 'Scan again')}: ${s.title}" aria-label="${tr('Escanear de novo', 'Scan again')}: ${s.title}">
                 ${faceThumb(this.impl, i, s.grid.flat().map((idx) => r.keys[idx]))}
-                <span class="rf-label">${faceLabel(this.impl, i)}<span class="rf-redo">${icon('camera')}Refazer</span></span>
+                <span class="rf-label">${faceLabel(this.impl, i)}<span class="rf-redo">${icon('camera')}${tr('Refazer', 'Redo')}</span></span>
               </button>`,
             )
             .join('')}
         </div>
         ${
           res.ok
-            ? `<div class="review-status ok">${icon('checkCircle')}<span>Tudo certo: as cores formam um puzzle possível.</span></div>`
-            : `<div class="review-status bad">${icon('warning')}<div><b>Algo não bate:</b>${res.errors
+            ? `<div class="review-status ok">${icon('checkCircle')}<span>${tr('Tudo certo: as cores formam um puzzle possível.', 'All good: the colors form a possible puzzle.')}</span></div>`
+            : `<div class="review-status bad">${icon('warning')}<div><b>${tr('Algo não bate:', 'Something doesn’t add up:')}</b>${res.errors
                 .slice(0, 3)
                 .map((e) => `<p>${e}</p>`)
-                .join('')}${res.errors.length > 3 ? `<p>… e mais ${res.errors.length - 3} problemas.</p>` : ''}
-                <p class="hint">Refaça a face que parece errada — ou use as cores assim e corrija pintando.</p></div></div>`
+                .join('')}${res.errors.length > 3 ? `<p>${tr(`… e mais ${res.errors.length - 3} problemas.`, `… and ${res.errors.length - 3} more problems.`)}</p>` : ''}
+                <p class="hint">${tr('Refaça a face que parece errada — ou use as cores assim e corrija pintando.', 'Redo the face that looks wrong — or use these colors and fix them by painting.')}</p></div></div>`
         }
         <div class="review-actions">
-          <button class="btn ghost" data-act="restart">Escanear tudo de novo</button>
-          <button class="btn primary big" data-act="use">Usar estas cores →</button>
+          <button class="btn ghost" data-act="restart">${tr('Escanear tudo de novo', 'Scan everything again')}</button>
+          <button class="btn primary big" data-act="use">${tr('Usar estas cores', 'Use these colors')} →</button>
         </div>
       </div>`;
     this.root.querySelectorAll<HTMLButtonElement>('[data-face]').forEach((b) => b.addEventListener('click', () => this.rescan(Number(b.dataset.face))));

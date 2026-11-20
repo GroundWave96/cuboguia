@@ -53,7 +53,7 @@ describe('5x5 — validação', () => {
   it('falta pintar', () => {
     const s = [...solved];
     s[3] = '?';
-    expect(cube5.validate(s).errors[0]).toMatch(/faltam 1/);
+    expect(cube5.validate(s).errors[0]).toMatch(/falta 1 adesivo/);
   });
 });
 

@@ -21,7 +21,8 @@ const CUBE_CAMERA: Record<string, RGB> = {
   azul: [30, 105, 175],
 };
 
-export const baseRgb = (c: ColorInfo): RGB => (c.camera as RGB | undefined) ?? CUBE_CAMERA[c.name] ?? hexToRgb(c.hex);
+const refName = (c: ColorInfo) => c.ref ?? c.name;
+export const baseRgb = (c: ColorInfo): RGB => (c.camera as RGB | undefined) ?? CUBE_CAMERA[refName(c)] ?? hexToRgb(c.hex);
 
 /** brilho percebido (0..255) */
 const lum = ([r, g, b]: RGB) => 0.299 * r + 0.587 * g + 0.114 * b;
@@ -88,7 +89,7 @@ export class ColorModel {
     // sem nenhuma referência ainda, o matiz é o mais seguro para as 6 cores padrão
     if (this.kind === 'hue6' && this.learnedCount === 0) {
       const name = classifyCubeColor(n);
-      const c = this.colors.find((x) => x.name === name);
+      const c = this.colors.find((x) => refName(x) === name);
       if (c) return c.key;
     }
     return nearestKey(rgbToLab(n), this.refs());
@@ -98,7 +99,7 @@ export class ColorModel {
   classifyBase(rgb: RGB): string {
     const n = this.norm(rgb);
     if (this.kind === 'hue6') {
-      const c = this.colors.find((x) => x.name === classifyCubeColor(n));
+      const c = this.colors.find((x) => refName(x) === classifyCubeColor(n));
       if (c) return c.key;
     }
     return nearestKey(rgbToLab(n), this.colors.map((c) => ({ key: c.key, lab: rgbToLab(this.base.get(c.key)!) })));

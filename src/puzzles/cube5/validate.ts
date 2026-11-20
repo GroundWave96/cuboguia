@@ -1,3 +1,5 @@
+import { tr } from '../../core/i18n';
+import { msg } from '../../core/messages';
 import type { PuzzleState, ValidationResult } from '../../core/types';
 import { UNKNOWN } from '../../core/types';
 import { COLOR_NAME } from '../cube3/colors';
@@ -16,23 +18,28 @@ const name = (c: string) => COLOR_NAME[c] ?? c;
 export function validateCube5(state: PuzzleState): ValidationResult {
   const errors: string[] = [];
   const unknown = state.filter((c) => c === UNKNOWN).length;
-  if (unknown > 0) return { ok: false, errors: [`Ainda faltam ${unknown} adesivo(s) para pintar.`] };
+  if (unknown > 0) return { ok: false, errors: [msg.missing(unknown)] };
 
   for (const f of FACES5) {
     const n = state.filter((c) => c === f).length;
-    if (n !== 25) errors.push(`A cor ${name(f)} aparece ${n} vez(es) — deveria aparecer 25.`);
+    if (n !== 25) errors.push(msg.colorCount(name(f), n, 25));
   }
   if (errors.length) return { ok: false, errors };
 
-  const countIn = (ids: number[], label: string) => {
+  const countIn = (ids: number[], label: [string, string]) => {
     for (const f of FACES5) {
       const n = ids.filter((i) => state[i] === f).length;
       if (n !== 4)
-        errors.push(`Nos centros ${label}, a cor ${name(f)} aparece ${n} vez(es) — cada cor tem 4 peças desse tipo.`);
+        errors.push(
+          tr(
+            `Nos centros ${label[0]}, a cor ${name(f)} aparece ${n} ${n === 1 ? 'vez' : 'vezes'} — cada cor tem 4 peças desse tipo.`,
+            `Among the ${label[1]} centers, the color ${name(f)} appears ${n} ${n === 1 ? 'time' : 'times'} — each color has 4 pieces of this kind.`,
+          ),
+        );
     }
   };
-  countIn(X_CENTERS, 'em X (as 4 quinas do miolo de cada face)');
-  countIn(T_CENTERS, 'em cruz (os 4 vizinhos do centro fixo)');
+  countIn(X_CENTERS, ['em X (as 4 quinas do miolo de cada face)', 'X (the 4 corners of each face’s middle)']);
+  countIn(T_CENTERS, ['em cruz (os 4 vizinhos do centro fixo)', 'cross-shaped (the 4 neighbors of the fixed center)']);
 
   const valid = new Set(WINGS.map(([a, b]) => FACES5[faceOf5(a)] + FACES5[faceOf5(b)]));
   const seen = new Map<string, number>();
@@ -42,18 +49,35 @@ export function validateCube5(state: PuzzleState): ValidationResult {
       const opposite = valid.has(state[b] + state[a]);
       errors.push(
         opposite
-          ? `Existe uma ponta de aresta ${name(state[a])}-${name(state[b])} virada ao contrário — no 5x5 essas peças não viram no lugar; confira as cores dela.`
-          : `Existe uma ponta de aresta com as cores ${name(state[a])}-${name(state[b])}, que não existe num cubo real.`,
+          ? tr(
+              `Existe uma ponta de aresta ${name(state[a])}-${name(state[b])} virada ao contrário — no 5x5 essas peças não viram no lugar; confira as cores dela.`,
+              `There’s a ${name(state[a])}-${name(state[b])} edge wing flipped the wrong way — on a 5x5 these pieces can’t flip in place; check its colors.`,
+            )
+          : tr(
+              `Existe uma ponta de aresta com as cores ${name(state[a])}-${name(state[b])}, que não existe num cubo real.`,
+              `There’s an edge wing with the colors ${name(state[a])}-${name(state[b])}, which doesn’t exist on a real cube.`,
+            ),
       );
       continue;
     }
     seen.set(k, (seen.get(k) ?? 0) + 1);
   }
   for (const [k, n] of seen)
-    if (n > 1) errors.push(`A ponta de aresta ${name(k[0])}-${name(k[1])} aparece ${n} vezes — provavelmente duas cores estão trocadas.`);
+    if (n > 1)
+      errors.push(
+        tr(
+          `A ponta de aresta ${name(k[0])}-${name(k[1])} aparece ${n} vezes — provavelmente duas cores estão trocadas.`,
+          `The ${name(k[0])}-${name(k[1])} edge wing appears ${n} times — two colors are probably swapped.`,
+        ),
+      );
   if (errors.length) return { ok: false, errors };
 
   // o que sobra (cantos, meio das arestas e centros fixos) é um 3x3 de verdade
   const r3 = validateCube3(project3(state));
-  return { ok: r3.ok, errors: r3.errors.map((e) => e.replace('Uma aresta está invertida', 'Uma aresta (adesivo do meio) está invertida')) };
+  const flipped = msg.flippedEdge();
+  const flipped5 = tr(
+    'Uma aresta (adesivo do meio) está invertida — confira as cores das arestas (peças de 2 cores).',
+    'An edge (middle sticker) is flipped — check the edge colors (the 2-color pieces).',
+  );
+  return { ok: r3.ok, errors: r3.errors.map((e) => (e === flipped ? flipped5 : e)) };
 }

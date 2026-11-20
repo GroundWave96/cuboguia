@@ -1,21 +1,25 @@
 /**
  * Endereços do site (sem #, para o Google e para a contagem de visitas):
  *
- *   /                      início
- *   /3x3                   informar as cores do 3x3 (pintar ou câmera)
- *   /3x3/tutorial?m=&s=    tutorial (método e estado do cubo no endereço)
- *   /cronometro?p=&e=&t=   cronômetro (com desafio opcional)
+ *   /                      início                      /en
+ *   /3x3                   informar as cores do 3x3    /en/3x3
+ *   /3x3/tutorial?m=&s=    tutorial                    /en/3x3/tutorial?m=&s=
+ *   /cronometro?p=&e=&t=   cronômetro (e desafio)      /en/timer?p=&e=&t=
  *
  * Os links antigos (#/p/cube3, #/cronometro?...) continuam funcionando: viram o novo.
  */
+import { getLang, type Lang } from './i18n';
 import { PUZZLES } from './registry';
 
 export const slugOf = (id: string) => PUZZLES.find((p) => p.id === id)?.slug ?? id;
 export const idOfSlug = (slug: string) => PUZZLES.find((p) => p.slug === slug.toLowerCase())?.id;
 
-export const puzzlePath = (id: string) => `/${slugOf(id)}`;
-export const solvePath = (id: string, method: string, state: string) => `/${slugOf(id)}/tutorial?m=${method}&s=${state}`;
-export const TIMER_PATH = '/cronometro';
+/** começo dos endereços no idioma (ou no idioma atual) */
+const prefix = (lang: Lang = getLang()) => (lang === 'en' ? '/en' : '');
+export const homePath = (lang: Lang = getLang()) => (lang === 'en' ? '/en' : '/');
+export const puzzlePath = (id: string, lang?: Lang) => `${prefix(lang)}/${slugOf(id)}`;
+export const solvePath = (id: string, method: string, state: string, lang?: Lang) => `${prefix(lang)}/${slugOf(id)}/tutorial?m=${method}&s=${state}`;
+export const timerPath = (lang: Lang = getLang()) => (lang === 'en' ? '/en/timer' : '/cronometro');
 
 let onChange: (() => void) | null = null;
 export function setRouteHandler(fn: () => void) {
@@ -36,25 +40,38 @@ export function fromLegacyHash(hash: string): string | null {
   const parts = path.split('/').filter(Boolean);
   const q = query ? `?${query}` : '';
   if (!parts.length) return '/';
-  if (parts[0] === 'cronometro') return TIMER_PATH + q;
+  if (parts[0] === 'cronometro') return timerPath('pt') + q;
   if (parts[0] === 'p' && parts[1] && PUZZLES.some((p) => p.id === parts[1])) return parts[2] === 'solve' ? `/${slugOf(parts[1])}/tutorial${q}` : puzzlePath(parts[1]);
   return '/';
 }
 
-export type Route =
+export type Route = { lang: Lang } & (
   | { page: 'home' }
   | { page: 'timer'; params: URLSearchParams }
   | { page: 'input'; id: string; params: URLSearchParams }
   | { page: 'solve'; id: string; params: URLSearchParams }
-  | { page: 'notfound' };
+  | { page: 'notfound' }
+);
 
 export function parseRoute(pathname: string, search: string): Route {
-  const parts = pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  let parts = pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  const lang: Lang = parts[0] === 'en' ? 'en' : 'pt';
+  if (lang === 'en') parts = parts.slice(1);
   const params = new URLSearchParams(search);
-  if (!parts.length) return { page: 'home' };
-  if (parts[0] === 'cronometro' && parts.length === 1) return { page: 'timer', params };
+  if (!parts.length) return { lang, page: 'home' };
+  if ((parts[0] === 'cronometro' || parts[0] === 'timer') && parts.length === 1) return { lang, page: 'timer', params };
   const id = idOfSlug(parts[0]);
-  if (id && parts.length === 1) return { page: 'input', id, params };
-  if (id && parts.length === 2 && parts[1] === 'tutorial') return { page: 'solve', id, params };
-  return { page: 'notfound' };
+  if (id && parts.length === 1) return { lang, page: 'input', id, params };
+  if (id && parts.length === 2 && parts[1] === 'tutorial') return { lang, page: 'solve', id, params };
+  return { lang, page: 'notfound' };
+}
+
+/** o mesmo endereço no outro idioma (a página e os parâmetros continuam) */
+export function pathInLang(pathname: string, search: string, lang: Lang): string {
+  const r = parseRoute(pathname, search);
+  const q = search && search !== '?' ? (search.startsWith('?') ? search : `?${search}`) : '';
+  if (r.page === 'timer') return timerPath(lang) + q;
+  if (r.page === 'input') return puzzlePath(r.id, lang) + q;
+  if (r.page === 'solve') return `${prefix(lang)}/${slugOf(r.id)}/tutorial${q}`;
+  return homePath(lang);
 }

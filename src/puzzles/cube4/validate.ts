@@ -1,3 +1,5 @@
+import { tr } from '../../core/i18n';
+import { msg } from '../../core/messages';
 import { UNKNOWN, type PuzzleState, type ValidationResult } from '../../core/types';
 import { COLOR_NAME } from '../cube3/colors';
 import { CORNERS4, WING_POSITIONS, geo4 as geo, partner } from './pieces';
@@ -15,11 +17,11 @@ const HOME_WINGS = WING_POSITIONS.map((p) => SOLVED[p] + SOLVED[partner(p)]);
  */
 export function validateCube4(state: PuzzleState): ValidationResult {
   const unknown = state.filter((c) => c === UNKNOWN).length;
-  if (unknown) return { ok: false, errors: [`Ainda falta${unknown > 1 ? 'm' : ''} ${unknown} adesivo${unknown > 1 ? 's' : ''} para pintar.`] };
+  if (unknown) return { ok: false, errors: [msg.missing(unknown)] };
   const errors: string[] = [];
   const count = new Map<string, number>();
   for (const c of state) count.set(c, (count.get(c) ?? 0) + 1);
-  for (const [c, n] of count) if (n !== 16) errors.push(`A cor ${name(c)} aparece ${n} vezes (deveria aparecer 16).`);
+  for (const [c, n] of count) if (n !== 16) errors.push(msg.colorCount(name(c), n, 16));
   if (errors.length) return { ok: false, errors };
 
   const seenCorner = new Set<number>();
@@ -31,12 +33,12 @@ export function validateCube4(state: PuzzleState): ValidationResult {
       const mirrored = HOME_CORNERS.some((h) => [...h].sort().join() === [...cols].sort().join());
       errors.push(
         mirrored
-          ? `O canto ${cols.map(name).join('-')} está com as cores na ordem trocada (como num espelho) — confira esse canto.`
-          : `Existe um canto com as cores ${cols.map(name).join('-')}, que não existe num cubo real.`,
+          ? msg.mirrorCorner(cols.map(name).join('-'))
+          : msg.noCorner(cols.map(name).join('-')),
       );
       continue;
     }
-    if (seenCorner.has(home)) errors.push(`O canto ${cols.map(name).join('-')} aparece duas vezes.`);
+    if (seenCorner.has(home)) errors.push(msg.dupCorner(cols.map(name).join('-')));
     seenCorner.add(home);
     // giro: em que posição está o adesivo amarelo/branco (o primeiro adesivo do canto é o de cima/baixo)
     twist += cols.findIndex((c) => c === 'U' || c === 'D');
@@ -47,15 +49,20 @@ export function validateCube4(state: PuzzleState): ValidationResult {
     const w = state[p] + state[partner(p)];
     const pairText = `${name(state[p])}-${name(state[partner(p)])}`;
     if (!HOME_WINGS.includes(w)) {
-      errors.push(`Existe uma aresta com as cores ${pairText}, que não existe num cubo real.`);
+      errors.push(msg.noEdge(pairText));
       continue;
     }
     // cada aresta tem duas pontas, uma em cada sentido: uma ponta pintada ao contrário vira repetida
     if (seenWing.has(w))
-      errors.push(`A ponta de aresta ${pairText} aparece mais de uma vez — cada aresta tem duas pontas, uma de cada lado; confira se alguma ficou com as cores ao contrário.`);
+      errors.push(
+        tr(
+          `A ponta de aresta ${pairText} aparece mais de uma vez — cada aresta tem duas pontas, uma de cada lado; confira se alguma ficou com as cores ao contrário.`,
+          `The ${pairText} edge wing appears more than once — every edge has two wings, one on each side; check whether one has its colors reversed.`,
+        ),
+      );
     seenWing.add(w);
   }
   if (errors.length) return { ok: false, errors };
-  if (twist % 3 !== 0) errors.push('Algum canto está girado no lugar (com as cores "rodadas") — confira os cantos.');
+  if (twist % 3 !== 0) errors.push(msg.twistedCorner());
   return { ok: errors.length === 0, errors };
 }
