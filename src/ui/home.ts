@@ -1,6 +1,7 @@
-import { tr } from '../core/i18n';
+import { getLang, tr } from '../core/i18n';
+import { listProgress } from '../core/progress';
 import { PUZZLES, loadPuzzle } from '../core/registry';
-import { homePath, puzzlePath } from '../core/router';
+import { homePath, puzzlePath, solvePath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
 import { icon } from './icons';
 
@@ -16,6 +17,37 @@ const SHOW: Record<string, { scramble: number; ms: number }> = {
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** "há 2 horas" / "2 hours ago" */
+function ago(t: number): string {
+  const s = (t - Date.now()) / 1000;
+  const rtf = new Intl.RelativeTimeFormat(getLang() === 'en' ? 'en' : 'pt-BR', { numeric: 'auto' });
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [['day', 86400], ['hour', 3600], ['minute', 60]];
+  for (const [u, n] of units) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
+  return tr('agora há pouco', 'just now');
+}
+
+/** tutoriais em andamento neste aparelho (os 3 mais recentes) */
+function resumeHtml(cls = ''): string {
+  const list = listProgress()
+    .filter((p) => PUZZLES.some((d) => d.id === p.puzzle && d.available))
+    .slice(0, 3);
+  if (!list.length) return '';
+  return `<div class="resume-home ${cls}">
+    <span class="resume-home-title">${icon('history')}${tr('Continue de onde parou', 'Pick up where you left off')}</span>
+    ${list
+      .map((p) => {
+        const def = PUZZLES.find((d) => d.id === p.puzzle)!;
+        return `<a class="resume-item" href="${solvePath(p.puzzle, p.method, p.state)}">
+          <span class="resume-icon" aria-hidden="true">${def.icon}</span>
+          <span class="resume-text"><b>${def.name}</b><small>${tr(`Passo ${p.step + 1} de ${p.steps}`, `Step ${p.step + 1} of ${p.steps}`)} · ${ago(p.t)}</small>
+            <span class="resume-bar"><span style="width:${Math.round((p.pos / p.total) * 100)}%"></span></span></span>
+          <span class="resume-go">${icon('play')}</span>
+        </a>`;
+      })
+      .join('')}
+  </div>`;
+}
+
 export function renderHome(app: HTMLElement) {
   const available = PUZZLES.filter((p) => p.available);
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -29,6 +61,7 @@ export function renderHome(app: HTMLElement) {
         .join('')}
     </div>
     <div class="page hero">
+      ${resumeHtml('resume-top')}
       <div class="hero-text">
         <span class="eyebrow">${tr('Tutorial interativo em 3D', 'Interactive 3D tutorial')}</span>
         <h1>${tr('Resolva o <em>seu</em> cubo mágico, passo a passo.', 'Solve <em>your</em> Rubik’s cube, step by step.')}</h1>
@@ -40,6 +73,7 @@ export function renderHome(app: HTMLElement) {
           <a class="btn primary big" id="hero-go" href="${puzzlePath('cube3')}">${tr('Resolver meu', 'Solve my')} <span id="hero-go-name">3x3</span></a>
           <a class="btn ghost big" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
         </div>
+        ${resumeHtml('resume-side')}
         <ul class="hero-badges">
           <li>${icon('palette')}${tr('Pinte ou use a câmera', 'Paint or use the camera')}</li>
           <li>${icon('levels')}${tr('Iniciante e avançado', 'Beginner and advanced')}</li>

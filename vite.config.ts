@@ -5,7 +5,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 /** arquivos da pasta public que não precisam ir para o aparelho */
-const SKIP_PUBLIC = new Set(['robots.txt', 'sitemap.xml', '_headers', '_redirects']);
+const SKIP_PUBLIC = new Set(['robots.txt', 'sitemap.xml', '_headers', '_redirects', 'fonts/OFL.txt', 'og.png', 'og-desafio.png']);
 
 function listPublic(dir: string, root = dir): string[] {
   return readdirSync(dir).flatMap((f) => {

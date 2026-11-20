@@ -1,11 +1,11 @@
 /**
- * Cabeçalho: Início · Puzzles ▾ (painel com todos os puzzles) · Cronômetro · Como funciona · PT|EN.
+ * Cabeçalho: Início · Puzzles ▾ (painel com todos os puzzles) · Cronômetro · Algoritmos · Como funciona · PT|EN.
  * Com muitos puzzles o menu continua do mesmo tamanho; no celular vira um botão ☰.
  * Os textos dependem do idioma: o cabeçalho (e o rodapé) é remontado quando o idioma muda.
  */
 import { getLang, tr, type Lang } from '../core/i18n';
 import { PUZZLES } from '../core/registry';
-import { homePath, pathInLang, puzzlePath, timerPath } from '../core/router';
+import { algsPath, homePath, pathInLang, puzzlePath, timerPath } from '../core/router';
 import { icon } from './icons';
 import { refreshInstall } from './pwa';
 
@@ -54,6 +54,7 @@ export function mountHeader() {
         </div>
       </div>
       <a href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
+      <a href="${algsPath()}" data-nav="algs">${tr('Algoritmos', 'Algorithms')}</a>
       <a href="${homePath()}" data-scroll="como-funciona" class="nav-extra">${tr('Como funciona', 'How it works')}</a>
       <button type="button" class="nav-install" data-install hidden title="${tr('Instalar o CuboGuia como app (funciona sem internet)', 'Install CuboGuia as an app (works offline)')}">${icon('download')}<span class="nav-install-txt">${tr('Instalar app', 'Install app')}</span></button>
       ${langSwitch('nav-lang')}`;
@@ -62,6 +63,7 @@ export function mountHeader() {
         ${langSwitch('drawer-lang')}
         <a class="drawer-link" href="${homePath()}" data-nav="home">${tr('Início', 'Home')}</a>
         <a class="drawer-link" href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
+        <a class="drawer-link" href="${algsPath()}" data-nav="algs">${tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms')}</a>
         <a class="drawer-link" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
         <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}${tr('Instalar app (funciona sem internet)', 'Install app (works offline)')}</button>
         <div class="mega-title">Puzzles</div>
@@ -129,6 +131,8 @@ export function mountHeader() {
     if (!l) return;
     try {
       localStorage.setItem('cubo:lang', l);
+      // no tutorial: continua no mesmo passo, sem o aviso "continuando de onde parou"
+      if (document.body.dataset.page === 'solve') sessionStorage.setItem('cubo:langSwitch', '1');
     } catch {
       /* sem armazenamento */
     }

@@ -19,6 +19,11 @@ const MIDDLE: Record<string, [string, string]> = {
 
 /** "2ª camada da direita (fatia de dentro) · horário ↻" */
 export function describeNxNMove(m: string, withColor: boolean): string {
+  const rot = /^([xyz])/.exec(m);
+  if (rot) {
+    const like = { x: 'R', y: 'U', z: 'F' }[rot[1] as 'x' | 'y' | 'z'];
+    return tr(`Girar o cubo inteiro na mão (como o ${like}) · ${dirText(m)}`, `Turn the whole cube in your hands (like ${like}) · ${dirText(m)}`);
+  }
   const letter = m.replace(/[^URFDLBMES]/g, '');
   if (MIDDLE[letter]) return `${tr(...MIDDLE[letter])} · ${dirText(m)}`;
   const mv = parseMove(m);

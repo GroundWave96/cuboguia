@@ -1,0 +1,35 @@
+# Testes completos no GitHub, só quando chamados à mão (aba Actions → Testes → Run workflow).
+# Não rodam sozinhos: a máquina do GitHub não tem placa de vídeo e leva ~15 min, e a proteção
+# do dia a dia já existe — o Cloudflare roda os testes de unidade antes de publicar
+# (npm run build) e os testes de navegador rodam no computador antes de juntar na main (npm run check).
+name: Testes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build (tipos + testes de unidade + site)
+        run: npm run build
+      - name: Instalar o Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Testes de navegador
+        run: npm run e2e
+      - name: Relatório (quando falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

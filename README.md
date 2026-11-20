@@ -37,9 +37,25 @@ No Megaminx o esquema de cores fica em `src/puzzles/megaminx/colors.ts`
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # testes do solucionador e da leitura de cores
-npm run build    # gera dist/
+npm test         # testes de unidade (solucionadores, câmera, cronômetro, inglês...)
+npm run build    # tipos + testes de unidade + gera dist/ (falha se algum teste falhar)
+npm run e2e      # testes de navegador (precisa do build; usa o Chrome instalado)
+npm run check    # tudo: build + testes de navegador
 ```
+
+## Testes
+
+- **Testes de unidade** (`tests/`, Vitest): rodam dentro do `npm run build`. Como o Cloudflare
+  publica com `npm run build`, **um teste quebrado impede a publicação** — o site no ar continua
+  na versão anterior.
+- **Testes de navegador** (`e2e/`, Playwright): abrem o site de verdade (com o `wrangler pages dev`,
+  igual ao Cloudflare) no computador e num celular simulado: todos os puzzles do início ao fim,
+  continuar de onde parou, câmera (com uma câmera de mentira), cronômetro com dois dedos, desafio,
+  sem internet e versão em inglês.
+- **Antes de juntar na `main`**: `npm run check` no computador (build + testes de navegador).
+- **GitHub Actions** (`.github/workflows/testes.yml`): os mesmos testes no GitHub, **só quando chamados
+  à mão** (aba Actions → Testes → Run workflow). Não roda sozinho porque lá não há placa de vídeo e
+  leva uns 15 minutos.
 
 ## Estrutura
 
@@ -117,6 +133,45 @@ apontam as páginas para o Google.
 - Avisos de validação comuns ficam em `src/core/messages.ts`.
 - `tests/i18n.test.ts` resolve embaralhados de todos os puzzles em todos os métodos em
   inglês e falha se aparecer qualquer palavra em português — rode ao adicionar textos.
+
+## Tutorial: continuar de onde parou
+
+O passo e o movimento de cada tutorial ficam guardados no navegador (`src/core/progress.ts`,
+chave `cubo:progress`, até 12 tutoriais por 60 dias). O mesmo cubo e método sempre geram a mesma
+solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
+progresso antigo é ignorado). A tela inicial mostra os tutoriais em andamento.
+
+## Algoritmos OLL e PLL (`/algoritmos`)
+
+Para quem já resolve pelo iniciante e quer passar para o CFOP: OLL em 2 etapas (10 casos) e PLL
+completa (21). Os algoritmos ficam em `src/puzzles/cube3/algs.ts`; o desenho de cada caso **não é
+feito à mão**: é o algoritmo aplicado ao contrário num cubo resolvido. `tests/algs.test.ts` confere
+que cada algoritmo mexe só na última camada, que os casos são todos diferentes, que o tipo de troca
+combina com o grupo (só arestas, cantos vizinhos, diagonal, G), que o algoritmo alternativo resolve o
+mesmo caso e que os pares a/b são espelhos. Para trocar ou adicionar um algoritmo, edite a lista e
+rode `npm test`. Os casos marcados como "Aprendido" ficam no aparelho (`cubo:algs:learned`).
+A notação aceita rotações do cubo inteiro (`x`, `y`, `z`), além de `M`, `E`, `S` e camadas largas.
+
+## Cronômetro: recordes, gráfico e exportar
+
+- **Recorde**: ao parar, compara com os tempos anteriores (`newRecords` em `src/core/timerstats.ts`) e
+  comemora o melhor tempo, a melhor média de 5 e a de 12. O primeiro tempo não conta como recorde.
+- **Gráfico** (`src/ui/timechart.ts`, SVG): cada resolução é um ponto, a média de 5 é a linha.
+  Cores validadas para daltonismo no fundo escuro. A lista de tempos é a "tabela" do gráfico.
+- **Exportar/importar** (`src/core/timerio.ts`): um `.json` com os tempos de todos os puzzles.
+  A importação também aceita o arquivo de exportação do **csTimer** (o tipo de embaralho de cada
+  sessão decide o puzzle) e junta sem repetir tempos.
+
+## Prévia do link de desafio (WhatsApp)
+
+WhatsApp e redes sociais não rodam o JavaScript da página, então o título da prévia vem do servidor:
+`functions/cronometro.ts` e `functions/en/timer.ts` (Cloudflare Pages Functions, grátis) chamam
+`server/challenge-preview.ts`, que pega o `index.html` e troca título, descrição e imagem
+("Ana te desafiou: 12.34 no 3x3"). Só esses dois endereços passam pela função; o resto do site
+continua estático. Testar localmente: `npx wrangler pages dev dist` (já roda as funções).
+
+Imagens da prévia (`public/og.png` e `public/og-desafio.png`, sem texto em nenhum idioma):
+geradas por `node tools/og-images.mjs` com o site rodando no wrangler.
 
 ## Aplicativo e uso sem internet
 

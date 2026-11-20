@@ -9,12 +9,11 @@
  *
  * Páginas (/, /3x3, /3x3/tutorial...) → o index.html guardado (o site monta a página).
  * Arquivos do site → do cache (com o nome versionado, nunca mudam).
- * Fontes do Google → guardadas na primeira vez e atualizadas em segundo plano.
+ * As fontes ficam em /fonts e entram na lista como qualquer outro arquivo.
  */
 const VERSION = '__VERSION__';
 const PRECACHE = __PRECACHE__;
 const CACHE = `cuboguia-${VERSION}`;
-const FONTS = 'cuboguia-fontes';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -29,7 +28,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('cuboguia-') && k !== CACHE && k !== FONTS).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('cuboguia-') && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -43,22 +42,6 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // fontes do Google: o que está guardado vale na hora; atualiza em segundo plano
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(
-      caches.open(FONTS).then(async (cache) => {
-        const hit = await cache.match(req);
-        const fresh = fetch(req)
-          .then((res) => {
-            if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
-            return res;
-          })
-          .catch(() => hit);
-        return hit || fresh;
-      }),
-    );
-    return;
-  }
   if (url.origin !== self.location.origin) return;
 
   // páginas: o site monta todas a partir do index.html

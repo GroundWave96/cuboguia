@@ -7,3 +7,5 @@ dist
 # fotos de teste da câmera (grandes); os testes usam tests/fixtures/camera-samples.json
 tests/cube images/
 __pycache__/
+test-results/
+playwright-report/

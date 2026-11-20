@@ -6,6 +6,7 @@ import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/type
 import { icon } from './icons';
 import { notationHtml } from './notation';
 import { keepScreenOn } from './wakelock';
+import { loadProgress, movesSignature, saveProgress } from '../core/progress';
 
 interface FlatMove {
   move: string;
@@ -49,6 +50,19 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     });
   }
 
+  // progresso salvo: o mesmo cubo e método sempre geram a mesma solução
+  const stateCode = encodeState(initial, impl.colors.map((c) => c.key));
+  const sig = movesSignature(flat.map((f) => f.move));
+  const saved = steps.length ? loadProgress(puzzleId, methodId, stateCode, sig) : null;
+  // veio da troca de idioma: continua no mesmo passo, sem o aviso "continuando de onde parou"
+  let langSwitch = false;
+  try {
+    langSwitch = sessionStorage.getItem('cubo:langSwitch') === '1';
+    sessionStorage.removeItem('cubo:langSwitch');
+  } catch {
+    /* sem armazenamento */
+  }
+
   const faceText = Object.fromEntries(impl.notationHelp.map((h) => [h.move, h.text]));
   const describeMove = (m: string) => {
     if (impl.describeMove) return impl.describeMove(m);
@@ -76,7 +90,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         ${impl.methods
           .map(
             (m) =>
-              `<a class="${m.id === methodId ? 'on' : ''}" href="${solvePath(puzzleId, m.id, encodeState(initial, impl.colors.map((c) => c.key)))}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
+              `<a class="${m.id === methodId ? 'on' : ''}" href="${solvePath(puzzleId, m.id, stateCode)}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
           )
           .join('')}
       </div>
@@ -93,6 +107,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view')}">${icon('resetView')}</button>
       </div>
       <div class="ws-panel card step-panel">
+        <div class="resume-note" hidden>${icon('history')}<span></span><button class="btn ghost sm" data-act="restart">${tr('Começar do início', 'Start over')}</button><button class="icon-btn" data-act="hideResume" aria-label="${tr('Fechar', 'Close')}" title="${tr('Fechar', 'Close')}">${icon('close')}</button></div>
         <div class="step-body"></div>
         <div class="step-ok" hidden>${icon('checkCircle')}<span>${tr('Passo concluído! Avance para o <b>próximo passo</b>.', 'Step done! Move on to the <b>next step</b>.')}</span></div>
         <!-- controles: ficam presos na parte de baixo da tela enquanto o painel passa por ela -->
@@ -129,6 +144,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const mainBtn = panel.querySelector<HTMLButtonElement>('[data-act="main"]')!;
   const prevMoveBtn = panel.querySelector<HTMLButtonElement>('[data-act="prevMove"]')!;
   const badge = app.querySelector<HTMLElement>('.move-badge')!;
+  const resumeNote = panel.querySelector<HTMLElement>('.resume-note')!;
 
   const stageIndex = (id: string) => sol.stages.findIndex((s) => s.id === id);
   const stepEnd = (i: number) => stepStart[i + 1];
@@ -302,7 +318,18 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     mainBtn.classList.toggle('wide', wide);
   }
 
+  /** guarda onde parou (só quando muda; no início e no fim o registro é apagado) */
+  let lastSaved = '';
+  function persist() {
+    if (!steps.length || busy) return;
+    const k = `${cur}:${pos}`;
+    if (k === lastSaved) return;
+    lastSaved = k;
+    saveProgress({ puzzle: puzzleId, method: methodId, state: stateCode, step: cur, pos, steps: steps.length, total: flat.length, sig, t: Date.now() });
+  }
+
   function render() {
+    persist();
     // etapas
     const curStage = steps[cur] ? stageIndex(steps[cur].stageId) : sol.stages.length;
     app.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach((b, i) => {
@@ -364,6 +391,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       return;
     }
     const act = t.closest<HTMLElement>('[data-act]')?.dataset.act;
+    if (act) resumeNote.hidden = true;
     if (act === 'prevStep') prevStep();
     else if (act === 'prevMove') prevMove();
     else if (act === 'nextMove') nextMove();
@@ -409,7 +437,28 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const releaseScreen = keepScreenOn();
 
   view.setState(initial);
-  if (steps.length) goToStep(0);
+  if (saved && saved.step < steps.length && saved.pos >= stepStart[saved.step] && saved.pos <= stepEnd(saved.step)) {
+    // continua de onde parou: o estado do passo + os movimentos já feitos dentro dele
+    cur = saved.step;
+    let s = startStates[cur];
+    for (let p = stepStart[cur]; p < saved.pos; p++) s = impl.applyMove(s, flat[p].move);
+    pos = saved.pos;
+    view.setState(s);
+    showFocus();
+    render();
+    resumeNote.querySelector('span')!.innerHTML = tr(
+      `Continuando de onde você parou: <b>passo ${cur + 1} de ${steps.length}</b>.`,
+      `Picking up where you left off: <b>step ${cur + 1} of ${steps.length}</b>.`,
+    );
+    resumeNote.hidden = langSwitch;
+    // celular: o cubo fica fixo no topo; rola até o aviso aparecer logo abaixo dele
+    requestAnimationFrame(() => {
+      if (langSwitch || getComputedStyle(viewCard).position !== 'sticky') return;
+      const stuckTop = parseFloat(getComputedStyle(viewCard).top) || 0;
+      const y = window.scrollY + resumeNote.getBoundingClientRect().top - (stuckTop + viewCard.offsetHeight + 8);
+      if (y > window.scrollY) window.scrollTo({ top: y });
+    });
+  } else if (steps.length) goToStep(0);
   else render();
 
   return () => {

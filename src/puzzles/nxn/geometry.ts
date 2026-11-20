@@ -69,12 +69,18 @@ export interface ParsedMove {
  *   3Rw    três camadas a partir da face
  *   2R     só a 2ª camada (fatia interna), sem a face
  *   M E S  fatia do meio (cubos ímpares), no sentido de L, D e F
+ *   x y z  o cubo inteiro, no sentido de R, U e F (usado nos algoritmos)
  */
 const MIDDLE: Record<string, FaceId> = { M: 'L', E: 'D', S: 'F' };
+const ROTATION: Record<string, FaceId> = { x: 'R', y: 'U', z: 'F' };
+/** "todas as camadas" (maior que qualquer N) */
+const ALL_LAYERS = 99;
 
 export function parseMove(move: string): ParsedMove {
   const mid = /^([MES])(['2]?)$/.exec(move.trim());
   if (mid) return { face: MIDDLE[mid[1]], turns: mid[2] === "'" ? 3 : mid[2] === '2' ? 2 : 1, from: 0, depth: 0 };
+  const rot = /^([xyz])(['2]?)$/.exec(move.trim());
+  if (rot) return { face: ROTATION[rot[1]], turns: rot[2] === "'" ? 3 : rot[2] === '2' ? 2 : 1, from: 1, depth: ALL_LAYERS };
   const m = /^(\d*)([URFDLBurfdlb])(w?)(['2]?)$/.exec(move.trim());
   if (!m) throw new Error(`Movimento inválido: ${move}`);
   const face = m[2].toUpperCase() as FaceId;

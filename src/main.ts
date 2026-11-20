@@ -8,6 +8,7 @@ import { renderHome } from './ui/home';
 import { renderInput } from './ui/input';
 import { renderSolve } from './ui/solve';
 import { renderTimer } from './ui/timer';
+import { renderAlgs } from './ui/algs';
 
 export type Cleanup = () => void;
 
@@ -97,6 +98,16 @@ async function route() {
         ),
       );
       cleanup = await renderTimer(app, r.params);
+    } else if (r.page === 'algs') {
+      setActiveNav('algs');
+      setMeta(
+        tr(`Algoritmos OLL e PLL do cubo mágico, com animação 3D — ${SITE}`, `OLL and PLL algorithms for the Rubik’s cube, with 3D animation — ${SITE}`),
+        tr(
+          'OLL em 2 etapas e PLL completa (21 casos) do CFOP: desenho de cada caso, o algoritmo animado em 3D, como montar o caso no seu cubo e um modo treino.',
+          'CFOP 2-look OLL and full PLL (21 cases): a picture of each case, the algorithm animated in 3D, how to set it up on your cube, and a training mode.',
+        ),
+      );
+      cleanup = await renderAlgs(app);
     } else if (r.page === 'input' || r.page === 'solve') {
       const def = getPuzzle(r.id)!;
       setActiveNav(r.id);

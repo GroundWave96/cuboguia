@@ -1,0 +1,10 @@
+Fontes usadas pelo CuboGuia, distribuídas sob a SIL Open Font License 1.1
+(texto completo: https://openfontlicense.org/open-font-license-official-text/)
+
+inter-*.woff2
+  Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter)
+
+space-grotesk-*.woff2
+  Copyright 2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk)
+
+Arquivos baixados do Google Fonts (subconjuntos latin e latin-ext, versões variáveis).
