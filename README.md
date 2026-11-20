@@ -8,6 +8,7 @@ animado, passo a passo.
 |---|---|
 | 3x3 | Iniciante (camadas) · CFOP (Cross, F2L, OLL/PLL em 2 etapas) |
 | 2x2 | Iniciante (camadas) · Solução ótima (≤ 11 movimentos) |
+| 4x4 | Redução (centros, arestas, paridades OLL/PLL) + iniciante ou CFOP |
 | Pyraminx | Iniciante (pontas, centros, base, topo) · Solução ótima (≤ 11 + pontas) |
 | Skewb | Iniciante (face branca, cantos de cima, centros) · Solução ótima (≤ 11 movimentos) |
 | Megaminx | Iniciante (camadas, ~300 mov.) · Avançado (F2L/S2L em pares, última face em 2 olhares, ~250 mov.) |
@@ -17,6 +18,11 @@ atrás-embaixo-esquerda; os solucionadores só usam U, R e F para não movê-lo.
 
 No Pyraminx a referência é a posição dos centros (eles só giram no lugar):
 centro sem amarelo em cima e centro sem verde atrás; os solucionadores usam os 4 eixos.
+
+No 4x4 nenhum centro é fixo: o solucionador monta o branco embaixo e o amarelo em
+cima na posição em que o cubo está (a câmera, como no 2x2, começa por qualquer face).
+Depois de juntar as arestas, as paridades do 4x4 (aresta virada sozinha e duas arestas
+trocadas) são corrigidas com um algoritmo cada, e o resto é a solução do 3x3.
 
 No Skewb a referência é o canto amarelo-verde-laranja, sempre em cima-frente-direita:
 os giros R, U, L e B (notação WCA) nunca mexem nele. Cada peça é única, então os
@@ -44,6 +50,7 @@ src/
     nxn/           geometria + visual 3D genéricos para cubos NxN (2x2, 3x3, 4x4, 5x5...)
     cube3/         3x3: peças, validação e solucionadores (iniciante e CFOP)
     cube2/         2x2: validação e solucionadores (iniciante e ótimo)
+    cube4/         4x4: redução (centros, arestas, paridades) e fim como 3x3
     pyraminx/      Pyraminx: tetraedro, peças 3D, rede triangular e solucionadores
     skewb/         Skewb: cubo cortado pelos cantos, rede em cruz e solucionadores
     megaminx/      Megaminx: geometria do dodecaedro, rede em duas flores, câmera e solucionador

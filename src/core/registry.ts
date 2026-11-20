@@ -18,7 +18,14 @@ export const PUZZLES: PuzzleDefinition[] = [
     icon: cubeIcon(2),
     load: () => import('../puzzles/cube2').then((m) => m.default as PuzzleImpl),
   },
-  { id: 'cube4', name: 'Cubo 4x4', subtitle: 'Revenge', available: false, icon: cubeIcon(4) },
+  {
+    id: 'cube4',
+    name: 'Cubo 4x4',
+    subtitle: 'Revenge. Centros, arestas, paridades e fim como 3x3.',
+    available: true,
+    icon: cubeIcon(4),
+    load: () => import('../puzzles/cube4').then((m) => m.default as PuzzleImpl),
+  },
   {
     id: 'cube5',
     name: 'Cubo 5x5',
