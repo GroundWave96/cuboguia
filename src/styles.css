@@ -683,6 +683,12 @@ body.no-scroll { overflow: hidden; }
   .ws-header { padding-top: 12px; margin-bottom: 10px; }
   .ws-header h1 { font-size: 1.25rem; margin-bottom: 4px; }
   .ws-header p { font-size: 0.85rem; line-height: 1.45; }
+  /* celulares grandes deitados passam de 900px de largura: desfaz o cabeçalho de computador
+     (método ao lado do título), que espremia o título na metade direita da tela */
+  .solve .ws-header { display: block; margin-bottom: 10px; }
+  .solve .ws-header h1 { font-size: 1.25rem; }
+  .solve .ws-header p { font-size: 0.85rem; }
+  .solve .ws-header .method-switch { margin-top: 8px; }
   .back { margin-bottom: 4px; }
   .method-switch { margin-top: 8px; }
   .method-switch a { padding: 5px 10px; font-size: 0.82rem; }
