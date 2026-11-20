@@ -99,6 +99,30 @@ export function pyraminxIcon(): string {
 }
 
 // ---------------------------------------------------------------------------
+// Skewb: o mesmo cubo isométrico, cada face com o losango do meio e 4 triângulos
+export function skewbIcon(): string {
+  const proj = (x: number, y: number, z: number): P => [60 + (x - y) * 47, 8 + (x + y) * 27 + (1 - z) * 54];
+  const out: string[] = [];
+  out.push(body([proj(0, 0, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0), proj(0, 1, 1)], 8));
+  const shapes: P[][] = [
+    [[0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5]],
+    [[0, 0], [0.5, 0], [0, 0.5]],
+    [[1, 0], [1, 0.5], [0.5, 0]],
+    [[1, 1], [0.5, 1], [1, 0.5]],
+    [[0, 1], [0, 0.5], [0.5, 1]],
+  ];
+  const faces: [(a: number, b: number) => P, string][] = [
+    [(a, b) => proj(a, b, 1), '#ffd83a'],
+    [(a, b) => proj(a, 1, 1 - b), '#00a651'],
+    [(a, b) => proj(1, 1 - a, 1 - b), '#f2600f'],
+  ];
+  for (const [map, color] of faces) for (const s of shapes) out.push(sticker(shrink(s.map(([a, b]) => map(a, b)), 0.8), color, 4));
+  out.push(shade([proj(0, 0, 1), proj(1, 0, 1), proj(1, 1, 1), proj(0, 1, 1)], '#ffffff', 0.06));
+  out.push(shade([proj(1, 1, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0)], '#3a1200', 0.12));
+  return wrap(out.join(''));
+}
+
+// ---------------------------------------------------------------------------
 // Megaminx: dodecaedro de verdade, rotacionado e projetado
 type V3 = [number, number, number];
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];

@@ -165,6 +165,8 @@ export interface PuzzleImpl {
   scanColorModel?: 'hue6' | 'nearest';
   /** explicação da notação (HTML) mostrada no tutorial, se diferente da do cubo */
   notationNote?: string;
+  /** frase antes da lista de letras (padrão: "Cada letra é uma face...") */
+  notationIntro?: string;
   /** texto explicando um movimento (ex.: "Direita · horário") */
   describeMove?: (move: string) => string;
   notationHelp: { move: string; text: string }[];

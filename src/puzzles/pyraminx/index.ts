@@ -133,6 +133,7 @@ const pyraminx: PuzzleImpl = {
     const dir = m.endsWith("'") ? 'anti-horário ↺' : 'horário ↻';
     return `${tip ? 'Só a ponta' : 'Camada'} ${VERT_TEXT[VERTS[vert]].toLowerCase()} · ${dir} (120°)`;
   },
+  notationIntro: 'Cada letra é um <b>vértice</b> (uma ponta). Gire olhando a ponta <b>de fora</b>:',
   notationNote:
     '<p><code>U L R B</code> = camada grande do vértice (ponta + centro + 3 arestas) · <code>u l r b</code> = só a ponta · <code>\'</code> = anti-horário. Cada giro é ⅓ de volta (120°), olhando o vértice de fora.</p>',
   notationHelp: [

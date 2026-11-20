@@ -67,7 +67,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     <div class="ws-header">
       <a class="back" href="#/p/${puzzleId}">← Editar cores</a>
       <h1>Tutorial: resolvendo seu ${def.name.replace('Cubo ', '')}</h1>
-      <p>${sol.method} · <b>${steps.length}</b> passos · <b>${flat.length}</b> movimentos. ${impl.holdHint} Mantenha essa posição o tempo todo.</p>
+      <p>${sol.method} · <b>${steps.length}</b> passo${steps.length === 1 ? '' : 's'} · <b>${flat.length}</b> movimento${flat.length === 1 ? '' : 's'}. ${impl.holdHint} Mantenha essa posição o tempo todo.</p>
       <div class="method-switch" role="group" aria-label="Método">
         ${impl.methods
           .map(
@@ -105,7 +105,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
           <label class="speed">Velocidade <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
           <details class="notation">
             <summary>Como ler os movimentos?</summary>
-            <p>Cada letra é uma face. Gire-a olhando <b>de frente para ela</b>:</p>
+            <p>${impl.notationIntro ?? 'Cada letra é uma face. Gire-a olhando <b>de frente para ela</b>:'}</p>
             <ul>${impl.notationHelp.map((h) => `<li><code>${h.move}</code> ${h.text}</li>`).join('')}</ul>
             ${impl.notationNote ?? `<p><code>R</code> = sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = meia volta.</p>
             <p>Letra minúscula (<code>r</code>) = a face <b>e</b> a camada do meio juntas (duas camadas).</p>`}

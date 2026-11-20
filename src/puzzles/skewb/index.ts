@@ -1,0 +1,142 @@
+import type { PuzzleImpl } from '../../core/types';
+import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
+import { PolyView } from '../poly/PolyView';
+import { H, MOVE_CORNERS, REFERENCE_CORNER, SKEWB_ROTATIONS, invertSkewbMove, randomScramble, skewbGeo as geo, type V3 } from './geometry';
+import { buildSkewbNet, buildSkewbScan, skewbPieces } from './layout';
+import { SKEWB_SOLVED as SOLVED, solveSkewbBeginner, solveSkewbOptimal } from './solver';
+import { validateSkewb } from './validate';
+
+const SCAN = buildSkewbScan();
+const pick = <T>(state: T[], order: number[]) => order.map((i) => state[i]);
+
+/**
+ * Segurou o Skewb de outro jeito? Gira o puzzle inteiro até o canto amarelo-verde-laranja
+ * ficar em cima-frente-direita. Devolve de onde vem cada adesivo.
+ */
+function normalizeOrder(state: string[]): number[] {
+  for (const p of SKEWB_ROTATIONS) if (REFERENCE_CORNER.stickers.every((i) => state[p[i]] === SOLVED[i])) return Array.from(p);
+  return state.map((_, i) => i); // não achou o canto: a validação explica o que está errado
+}
+const normalize = (state: string[]) => pick(state, normalizeOrder(state));
+
+/** gira a imagem de uma face ¼ de volta (o centro fica, os triângulos andam) */
+const turnImage = <T>(img: T[]) => [img[0], img[4], img[1], img[2], img[3]];
+
+/**
+ * Se a leitura não formar um Skewb possível, testa os enganos mais comuns — girou para a
+ * direita (2ª e 4ª faces trocadas), mostrou o topo/a base girados ou trocados — do que
+ * muda menos para o que muda mais, e fica com a primeira montagem válida.
+ */
+function repairOrder(state: string[]): number[] {
+  const ids = state.map((_, i) => i);
+  const ok = (s: string[]) => validateSkewb(normalize(s)).ok;
+  if (ok(state)) return ids;
+  const images = SCAN.map((f) => f.grid.flat());
+  const tries: { cost: number; slots: number[][] }[] = [];
+  for (const sides of [false, true])
+    for (const swapUD of [false, true])
+      for (let ru = 0; ru < 4; ru++)
+        for (let rd = 0; rd < 4; rd++) {
+          const slots = [...images];
+          if (sides) [slots[1], slots[3]] = [images[3], images[1]];
+          let up = swapUD ? images[5] : images[4], down = swapUD ? images[4] : images[5];
+          for (let k = 0; k < ru; k++) up = turnImage(up);
+          for (let k = 0; k < rd; k++) down = turnImage(down);
+          slots[4] = up;
+          slots[5] = down;
+          tries.push({ cost: +sides + +swapUD + +(ru > 0) + +(rd > 0), slots });
+        }
+  for (const t of tries.sort((a, b) => a.cost - b.cost)) {
+    const order = [...ids];
+    SCAN.forEach((f, k) => f.grid.flat().forEach((i, j) => (order[i] = t.slots[k][j])));
+    if (ok(pick(state, order))) return order;
+  }
+  return ids;
+}
+
+/** leitura da câmera → posição de referência, dizendo de onde veio cada adesivo */
+function scanOrder(state: string[]): number[] {
+  const first = repairOrder(state);
+  return pick(first, normalizeOrder(pick(state, first)));
+}
+
+const CORNER_TEXT: Record<string, string> = {
+  R: 'Canto de baixo-trás-direita',
+  U: 'Canto de cima-trás-esquerda',
+  L: 'Canto de baixo-frente-esquerda',
+  B: 'Canto de baixo-trás-esquerda',
+};
+
+const skewb: PuzzleImpl = {
+  colors: CUBE3_COLORS,
+  holdHint:
+    'Segure o Skewb com o canto <b>amarelo-verde-laranja</b> em cima, na frente, à direita — <b>amarelo em cima</b> e <b>verde na frente</b>. Ele é a referência: nenhum movimento do tutorial mexe nele.',
+  scanHint:
+    'Pode começar por <b>qualquer face</b>, segurando o Skewb do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como ele estava virado.',
+  stickerCount: geo.stickers.length,
+  solvedState: () => geo.solved(),
+  fixedStickers: REFERENCE_CORNER.stickers,
+  applyMove: (s, m) => geo.apply(s, m),
+  invertMove: invertSkewbMove,
+  locationMap: (m) => geo.locationMap(m),
+  scramble: (len = 11) => randomScramble(len),
+  validate: validateSkewb,
+  normalize,
+  repairScan: (state) => pick(state, repairOrder(state)),
+  scanOrder,
+  methods: [
+    {
+      id: 'beginner',
+      name: 'Iniciante (camadas)',
+      tagline: 'Para aprender · ~25 movimentos',
+      description: 'Face branca (o centro e um canto por vez), depois os cantos de cima e por fim os centros.',
+    },
+    {
+      id: 'optimal',
+      name: 'Avançado (ótimo)',
+      tagline: 'A menor solução · ≤ 11 movimentos',
+      description: 'O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.',
+    },
+  ],
+  solve: (state, methodId) => (methodId === 'optimal' ? solveSkewbOptimal(state) : solveSkewbBeginner(state)),
+  createView: (container) =>
+    new PolyView(container, {
+      ...skewbPieces(),
+      bodyFaces: geo.bodyFaces,
+      palette: COLOR_HEX,
+      solved: geo.solved(),
+      apply: (s, m) => geo.apply(s, m),
+      locationMap: (m) => geo.locationMap(m),
+      moveInfo: (m) => ({ axis: geo.axis(m), angle: geo.moveAngle(m), layer: geo.layer(m), cut: 0 }),
+      // diagonal mostrando cima, frente e direita (o canto de referência no meio)
+      defaultDir: [0.85, 0.75, 1],
+      // vistas candidatas: faces, cantos e meios das arestas do cubo
+      viewDirs: [
+        ...geo.stickers.filter((s) => s.kind === 'center').map((s) => s.normal),
+        ...geo.corners.map((c) => c.vertex),
+        ...[0, 1, 2].flatMap((zero) =>
+          [1, -1].flatMap((a) => [1, -1].map((b) => {
+            const v: V3 = [0, 0, 0];
+            const others = [0, 1, 2].filter((i) => i !== zero);
+            v[others[0]] = a;
+            v[others[1]] = b;
+            return v;
+          })),
+        ),
+      ],
+      radius: H * 1.25,
+    }),
+  net: [],
+  netSvg: buildSkewbNet(),
+  scan: SCAN,
+  describeMove: (m) => {
+    const dir = m.endsWith("'") ? 'anti-horário ↺' : 'horário ↻';
+    return `${CORNER_TEXT[m[0]]} · ${dir} (⅓ de volta)`;
+  },
+  notationIntro: 'Cada letra é um <b>canto</b>. Gire a metade do Skewb que tem esse canto, olhando o canto <b>de fora</b>:',
+  notationNote:
+    '<p>Cada giro é <b>⅓ de volta</b>. Sem apóstrofo = horário · <code>\'</code> = anti-horário. Nenhum giro mexe no canto amarelo-verde-laranja (cima-frente-direita).</p>',
+  notationHelp: Object.keys(MOVE_CORNERS).map((k) => ({ move: k, text: CORNER_TEXT[k].replace('Canto de ', 'canto de ') })),
+};
+
+export default skewb;

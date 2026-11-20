@@ -1,5 +1,5 @@
 import type { PuzzleDefinition, PuzzleImpl } from './types';
-import { cubeIcon, megaminxIcon, pyraminxIcon } from './icons';
+import { cubeIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
 
 export const PUZZLES: PuzzleDefinition[] = [
   {
@@ -34,6 +34,14 @@ export const PUZZLES: PuzzleDefinition[] = [
     available: true,
     icon: pyraminxIcon(),
     load: () => import('../puzzles/pyraminx').then((m) => m.default as PuzzleImpl),
+  },
+  {
+    id: 'skewb',
+    name: 'Skewb',
+    subtitle: 'O cubo que gira pelos cantos. Iniciante ou solução ótima.',
+    available: true,
+    icon: skewbIcon(),
+    load: () => import('../puzzles/skewb').then((m) => m.default as PuzzleImpl),
   },
   {
     id: 'megaminx',

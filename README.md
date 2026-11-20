@@ -9,6 +9,7 @@ animado, passo a passo.
 | 3x3 | Iniciante (camadas) · CFOP (Cross, F2L, OLL/PLL em 2 etapas) |
 | 2x2 | Iniciante (camadas) · Solução ótima (≤ 11 movimentos) |
 | Pyraminx | Iniciante (pontas, centros, base, topo) · Solução ótima (≤ 11 + pontas) |
+| Skewb | Iniciante (face branca, cantos de cima, centros) · Solução ótima (≤ 11 movimentos) |
 | Megaminx | Iniciante (camadas, ~300 mov.) · Avançado (F2L/S2L em pares, última face em 2 olhares, ~250 mov.) |
 
 No 2x2 (sem centros) a referência é o canto branco-azul-vermelho, sempre
@@ -16,6 +17,11 @@ atrás-embaixo-esquerda; os solucionadores só usam U, R e F para não movê-lo.
 
 No Pyraminx a referência é a posição dos centros (eles só giram no lugar):
 centro sem amarelo em cima e centro sem verde atrás; os solucionadores usam os 4 eixos.
+
+No Skewb a referência é o canto amarelo-verde-laranja, sempre em cima-frente-direita:
+os giros R, U, L e B (notação WCA) nunca mexem nele. Cada peça é única, então os
+solucionadores usam tabelas de distância por conjunto de peças (os cantos e os centros
+são independentes: 8.748 × 360 = 3.149.280 posições) — as mesmas tabelas validam o puzzle.
 
 No Megaminx o esquema de cores fica em `src/puzzles/megaminx/colors.ts`
 (`MIRROR = true` espelha o sentido das cores, para puzzles com o esquema invertido).
@@ -39,6 +45,7 @@ src/
     cube3/         3x3: peças, validação e solucionadores (iniciante e CFOP)
     cube2/         2x2: validação e solucionadores (iniciante e ótimo)
     pyraminx/      Pyraminx: tetraedro, peças 3D, rede triangular e solucionadores
+    skewb/         Skewb: cubo cortado pelos cantos, rede em cruz e solucionadores
     megaminx/      Megaminx: geometria do dodecaedro, rede em duas flores, câmera e solucionador
     poly/          visual 3D genérico de poliedros (corta o corpo na animação do giro)
   ui/              páginas: início, entrada de cores (pintura/câmera), tutorial
