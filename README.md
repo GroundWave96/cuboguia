@@ -99,11 +99,24 @@ Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.t
 | `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/pyraminx`, `/skewb`, `/megaminx` | informar as cores |
 | `/3x3/tutorial?m=método&s=estado` | tutorial |
 | `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
+| `/en`, `/en/3x3`, `/en/3x3/tutorial`, `/en/timer` | as mesmas páginas em inglês |
 
 Os links antigos (`#/p/cube3`, `#/cronometro?...`) viram o endereço novo sozinhos.
 O Cloudflare Pages entrega o `index.html` em qualquer endereço (o projeto não tem
 `404.html`, então ele trata o site como SPA). `public/sitemap.xml` e `robots.txt`
 apontam as páginas para o Google.
+
+## Idiomas (português e inglês)
+
+- O idioma vem do endereço: `/3x3` é português, `/en/3x3` é inglês (o cronômetro é
+  `/cronometro` e `/en/timer`). O seletor **PT | EN** do menu leva para a mesma página
+  no outro idioma; navegador em inglês na versão em português vê um convite discreto.
+- Os textos ficam junto do código: `tr('Próximo passo', 'Next step')` (`src/core/i18n.ts`).
+  Como o idioma pode mudar sem recarregar, texto nunca vai para constante no carregamento:
+  use getters (`get holdHint() { return tr(...) }`), funções (`STAGES()`) ou `i18nMap`.
+- Avisos de validação comuns ficam em `src/core/messages.ts`.
+- `tests/i18n.test.ts` resolve embaralhados de todos os puzzles em todos os métodos em
+  inglês e falha se aparecer qualquer palavra em português — rode ao adicionar textos.
 
 ## Aplicativo e uso sem internet
 

@@ -1,3 +1,4 @@
+import { tr } from '../../core/i18n';
 /** Rede 2D (duas "flores") e moldes da câmera do Megaminx. */
 import type { ColorInfo, PuzzleImpl, ScanFace } from '../../core/types';
 import { EDGE_T, FACES, INNER, megaGeo as geo, type V3 } from './geometry';
@@ -139,23 +140,36 @@ export function buildMegaScan(colors: ColorInfo[]): ScanFace[] {
     const isUpper = ['F', 'R', 'BR', 'BL', 'L'].includes(fk);
     const isLower = ['DR', 'DBR', 'B', 'DBL', 'DL'].includes(fk);
     const prev = order[order.indexOf(fk) - 1];
-    const hint =
+    const hint = () =>
       fk === 'F'
-        ? `Cinza em cima, <b>${name('F')}</b> de frente`
+        ? tr(`Cinza em cima, <b>${name('F')}</b> de frente`, `Gray on top, <b>${name('F')}</b> in front`)
         : isUpper || (isLower && prev && !['L'].includes(prev))
-          ? 'Gire o megaminx um passo para a esquerda'
+          ? tr('Gire o megaminx um passo para a esquerda', 'Turn the Megaminx one step to the left')
           : fk === 'DR'
-            ? `Volte o ${name('F')} para a frente e incline para baixo: face <b>${name('DR')}</b>`
+            ? tr(`Volte o ${name('F')} para a frente e incline para baixo: face <b>${name('DR')}</b>`, `Bring ${name('F')} back to the front and tilt it down: <b>${name('DR')}</b> face`)
             : fk === 'U'
-              ? `Cinza para a câmera, ${name('F')} embaixo`
-              : `Branco para a câmera, ${name('F')} em cima`;
+              ? tr(`Cinza para a câmera, ${name('F')} embaixo`, `Gray toward the camera, ${name('F')} at the bottom`)
+              : tr(`Branco para a câmera, ${name('F')} em cima`, `White toward the camera, ${name('F')} on top`);
     return {
       face: fk,
       grid: [Array.from({ length: 11 }, (_, s) => f * 11 + s)],
-      title: `Face ${name(fk)}`,
+      get title() {
+        return tr(`Face ${name(fk)}`, `${name(fk)[0].toUpperCase()}${name(fk).slice(1)} face`);
+      },
       faceColor: fk,
-      hint,
-      upLabel: fk === 'U' ? `${name('F').toUpperCase()} EMBAIXO` : fk === 'D' ? `${name('F').toUpperCase()} PARA CIMA` : isUpper ? `${name('U').toUpperCase()} EM CIMA` : `${name('D').toUpperCase()} EMBAIXO`,
+      get hint() {
+        return hint();
+      },
+      get upLabel() {
+        const up = (k: string) => name(k).toUpperCase();
+        return fk === 'U'
+          ? tr(`${up('F')} EMBAIXO`, `${up('F')} AT THE BOTTOM`)
+          : fk === 'D'
+            ? tr(`${up('F')} PARA CIMA`, `${up('F')} UP`)
+            : isUpper
+              ? tr(`${up('U')} EM CIMA`, `${up('U')} ON TOP`)
+              : tr(`${up('D')} EMBAIXO`, `${up('D')} AT THE BOTTOM`);
+      },
       upColor: fk === 'U' || fk === 'D' ? 'F' : isUpper ? 'U' : 'D',
       arrow: fk === 'U' || isLower ? '▼' : '▲',
       edges: { up: [], down: [], left: [], right: [] },

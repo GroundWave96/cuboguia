@@ -1,3 +1,4 @@
+import { i18nMap, tr } from '../../core/i18n';
 import type { PuzzleImpl } from '../../core/types';
 import { PolyView } from '../poly/PolyView';
 import { megaPieces } from './pieces3d';
@@ -7,24 +8,29 @@ import { buildMegaNet, buildMegaScan } from './layout';
 import { solveMegaminx, solveMegaminxAdvanced } from './solver';
 import { validateMegaminx } from './validate';
 
-const FACE_TEXT: Record<string, string> = {
-  U: 'Cima',
-  F: 'Frente',
-  R: 'Direita',
-  L: 'Esquerda',
-  BR: 'Trás-direita',
-  BL: 'Trás-esquerda',
-  DR: 'Baixo-direita',
-  DL: 'Baixo-esquerda',
-  DBR: 'Baixo-trás-direita',
-  DBL: 'Baixo-trás-esquerda',
-  B: 'Trás (embaixo)',
-  D: 'Baixo',
-};
+const FACE_TEXT = i18nMap({
+  U: ['Cima', 'Top'],
+  F: ['Frente', 'Front'],
+  R: ['Direita', 'Right'],
+  L: ['Esquerda', 'Left'],
+  BR: ['Trás-direita', 'Back-right'],
+  BL: ['Trás-esquerda', 'Back-left'],
+  DR: ['Baixo-direita', 'Bottom-right'],
+  DL: ['Baixo-esquerda', 'Bottom-left'],
+  DBR: ['Baixo-trás-direita', 'Bottom-back-right'],
+  DBL: ['Baixo-trás-esquerda', 'Bottom-back-left'],
+  B: ['Trás (embaixo)', 'Back (lower)'],
+  D: ['Baixo', 'Bottom'],
+});
 
 const megaminx: PuzzleImpl = {
   colors: MEGA_COLORS,
-  holdHint: `Segure o megaminx com o <b>${MEGA_COLOR_NAME.U}</b> em cima, o <b>${MEGA_COLOR_NAME.D}</b> embaixo e o <b>${MEGA_COLOR_NAME.F}</b> de frente.`,
+  get holdHint() {
+    return tr(
+      `Segure o megaminx com o <b>${MEGA_COLOR_NAME.U}</b> em cima, o <b>${MEGA_COLOR_NAME.D}</b> embaixo e o <b>${MEGA_COLOR_NAME.F}</b> de frente.`,
+      `Hold the Megaminx with <b>${MEGA_COLOR_NAME.U}</b> on top, <b>${MEGA_COLOR_NAME.D}</b> on the bottom and <b>${MEGA_COLOR_NAME.F}</b> in front.`,
+    );
+  },
   stickerCount: 132,
   solvedState: () => geo.solved(),
   fixedStickers: FACES.map((_, f) => f * 11),
@@ -33,20 +39,25 @@ const megaminx: PuzzleImpl = {
   locationMap: (m) => geo.locationMap(m),
   scramble: (len = 45) => geo.randomScramble(len),
   validate: validateMegaminx,
-  methods: [
-    {
-      id: 'beginner',
-      name: 'Iniciante (camadas)',
-      tagline: 'Camada por camada · ~300 movimentos',
-      description: 'Face branca, depois as camadas do meio e por fim a face cinza — como o 3x3, com mais peças.',
-    },
-    {
-      id: 'advanced',
-      name: 'Avançado (pares)',
-      tagline: 'Estilo speedcuber · ~250 movimentos',
-      description: 'Estrela planejada de 2 em 2, F2L e S2L com canto + aresta juntos e a última face em 2 olhares.',
-    },
-  ],
+  get methods() {
+    return [
+      {
+        id: 'beginner',
+        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
+        tagline: tr('Camada por camada · ~300 movimentos', 'Layer by layer · ~300 moves'),
+        description: tr('Face branca, depois as camadas do meio e por fim a face cinza — como o 3x3, com mais peças.', 'White face, then the middle layers and finally the gray face — like the 3x3, with more pieces.'),
+      },
+      {
+        id: 'advanced',
+        name: tr('Avançado (pares)', 'Advanced (pairs)'),
+        tagline: tr('Estilo speedcuber · ~250 movimentos', 'Speedcuber style · ~250 moves'),
+        description: tr(
+          'Estrela planejada de 2 em 2, F2L e S2L com canto + aresta juntos e a última face em 2 olhares.',
+          'Star planned 2 at a time, F2L and S2L with corner + edge together, and a 2-look last face.',
+        ),
+      },
+    ];
+  },
   solve: (state, methodId) => (methodId === 'advanced' ? solveMegaminxAdvanced(state) : solveMegaminx(state)),
   createView: (container) =>
     new PolyView(container, {
@@ -76,12 +87,18 @@ const megaminx: PuzzleImpl = {
   describeMove: (m) => {
     const { face } = geo.parse(m);
     const two = m.includes('2');
-    const dir = m.endsWith("'") ? 'anti-horário ↺' : 'horário ↻';
-    return `${FACE_TEXT[FACES[face]]} (${MEGA_COLOR_NAME[FACES[face]]}) · ${dir}${two ? ' · 2 cliques (144°)' : ''}`;
+    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺') : tr('horário ↻', 'clockwise ↻');
+    return `${FACE_TEXT[FACES[face]]} (${MEGA_COLOR_NAME[FACES[face]]}) · ${dir}${two ? tr(' · 2 cliques (144°)', ' · 2 clicks (144°)') : ''}`;
   },
-  notationNote:
-    "<p><code>R</code> = 1 clique (72°) no sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = 2 cliques (144°) · <code>R2'</code> = 2 cliques anti-horário.</p>",
-  notationHelp: FACES.map((f) => ({ move: f, text: `${FACE_TEXT[f]} (${MEGA_COLOR_NAME[f]})` })),
+  get notationNote() {
+    return tr(
+      "<p><code>R</code> = 1 clique (72°) no sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = 2 cliques (144°) · <code>R2'</code> = 2 cliques anti-horário.</p>",
+      "<p><code>R</code> = 1 click (72°) clockwise · <code>R'</code> = counterclockwise · <code>R2</code> = 2 clicks (144°) · <code>R2'</code> = 2 clicks counterclockwise.</p>",
+    );
+  },
+  get notationHelp() {
+    return FACES.map((f) => ({ move: f, text: `${FACE_TEXT[f]} (${MEGA_COLOR_NAME[f]})` }));
+  },
 };
 
 export default megaminx;

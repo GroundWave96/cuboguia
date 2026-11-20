@@ -1,12 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://cuboguia.pages.dev/</loc></url>
-  <url><loc>https://cuboguia.pages.dev/2x2</loc></url>
-  <url><loc>https://cuboguia.pages.dev/3x3</loc></url>
-  <url><loc>https://cuboguia.pages.dev/4x4</loc></url>
-  <url><loc>https://cuboguia.pages.dev/5x5</loc></url>
-  <url><loc>https://cuboguia.pages.dev/pyraminx</loc></url>
-  <url><loc>https://cuboguia.pages.dev/skewb</loc></url>
-  <url><loc>https://cuboguia.pages.dev/megaminx</loc></url>
-  <url><loc>https://cuboguia.pages.dev/cronometro</loc></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://cuboguia.pages.dev/</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/2x2</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/2x2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/2x2"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/2x2</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/2x2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/2x2"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/3x3</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/3x3"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/3x3"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/3x3</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/3x3"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/3x3"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/4x4</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/4x4"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/4x4"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/4x4</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/4x4"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/4x4"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/skewb</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/skewb"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/skewb"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/skewb</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/skewb"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/skewb"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/megaminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/megaminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/megaminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/megaminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/cronometro</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/cronometro"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/timer"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/timer</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/cronometro"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/timer"/>
+  </url>
 </urlset>
