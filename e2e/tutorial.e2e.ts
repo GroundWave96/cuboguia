@@ -3,9 +3,13 @@ import { expect, test } from '@playwright/test';
 import { openRandomTutorial, trackErrors } from './helpers';
 
 const SLUGS = ['2x2', '3x3', '4x4', '5x5', 'pyraminx', 'skewb', 'megaminx'];
+/** tutoriais longos (40 a 60 passos): no GitHub o 3D é desenhado sem placa de vídeo e demora */
+const LONG = ['4x4', '5x5', 'megaminx'];
 
 for (const slug of SLUGS)
-  test(`${slug}: do início até resolvido`, async ({ page }) => {
+  test(`${slug}: do início até resolvido`, async ({ page }, info) => {
+    const long = LONG.includes(slug);
+    if (long) test.slow();
     const check = trackErrors(page);
     await openRandomTutorial(page, slug);
     await expect(page.locator('.step-meta')).toContainText(/Passo 1 de/);
@@ -14,6 +18,8 @@ for (const slug of SLUGS)
     await expect(page.locator('.chip.done')).toHaveCount(1);
     await page.click('[data-act="prevMove"]');
     await expect(page.locator('.chip.done')).toHaveCount(0);
+    // no celular, os longos param aqui (o caminho até o fim já é testado no computador)
+    if (long && info.project.name === 'celular') return check();
     // pula passo a passo até o fim
     for (let i = 0; i < 400 && !(await page.locator('.done-panel').count()); i++) await page.click('[data-act="nextStep"]');
     await expect(page.locator('.done-panel h2')).toContainText(/resolvido/i);

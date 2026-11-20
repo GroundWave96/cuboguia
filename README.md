@@ -139,6 +139,17 @@ chave `cubo:progress`, até 12 tutoriais por 60 dias). O mesmo cubo e método se
 solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
 progresso antigo é ignorado). A tela inicial mostra os tutoriais em andamento.
 
+## Algoritmos OLL e PLL (`/algoritmos`)
+
+Para quem já resolve pelo iniciante e quer passar para o CFOP: OLL em 2 etapas (10 casos) e PLL
+completa (21). Os algoritmos ficam em `src/puzzles/cube3/algs.ts`; o desenho de cada caso **não é
+feito à mão**: é o algoritmo aplicado ao contrário num cubo resolvido. `tests/algs.test.ts` confere
+que cada algoritmo mexe só na última camada, que os casos são todos diferentes, que o tipo de troca
+combina com o grupo (só arestas, cantos vizinhos, diagonal, G), que o algoritmo alternativo resolve o
+mesmo caso e que os pares a/b são espelhos. Para trocar ou adicionar um algoritmo, edite a lista e
+rode `npm test`. Os casos marcados como "Aprendido" ficam no aparelho (`cubo:algs:learned`).
+A notação aceita rotações do cubo inteiro (`x`, `y`, `z`), além de `M`, `E`, `S` e camadas largas.
+
 ## Cronômetro: recordes, gráfico e exportar
 
 - **Recorde**: ao parar, compara com os tempos anteriores (`newRecords` em `src/core/timerstats.ts`) e

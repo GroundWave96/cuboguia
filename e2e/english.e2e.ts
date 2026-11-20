@@ -34,6 +34,16 @@ test('telas em inglês, do início ao fim do tutorial', async ({ page }, info) =
   await expect(page.locator('.tm-scr-text')).not.toBeEmpty();
   await page.click('.tm-info-btn');
   bad.push(...(await portugueseLeft(page, '/en/timer')));
+  await page.goto('/en/algorithms');
+  await page.click('details.notation summary');
+  bad.push(...(await portugueseLeft(page, '/en/algorithms')));
+  await page.click('[data-tab="pll"]');
+  await page.click('[data-open="pll-v"]');
+  bad.push(...(await portugueseLeft(page, '/en/algorithms 3D')));
+  await page.keyboard.press('Escape');
+  await page.click('[data-tab="train"]');
+  await page.click('[data-treveal]');
+  bad.push(...(await portugueseLeft(page, '/en/algorithms practice')));
   await page.goto('/en/nothing-here');
   bad.push(...(await portugueseLeft(page, '/en/404')));
   expect([...new Set(bad)]).toEqual([]);

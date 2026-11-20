@@ -90,4 +90,14 @@
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/cronometro"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/timer"/>
   </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/algoritmos</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/algorithms</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms"/>
+  </url>
 </urlset>

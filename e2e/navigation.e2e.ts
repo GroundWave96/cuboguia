@@ -10,6 +10,8 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
     ['/pyraminx', /Pyraminx/],
     ['/megaminx', /Megaminx/],
     ['/en/skewb', /Skewb/],
+    ['/algoritmos', /OLL e PLL/],
+    ['/en/algorithms', /OLL and PLL/],
   ] as const) {
     const res = await page.goto(path);
     expect(res?.status(), path).toBe(200);
