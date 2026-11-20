@@ -52,3 +52,50 @@ export function readChallenge(params: URLSearchParams, puzzles: string[]): Chall
   }
   return { puzzle, scramble, ms, name: cleanName(params.get('n') ?? '') };
 }
+
+/** nomes curtos para a prévia do link (a função do servidor não carrega o registro dos puzzles) */
+export const PREVIEW_NAMES: Record<string, string> = {
+  cube2: '2x2',
+  cube3: '3x3',
+  cube4: '4x4',
+  cube5: '5x5',
+  pyraminx: 'Pyraminx',
+  skewb: 'Skewb',
+  megaminx: 'Megaminx',
+};
+
+/** "12.34" ou "1:02.35" (igual ao cronômetro) */
+function previewTime(ms: number): string {
+  const cs = Math.floor(ms / 10);
+  const m = Math.floor(cs / 6000), s = Math.floor((cs % 6000) / 100), c = cs % 100;
+  return `${m ? `${m}:${String(s).padStart(2, '0')}` : s}.${String(c).padStart(2, '0')}`;
+}
+
+/**
+ * Título e descrição da prévia do link de desafio (WhatsApp, Telegram, redes sociais).
+ * Esses aplicativos não rodam o JavaScript da página: o servidor coloca o texto no HTML.
+ */
+export function challengePreview(c: Challenge, lang: 'pt' | 'en'): { title: string; description: string } {
+  const pz = PREVIEW_NAMES[c.puzzle] ?? c.puzzle;
+  const t = c.ms === null ? null : previewTime(c.ms);
+  let scr = c.scramble.join(' ');
+  if (scr.length > 70) scr = scr.slice(0, 70).replace(/\s+\S*$/, '') + ' …';
+  if (lang === 'en') {
+    const title = c.name
+      ? t
+        ? `${c.name} challenged you: ${t} on the ${pz}`
+        : `${c.name} challenged you on the ${pz}`
+      : t
+        ? `${pz} challenge: ${t} — can you beat it?`
+        : `${pz} challenge — can you finish it?`;
+    return { title, description: `Same scramble: ${scr}. Open the link, scramble yours the same way and race the clock on CuboGuia.` };
+  }
+  const title = c.name
+    ? t
+      ? `${c.name} te desafiou: ${t} no ${pz}`
+      : `${c.name} te desafiou no ${pz}`
+    : t
+      ? `Desafio no ${pz}: ${t} — consegue bater?`
+      : `Desafio no ${pz} — consegue terminar?`;
+  return { title, description: `Mesmo embaralho: ${scr}. Abra o link, embaralhe o seu igual e tente bater o tempo no CuboGuia.` };
+}

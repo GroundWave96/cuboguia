@@ -139,6 +139,27 @@ chave `cubo:progress`, até 12 tutoriais por 60 dias). O mesmo cubo e método se
 solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
 progresso antigo é ignorado). A tela inicial mostra os tutoriais em andamento.
 
+## Cronômetro: recordes, gráfico e exportar
+
+- **Recorde**: ao parar, compara com os tempos anteriores (`newRecords` em `src/core/timerstats.ts`) e
+  comemora o melhor tempo, a melhor média de 5 e a de 12. O primeiro tempo não conta como recorde.
+- **Gráfico** (`src/ui/timechart.ts`, SVG): cada resolução é um ponto, a média de 5 é a linha.
+  Cores validadas para daltonismo no fundo escuro. A lista de tempos é a "tabela" do gráfico.
+- **Exportar/importar** (`src/core/timerio.ts`): um `.json` com os tempos de todos os puzzles.
+  A importação também aceita o arquivo de exportação do **csTimer** (o tipo de embaralho de cada
+  sessão decide o puzzle) e junta sem repetir tempos.
+
+## Prévia do link de desafio (WhatsApp)
+
+WhatsApp e redes sociais não rodam o JavaScript da página, então o título da prévia vem do servidor:
+`functions/cronometro.ts` e `functions/en/timer.ts` (Cloudflare Pages Functions, grátis) chamam
+`server/challenge-preview.ts`, que pega o `index.html` e troca título, descrição e imagem
+("Ana te desafiou: 12.34 no 3x3"). Só esses dois endereços passam pela função; o resto do site
+continua estático. Testar localmente: `npx wrangler pages dev dist` (já roda as funções).
+
+Imagens da prévia (`public/og.png` e `public/og-desafio.png`, sem texto em nenhum idioma):
+geradas por `node tools/og-images.mjs` com o site rodando no wrangler.
+
 ## Aplicativo e uso sem internet
 
 - `pwa/sw.js` é o service worker; no build, `vite.config.ts` gera o `dist/sw.js` com a

@@ -73,3 +73,29 @@ export function fmtSolve(s: Solve): string {
 export function inspectionPenalty(inspectMs: number): Penalty {
   return inspectMs <= 15000 ? 0 : inspectMs <= 17000 ? 2 : 'dnf';
 }
+
+export type RecordKind = 'single' | 'ao5' | 'ao12';
+
+/**
+ * Recordes batidos pela última resolução da lista (comparando com a lista sem ela).
+ * Só conta como recorde se já havia um antes: o primeiro tempo (ou a primeira média) não comemora.
+ */
+export function newRecords(solves: Solve[]): RecordKind[] {
+  if (solves.length < 2) return [];
+  const prev = solves.slice(0, -1);
+  const out: RecordKind[] = [];
+  const v = value(solves[solves.length - 1]);
+  const b = best(prev);
+  if (Number.isFinite(v) && b !== null && v < b) out.push('single');
+  for (const [n, kind] of [[5, 'ao5'], [12, 'ao12']] as const) {
+    const now = averageOf(solves, n);
+    const before = bestAverage(prev, n);
+    if (now !== null && Number.isFinite(now) && before !== null && now < before) out.push(kind);
+  }
+  return out;
+}
+
+/** média de n terminando em cada resolução (null antes de ter n tempos; Infinity = DNF) */
+export function rollingAverage(solves: Solve[], n: number): (number | null)[] {
+  return solves.map((_, i) => (i + 1 < n ? null : averageOf(solves.slice(i + 1 - n, i + 1), n)));
+}

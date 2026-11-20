@@ -12,7 +12,8 @@
 import { PUZZLES, loadPuzzle } from '../core/registry';
 import { homePath, timerPath } from '../core/router';
 import { MAX_NAME, challengeQuery, cleanName, readChallenge, type Challenge } from '../core/challenge';
-import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, value, type Penalty, type Solve } from '../core/timerstats';
+import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, newRecords, value, type Penalty, type RecordKind, type Solve } from '../core/timerstats';
+import { ImportError, exportJson, mergeSolves, parseImport } from '../core/timerio';
 import { tr } from '../core/i18n';
 import type { PuzzleImpl } from '../core/types';
 import { icon } from './icons';
@@ -20,6 +21,7 @@ import { netSvg } from './net';
 import { notationHtml } from './notation';
 import { toast } from './toast';
 import { keepScreenOn } from './wakelock';
+import { createTimeChart } from './timechart';
 
 /** quanto tempo segurar até ficar verde (como o Stackmat) */
 const HOLD_MS = 400;
@@ -125,6 +127,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     <div class="tm-pad" tabindex="0" aria-label="${tr('Cronômetro', 'Timer')}">
       <div class="tm-time">0.00</div>
       <div class="tm-hint"></div>
+      <div class="tm-pb" hidden role="status"></div>
       <div class="tm-last" hidden>
         <button class="btn ghost sm" data-last="2">+2</button>
         <button class="btn ghost sm" data-last="dnf">DNF</button>
@@ -133,8 +136,16 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       </div>
     </div>
     <div class="tm-stats card"></div>
+    <div class="tm-chart card" hidden></div>
     <div class="tm-list card">
-      <div class="tm-list-head"><span class="tm-label">${tr('Tempos', 'Times')}</span><button class="btn ghost sm" data-act="clear">${tr('Limpar sessão', 'Clear session')}</button></div>
+      <div class="tm-list-head"><span class="tm-label">${tr('Tempos', 'Times')}</span>
+        <span class="tm-list-acts">
+          <button class="btn ghost sm" data-act="export" title="${tr('Baixar um arquivo com os tempos de todos os puzzles', 'Download a file with the times of every puzzle')}">${icon('download')}${tr('Exportar', 'Export')}</button>
+          <button class="btn ghost sm" data-act="import" title="${tr('Abrir um arquivo exportado do CuboGuia ou do csTimer', 'Open a file exported from CuboGuia or csTimer')}">${icon('upload')}${tr('Importar', 'Import')}</button>
+          <button class="btn ghost sm" data-act="clear" title="${tr('Apagar todos os tempos deste puzzle', 'Delete every time for this puzzle')}">${tr('Limpar<span class="long"> sessão</span>', 'Clear<span class="long"> session</span>')}</button>
+        </span>
+        <input type="file" class="tm-file" accept=".json,.txt,application/json,text/plain" hidden>
+      </div>
       <ol class="tm-times"></ol>
     </div>
     <div class="tm-share" hidden>
@@ -162,6 +173,8 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   const preview = $<HTMLElement>('.tm-preview');
   const info = $<HTMLElement>('.tm-info');
   const infoBtn = $<HTMLButtonElement>('.tm-info-btn');
+  const pbEl = $<HTMLElement>('.tm-pb');
+  const chart = createTimeChart($<HTMLElement>('.tm-chart'));
 
   let impl: PuzzleImpl | null = null;
   let solves = loadSolves(cfg.puzzle);
@@ -218,6 +231,29 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     document.body.classList.toggle('timing', phase === 'running' || phase === 'inspect');
     hintEl.innerHTML = phase === 'running' ? '' : hint();
     lastEl.hidden = phase !== 'idle' || !solves.length || arming !== 'none';
+    if (phase !== 'idle' || arming !== 'none') hidePb();
+  }
+
+  // ---- recorde: comemora quando a última resolução bate o melhor tempo ou a melhor média
+  function showPb(kinds: RecordKind[]) {
+    const label: Record<RecordKind, string> = {
+      single: tr('melhor tempo', 'best single'),
+      ao5: tr('melhor média de 5', 'best ao5'),
+      ao12: tr('melhor média de 12', 'best ao12'),
+    };
+    // "melhor tempo e melhor média de 5" / "best single and best ao5"
+    const what = new Intl.ListFormat(tr('pt-BR', 'en'), { type: 'conjunction' }).format(kinds.map((k) => label[k]));
+
+    pbEl.innerHTML = `<div class="confetti" aria-hidden="true">${'<i></i>'.repeat(16)}</div>${icon('trophy')}<span><b>${tr('Novo recorde!', 'New record!')}</b> ${what[0].toUpperCase() + what.slice(1)}</span>`;
+    pbEl.hidden = false;
+    pad.classList.add('pb');
+    navigator.vibrate?.([40, 60, 40, 60, 120]);
+  }
+  function hidePb() {
+    if (pbEl.hidden) return;
+    pbEl.hidden = true;
+    pbEl.innerHTML = '';
+    pad.classList.remove('pb');
   }
 
   function tick() {
@@ -264,6 +300,8 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     renderStats();
     renderChallenge();
     paint();
+    const rec = newRecords(solves);
+    if (rec.length) showPb(rec);
   }
 
   function cancel() {
@@ -402,6 +440,8 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       stat(tr('Média geral', 'Mean'), fmt(mean(solves))),
       stat(tr('Resoluções', 'Solves'), String(solves.length)),
     ].join('');
+    chart.update(solves);
+    const bestMs = best(solves);
     const list = $<HTMLElement>('.tm-times');
     list.innerHTML = solves.length
       ? solves
@@ -411,7 +451,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
           .map(
             ({ s, i }) => `<li data-i="${i}">
               <span class="tm-n">${i + 1}</span>
-              <b class="tm-t ${s.pen === 'dnf' ? 'dnf' : ''}" title="${s.scramble}">${fmtSolve(s)}</b>
+              <b class="tm-t ${s.pen === 'dnf' ? 'dnf' : ''}" title="${s.scramble}">${fmtSolve(s)}${value(s) === bestMs ? `<span class="tm-best" title="${tr('Seu melhor tempo', 'Your best single')}">${icon('trophy')}</span>` : ''}</b>
               <span class="tm-acts">
                 <button class="${s.pen === 2 ? 'on' : ''}" data-pen="2" aria-pressed="${s.pen === 2}">+2</button>
                 <button class="${s.pen === 'dnf' ? 'on' : ''}" data-pen="dnf" aria-pressed="${s.pen === 'dnf'}">DNF</button>
@@ -429,11 +469,13 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     if (!s) return;
     s.pen = s.pen === pen ? 0 : pen;
     saveSolves(cfg.puzzle, solves);
+    if (i === solves.length - 1) hidePb();
     if (i === solves.length - 1 && phase === 'idle') timeEl.textContent = fmtSolve(s);
     renderStats();
     renderChallenge();
   }
   function remove(i: number) {
+    if (i === solves.length - 1) hidePb();
     solves.splice(i, 1);
     saveSolves(cfg.puzzle, solves);
     if (i === solves.length && phase === 'idle') timeEl.textContent = solves.length ? fmtSolve(solves[solves.length - 1]) : '0.00';
@@ -587,10 +629,64 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     newScramble();
     renderChallenge();
   });
+  // ---- exportar e importar (um arquivo .json; também lê o do csTimer)
+  $<HTMLElement>('[data-act="export"]').addEventListener('click', () => {
+    const all = Object.fromEntries(available.map((p) => [p.id, p.id === cfg.puzzle ? solves : loadSolves(p.id)]));
+    const total = Object.values(all).reduce((a, l) => a + l.length, 0);
+    if (!total) return toast(tr('Ainda não há tempos para exportar.', 'There are no times to export yet.'));
+    const blob = new Blob([exportJson(all)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `cuboguia-tempos-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast(tr(`${total} tempos exportados. Guarde o arquivo: ele traz os tempos de volta neste ou em outro aparelho.`, `${total} times exported. Keep the file: it brings your times back on this or another device.`));
+  });
+  const fileInput = $<HTMLInputElement>('.tm-file');
+  $<HTMLElement>('[data-act="import"]').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const f = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!f) return;
+    if (f.size > 20 * 1024 * 1024) return toast(tr('Arquivo grande demais.', 'File too large.'));
+    try {
+      const res = parseImport(await f.text(), available.map((p) => p.id));
+      let added = 0;
+      const where: string[] = [];
+      for (const [id, list] of Object.entries(res.byPuzzle)) {
+        const cur = id === cfg.puzzle ? solves : loadSolves(id);
+        const m = mergeSolves(cur, list);
+        if (!m.added) continue;
+        added += m.added;
+        where.push(puzzleName(id));
+        saveSolves(id, m.merged);
+        if (id === cfg.puzzle) solves = m.merged.slice(-MAX_SAVED);
+      }
+      hidePb();
+      renderStats();
+      paint();
+      const from = res.source === 'cstimer' ? ' (csTimer)' : '';
+      toast(
+        added
+          ? tr(`${added} tempos importados${from}: ${where.join(', ')}.`, `${added} times imported${from}: ${where.join(', ')}.`)
+          : tr('Esses tempos já estavam aqui — nada novo para importar.', 'Those times were already here — nothing new to import.'),
+      );
+    } catch (e) {
+      const r = e instanceof ImportError ? e.reason : 'format';
+      toast(
+        r === 'empty'
+          ? tr('O arquivo não tem tempos de puzzles do CuboGuia.', 'The file has no times for CuboGuia puzzles.')
+          : tr('Não reconheci esse arquivo. Use um arquivo exportado pelo CuboGuia ou pelo csTimer.', 'I didn’t recognize that file. Use a file exported from CuboGuia or csTimer.'),
+      );
+    }
+  });
   $<HTMLElement>('[data-act="clear"]').addEventListener('click', () => {
     if (!solves.length || !confirm(tr(`Apagar os ${solves.length} tempos deste puzzle?`, `Delete all ${solves.length} times for this puzzle?`))) return;
     solves = [];
     saveSolves(cfg.puzzle, solves);
+    hidePb();
     timeEl.textContent = '0.00';
     renderStats();
     paint();
@@ -626,6 +722,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   async function choose(id: string) {
     cfg.puzzle = id;
     saveCfg(cfg);
+    hidePb();
     solves = loadSolves(id);
     timeEl.textContent = solves.length ? fmtSolve(solves[solves.length - 1]) : '0.00';
     renderOpts();
@@ -703,5 +800,6 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
     releaseScreen();
+    chart.dispose();
   };
 }
