@@ -141,15 +141,20 @@ chave `cubo:progress`, até 12 tutoriais por 60 dias). O mesmo cubo e método se
 solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
 progresso antigo é ignorado). A tela inicial mostra os tutoriais em andamento.
 
-## Algoritmos OLL e PLL (`/algoritmos`)
+## Algoritmos (`/algoritmos`, `/algoritmos/2x2`, `/algoritmos/pyraminx`)
 
-Para quem já resolve pelo iniciante e quer passar para o CFOP: OLL em 2 etapas (10 casos) e PLL
-completa (21). Os algoritmos ficam em `src/puzzles/cube3/algs.ts`; o desenho de cada caso **não é
-feito à mão**: é o algoritmo aplicado ao contrário num cubo resolvido. `tests/algs.test.ts` confere
-que cada algoritmo mexe só na última camada, que os casos são todos diferentes, que o tipo de troca
-combina com o grupo (só arestas, cantos vizinhos, diagonal, G), que o algoritmo alternativo resolve o
-mesmo caso e que os pares a/b são espelhos. Para trocar ou adicionar um algoritmo, edite a lista e
-rode `npm test`. Os casos marcados como "Aprendido" ficam no aparelho (`cubo:algs:learned`).
+- **3x3**: OLL em 2 etapas (10), OLL completa (57, números e algoritmos da folha de OLL de Feliks
+  Zemdegs e Andy Klise, CubeSkills) e PLL completa (21) — `src/puzzles/cube3/algs.ts`.
+- **2x2**: método Ortega, face amarela (7) e PBL (6) — `src/puzzles/cube2/algs.ts`.
+- **Pyraminx**: última camada, as 3 arestas de cima (5 casos, algoritmos achados por busca dos mais
+  curtos com R, L e U) — `src/puzzles/pyraminx/algs.ts`.
+
+O desenho de cada caso **não é feito à mão**: é o algoritmo aplicado ao contrário no puzzle resolvido
+(`src/puzzles/algkit.ts`). `tests/algs.test.ts` e `tests/algs-others.test.ts` conferem que cada
+algoritmo mexe só no que deve, que os casos são todos diferentes (os 57 da OLL cobrem todos os casos
+que existem), que o formato combina com o grupo/nome (tipo de troca da PLL e da PBL, cantos da face
+amarela, sentido dos ciclos do Pyraminx), que o algoritmo alternativo resolve o mesmo caso e que os
+pares a/b são espelhos. Para trocar ou adicionar um algoritmo, edite a lista e rode `npm test`. Os casos marcados como "Aprendido" ficam no aparelho (`cubo:algs:learned`).
 A notação aceita rotações do cubo inteiro (`x`, `y`, `z`), além de `M`, `E`, `S` e camadas largas.
 
 ## Cronômetro: recordes, gráfico e exportar
@@ -162,13 +167,14 @@ A notação aceita rotações do cubo inteiro (`x`, `y`, `z`), além de `M`, `E`
   A importação também aceita o arquivo de exportação do **csTimer** (o tipo de embaralho de cada
   sessão decide o puzzle) e junta sem repetir tempos.
 
-## Prévia do link de desafio (WhatsApp)
+## Prévia dos links (WhatsApp, redes sociais)
 
-WhatsApp e redes sociais não rodam o JavaScript da página, então o título da prévia vem do servidor:
-`functions/cronometro.ts` e `functions/en/timer.ts` (Cloudflare Pages Functions, grátis) chamam
-`server/challenge-preview.ts`, que pega o `index.html` e troca título, descrição e imagem
-("Ana te desafiou: 12.34 no 3x3"). Só esses dois endereços passam pela função; o resto do site
-continua estático. Testar localmente: `npx wrangler pages dev dist` (já roda as funções).
+WhatsApp e redes sociais não rodam o JavaScript da página, e o site é um `index.html` só. Por isso
+`functions/_middleware.ts` (Cloudflare Pages Functions, grátis) chama `server/page-preview.ts`, que
+põe no HTML o título, a descrição e o idioma de cada página (os mesmos de `src/core/meta.ts`, que o
+site também usa) e, no link de desafio, "Ana te desafiou: 12.34 no 3x3" com a imagem do duelo.
+Os arquivos (js, css, imagens) não passam pela função (`public/_routes.json`). Testar localmente:
+`npx wrangler pages dev dist` (já roda as funções).
 
 Imagens da prévia (`public/og.png` e `public/og-desafio.png`, sem texto em nenhum idioma):
 geradas por `node tools/og-images.mjs` com o site rodando no wrangler.

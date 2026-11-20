@@ -1060,3 +1060,14 @@ body.al-modal { overflow: hidden; }
   .al-viewer { padding: 0; align-items: end; }
   .al-viewer-box { width: 100%; max-height: 94dvh; border-radius: 22px 22px 0 0; }
 }
+/* algoritmos: escolha de puzzle, PBL (topo e base) e planificação do Pyraminx */
+.al-puzzles { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 14px; }
+.al-puzzles a { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font: 600 0.88rem var(--font); text-decoration: none; }
+.al-puzzles a:hover { color: var(--text); }
+.al-puzzles a.on { color: var(--text); border-color: var(--accent-2); background: rgba(63,208,201,0.14); }
+.al-pbl { display: flex; gap: 6px; align-items: center; }
+.al-pic .al-pbl .al-svg { width: 74px; height: 74px; }
+.al-train-pic .al-pbl .al-svg { width: 160px; height: 160px; }
+.al-net { display: block; }
+.al-pic .al-net-svg { display: block; width: 150px; height: auto; max-height: 120px; }
+.al-train-pic .al-net-svg { display: block; width: 260px; height: auto; max-height: 230px; }

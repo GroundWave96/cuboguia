@@ -34,3 +34,44 @@ test('lista, 3D, aprendidos e treino', async ({ page }) => {
   await expect(page.locator('[data-treveal]')).toBeVisible();
   check();
 });
+
+test('OLL completa, 2x2 e Pyraminx: casos e 3D até o fim', async ({ page }, info) => {
+  test.skip(info.project.name !== 'computador', 'um basta');
+  const check = trackErrors(page);
+  await page.goto('/algoritmos');
+  await page.evaluate(() => localStorage.setItem('cubo:speed', '2.5'));
+  await page.click('[data-tab="oll"]');
+  await expect(page.locator('.al-card')).toHaveCount(57);
+  for (const [slug, tabs, cards] of [['2x2', ['c2oll', 'pbl'], [7, 6]], ['pyraminx', ['pyra-top'], [5]]] as const) {
+    await page.click(`.al-puzzles a[href="/algoritmos/${slug}"]`);
+    await expect(page).toHaveURL(new RegExp(`/algoritmos/${slug}$`));
+    for (let i = 0; i < tabs.length; i++) {
+      await page.click(`[data-tab="${tabs[i]}"]`);
+      await expect(page.locator('.al-card')).toHaveCount(cards[i]);
+      // anima o último caso da aba até o fim
+      await page.locator('[data-open]').last().click();
+      await page.click('[data-v="play"]');
+      await expect(page.locator('.al-v-move')).toContainText(/Pronto/, { timeout: 30_000 });
+      await page.keyboard.press('Escape');
+    }
+    await page.click('[data-tab="train"]');
+    await page.click('[data-treveal]');
+    await expect(page.locator('.al-train-side h3')).not.toBeEmpty();
+  }
+  check();
+});
+
+test('voltar à página de algoritmos não duplica os cliques', async ({ page }, info) => {
+  test.skip(info.project.name !== 'computador', 'um basta');
+  const check = trackErrors(page);
+  await page.goto('/algoritmos');
+  await page.click('a[data-nav="timer"]');
+  await expect(page.locator('.tm-scr-text')).not.toBeEmpty();
+  await page.click('a[data-nav="algs"]');
+  await page.click('a[data-nav="home"]');
+  await page.click('a[data-nav="algs"]');
+  await page.click('[data-learn="oll-sune"]');
+  await expect(page.locator('[data-learn="oll-sune"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.al-count')).toContainText('OLL em 2 etapas 1/10');
+  check();
+});
