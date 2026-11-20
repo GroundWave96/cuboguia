@@ -177,20 +177,12 @@ main { flex: 1; }
 
 /* vitrine */
 .showcase { position: relative; display: flex; flex-direction: column; gap: 12px; }
-.showcase-stage { position: relative; height: min(52vh, 460px); min-height: 300px; transition: opacity 0.22s, transform 0.22s; }
+.showcase-stage { position: relative; height: min(56vh, 500px); min-height: 300px; transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease; }
 .showcase-stage::before { content: ''; position: absolute; inset: 12%; background: radial-gradient(circle, rgba(124,140,255,0.3), transparent 65%); filter: blur(30px); pointer-events: none; }
-.showcase-stage.fading { opacity: 0; transform: scale(0.94); }
-.showcase-hud { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 12px; background: rgba(11,14,23,0.6); border: 1px solid var(--border); }
-.hud-name { font-family: var(--display); font-weight: 600; }
-.hud-status { font-size: 0.85rem; color: var(--accent-2); font-variant-numeric: tabular-nums; }
-.showcase-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.chip-pz { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 12px 6px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font: 600 0.85rem var(--font); cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s; }
-.chip-pz .pz-icon { width: 24px; height: 25px; }
-.chip-pz:hover { color: var(--text); background: var(--surface-2); }
-.chip-pz.active { color: var(--text); border-color: var(--accent); background: rgba(124,140,255,0.16); }
-.showcase-actions { display: flex; gap: 8px; }
-.showcase-actions .btn { flex: 1; }
-.showcase-actions .icon-only-sm { flex: 0 0 44px; padding: 0; }
+.showcase-stage.fading { opacity: 0; transform: scale(0.82) rotate(-10deg); filter: blur(6px); }
+/* nome do puzzle da vitrine: discreto, troca junto com o puzzle */
+.showcase-caption { text-align: center; font-family: var(--display); font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em; color: var(--muted); min-height: 1.4em; transition: opacity 0.5s; }
+.showcase-stage.fading + .showcase-caption { opacity: 0; }
 /* comemoração ao resolver */
 .burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 2; pointer-events: none; }
 .burst i { position: absolute; width: 9px; height: 9px; border-radius: 3px; opacity: 0; }
@@ -639,8 +631,6 @@ body.no-scroll { overflow: hidden; }
   .menu-btn { display: flex; }
 }
 @media (max-width: 520px) {
-  .showcase-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); overflow: visible; }
-  .chip-pz { flex-direction: column; gap: 2px; padding: 6px 4px; font-size: 0.75rem; }
 }
 @media (max-width: 420px) {
   .hero-badges li { font-size: 0.8rem; }
@@ -718,7 +708,7 @@ body.no-scroll { overflow: hidden; }
   /* página inicial: cubo e texto lado a lado */
   .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; padding-top: 12px; gap: 18px; }
   .showcase { order: 0; }
-  .showcase-stage { height: calc(100vh - 210px); height: calc(100svh - 210px); min-height: 160px; }
+  .showcase-stage { height: calc(100vh - 150px); height: calc(100svh - 150px); min-height: 160px; }
   .hero h1 { font-size: 1.9rem; }
   .lead { font-size: 0.98rem; }
 }

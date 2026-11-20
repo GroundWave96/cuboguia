@@ -6,12 +6,15 @@ const short = (name: string) => name.replace('Cubo ', '');
 
 /** quantos movimentos de embaralho e a velocidade da vitrine para cada puzzle */
 const SHOW: Record<string, { scramble: number; ms: number }> = {
-  cube3: { scramble: 18, ms: 170 },
   cube2: { scramble: 10, ms: 190 },
+  cube3: { scramble: 16, ms: 170 },
+  cube4: { scramble: 18, ms: 160 },
+  cube5: { scramble: 18, ms: 150 },
   pyraminx: { scramble: 9, ms: 220 },
+  skewb: { scramble: 9, ms: 230 },
   megaminx: { scramble: 14, ms: 200 },
-  cube5: { scramble: 20, ms: 150 },
 };
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function renderHome(app: HTMLElement) {
   const available = PUZZLES.filter((p) => p.available);
@@ -45,20 +48,7 @@ export function renderHome(app: HTMLElement) {
         <div class="showcase-stage" id="hero-cube">
           <div class="burst" aria-hidden="true">${'<i></i>'.repeat(14)}</div>
         </div>
-        <div class="showcase-hud" aria-live="polite">
-          <span class="hud-name" id="hud-name">Cubo 3x3</span>
-          <span class="hud-status" id="hud-status">Demonstração</span>
-        </div>
-        <div class="showcase-chips" role="tablist" aria-label="Puzzle da vitrine">
-          ${available
-            .map((p) => `<button role="tab" class="chip-pz" data-pz="${p.id}" aria-selected="false">${p.icon}<span>${short(p.name)}</span></button>`)
-            .join('')}
-        </div>
-        <div class="showcase-actions">
-          <button class="btn ghost sm" data-act="scramble">${icon('shuffle')}Embaralhar</button>
-          <button class="btn primary sm" data-act="solve">${icon('sparkles')}Resolver</button>
-          <button class="btn ghost sm icon-only-sm" data-act="auto" title="Pausar a demonstração" aria-label="Demonstração automática">${icon('pause')}</button>
-        </div>
+        <div class="showcase-caption" id="hud-name" aria-hidden="true"></div>
       </div>
     </div>
   </section>
@@ -159,141 +149,81 @@ export function renderHome(app: HTMLElement) {
   });
 
   // ---------------------------------------------------------------- vitrine
+  // só um enfeite: puzzles em ordem aleatória aparecem, embaralham, se resolvem e dão lugar ao próximo
   const stage = app.querySelector<HTMLElement>('#hero-cube')!;
-  const hudName = app.querySelector<HTMLElement>('#hud-name')!;
-  const hudStatus = app.querySelector<HTMLElement>('#hud-status')!;
+  const caption = app.querySelector<HTMLElement>('#hud-name')!;
   const goBtn = app.querySelector<HTMLAnchorElement>('#hero-go')!;
   const goName = app.querySelector<HTMLElement>('#hero-go-name')!;
-  const autoBtn = app.querySelector<HTMLButtonElement>('[data-act="auto"]')!;
   let alive = true;
-  let token = 0; // muda a cada troca de puzzle/ação: cancela animações antigas
   let view: PuzzleView | null = null;
-  let impl: PuzzleImpl | null = null;
-  let current = '';
-  let history: string[] = [];
-  let busy = false;
-  let auto = !reduceMotion;
-  let autoTimer = 0;
+  let onScreen = true;
 
-  const status = (t: string) => (hudStatus.textContent = t);
-  const setAuto = (on: boolean) => {
-    auto = on;
-    autoBtn.innerHTML = icon(on ? 'pause' : 'play');
-    autoBtn.title = on ? 'Pausar a demonstração' : 'Retomar a demonstração';
-    clearTimeout(autoTimer);
-    if (on && !busy) autoTimer = window.setTimeout(autoStep, 900);
+  // pausa quando a vitrine sai da tela ou a aba fica escondida (economiza bateria)
+  const seen = new IntersectionObserver(([e]) => (onScreen = e.isIntersecting));
+  seen.observe(stage);
+  const waitVisible = async () => {
+    while (alive && (document.hidden || !onScreen)) await sleep(400);
+    return alive;
   };
 
-  async function show(id: string) {
-    if (id === current && view) return;
-    const my = ++token;
-    current = id;
-    history = [];
-    busy = false;
+  /** sorteio sem repetir o anterior */
+  let last = '';
+  const nextId = () => {
+    const ids = available.map((p) => p.id).filter((id) => id !== last);
+    return (last = ids[Math.floor(Math.random() * ids.length)]);
+  };
+
+  async function show(id: string): Promise<PuzzleImpl | null> {
     const def = available.find((p) => p.id === id)!;
-    app.querySelectorAll<HTMLButtonElement>('.chip-pz').forEach((b) => {
-      const on = b.dataset.pz === id;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-selected', String(on));
-    });
-    hudName.textContent = def.name;
-    goName.textContent = short(def.name);
-    goBtn.href = `#/p/${id}`;
-    stage.classList.add('fading');
     const im = await loadPuzzle(id);
-    await new Promise((r) => setTimeout(r, 220));
-    if (!alive || my !== token) return;
+    if (!alive) return null;
     view?.dispose();
-    impl = im;
     view = im.createView(stage);
     view.setAutoRotate?.(true);
-    stage.classList.remove('fading');
-    status('Resolvido');
+    caption.textContent = def.name;
+    goName.textContent = short(def.name);
+    goBtn.href = `#/p/${id}`;
+    stage.classList.remove('fading', 'celebrate');
+    return im;
   }
 
-  async function play(moves: string[], ms: number, label: (i: number) => string) {
-    const my = token;
-    for (let i = 0; i < moves.length; i++) {
-      if (!alive || my !== token || !view) return false;
-      status(label(i + 1));
-      await view.animateMove(moves[i], ms);
+  async function play(moves: string[], ms: number) {
+    for (const m of moves) {
+      if (!(await waitVisible()) || !view) return false;
+      await view.animateMove(m, ms);
     }
-    return alive && my === token;
+    return alive;
   }
 
-  async function scramble() {
-    if (!impl || busy) return false;
-    busy = true;
-    const cfg = SHOW[current] ?? { scramble: 12, ms: 180 };
-    const moves = impl.scramble(cfg.scramble);
-    history.push(...moves);
-    const ok = await play(moves, cfg.ms, (i) => `Embaralhando… ${i}/${moves.length}`);
-    busy = false;
-    if (ok) status(`Embaralhado · ${history.length} movimentos`);
-    return ok;
-  }
-
-  async function solve() {
-    if (!impl || busy || !history.length) return false;
-    busy = true;
-    const cfg = SHOW[current] ?? { scramble: 12, ms: 180 };
-    const moves = [...history].reverse().map(impl.invertMove);
-    const ok = await play(moves, cfg.ms * 0.75, (i) => `Resolvendo… ${i}/${moves.length}`);
-    busy = false;
-    if (ok) {
-      history = [];
-      status('Resolvido! ✨');
-      if (!reduceMotion) {
-        stage.classList.remove('celebrate');
-        void stage.offsetWidth;
-        stage.classList.add('celebrate');
-      }
+  async function loop() {
+    while (alive) {
+      const id = nextId();
+      const impl = await show(id);
+      if (!impl) return;
+      const cfg = SHOW[id] ?? { scramble: 12, ms: 180 };
+      await sleep(900);
+      const moves = impl.scramble(cfg.scramble);
+      if (!(await play(moves, cfg.ms))) return;
+      await sleep(800);
+      if (!(await play([...moves].reverse().map(impl.invertMove), cfg.ms * 0.8))) return;
+      // comemoração leve, um tempo para olhar e some suave
+      stage.classList.remove('celebrate');
+      void stage.offsetWidth;
+      stage.classList.add('celebrate');
+      await sleep(1800);
+      if (!(await waitVisible())) return;
+      stage.classList.add('fading');
+      await sleep(520);
     }
-    return ok;
   }
 
-  /** demonstração: embaralha, resolve e passa para o próximo puzzle */
-  async function autoStep() {
-    if (!alive || !auto) return;
-    const my = token;
-    if (history.length) await solve();
-    else {
-      if (!(await scramble())) return;
-      await new Promise((r) => setTimeout(r, 900));
-      if (!alive || !auto || my !== token) return;
-      if (!(await solve())) return;
-      await new Promise((r) => setTimeout(r, 1600));
-      if (!alive || !auto || my !== token) return;
-      const ids = available.map((p) => p.id);
-      await show(ids[(ids.indexOf(current) + 1) % ids.length]);
-    }
-    if (alive && auto) autoTimer = window.setTimeout(autoStep, 700);
-  }
-
-  // controles: qualquer interação pausa a demonstração automática
-  app.querySelectorAll<HTMLButtonElement>('.chip-pz').forEach((b) =>
-    b.addEventListener('click', async () => {
-      setAuto(false);
-      await show(b.dataset.pz!);
-    }),
-  );
-  app.querySelector('[data-act="scramble"]')!.addEventListener('click', () => {
-    setAuto(false);
-    scramble();
-  });
-  app.querySelector('[data-act="solve"]')!.addEventListener('click', () => {
-    setAuto(false);
-    solve();
-  });
-  autoBtn.addEventListener('click', () => setAuto(!auto));
-
-  show('cube3').then(() => setAuto(auto));
+  if (reduceMotion) show(nextId());
+  else loop();
 
   return () => {
     alive = false;
-    token++;
-    clearTimeout(autoTimer);
     io.disconnect();
+    seen.disconnect();
     view?.dispose();
   };
 }
