@@ -23,7 +23,8 @@ export interface Progress {
 
 const KEY = 'cubo:progress';
 /** quantos tutoriais lembrar e por quanto tempo */
-const MAX = 12;
+/** o mais recente aparece no início e os outros 3 ficam no histórico */
+const MAX = 4;
 const MAX_AGE = 60 * 24 * 3600 * 1000;
 
 export function movesSignature(moves: string[]): string {

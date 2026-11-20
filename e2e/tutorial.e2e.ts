@@ -102,3 +102,33 @@ test('trocar o idioma no meio do tutorial mantém o passo', async ({ page }, inf
   await expect(page.locator('.resume-note')).toBeVisible();
   check();
 });
+
+test('início: só o tutorial mais recente à vista, os outros em "+ N outros", e o X esquece', async ({ page }) => {
+  const check = trackErrors(page);
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    const t = Date.now();
+    const p = (puzzle: string, state: string, ago: number) => ({ puzzle, method: 'beginner', state, step: 2, pos: 5, steps: 10, total: 40, sig: 'x', t: t - ago });
+    localStorage.setItem('cubo:progress', JSON.stringify([p('pyraminx', 'aaa', 1000), p('cube3', 'bbb', 60000), p('cube2', 'ccc', 120000)]));
+  });
+  await page.goto('/');
+  const box = page.locator('.resume-home:visible');
+  await expect(box.locator('> .resume-row')).toHaveCount(1);
+  await expect(box.locator('> .resume-row')).toContainText('Pyraminx');
+  await expect(box.locator('.resume-more summary')).toHaveText('+ 2 outros');
+  // esquece o mais recente: o próximo sobe
+  await box.locator('> .resume-row .resume-x').click();
+  await expect(box.locator('> .resume-row')).toContainText('Cubo 3x3');
+  await expect(box.locator('.resume-more summary')).toHaveText('+ 1 outro');
+  // abre os outros e esquece o último de lá
+  await box.locator('.resume-more summary').click();
+  await box.locator('.resume-more .resume-x').click();
+  await expect(box.locator('.resume-more')).toHaveCount(0);
+  await box.locator('.resume-x').click();
+  await expect(page.locator('.resume-home')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('cubo:progress'))).toBeNull();
+  await page.reload();
+  await expect(page.locator('.resume-home')).toHaveCount(0);
+  check();
+});

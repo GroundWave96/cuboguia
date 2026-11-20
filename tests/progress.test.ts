@@ -43,7 +43,7 @@ describe('progresso do tutorial', () => {
     for (let i = 0; i < 20; i++) saveProgress({ ...base, state: 's' + i, t: Date.now() + i });
     saveProgress({ ...base, state: 's3', pos: 1, t: Date.now() + 100 });
     const list = listProgress();
-    expect(list.length).toBe(12);
+    expect(list.length).toBe(4);
     expect(list[0]).toMatchObject({ state: 's3', pos: 1 });
     expect(list.filter((p) => p.state === 's3').length).toBe(1);
     clearProgress('cube3', 'beginner', 's3');

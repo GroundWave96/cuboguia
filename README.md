@@ -137,9 +137,9 @@ apontam as páginas para o Google.
 ## Tutorial: continuar de onde parou
 
 O passo e o movimento de cada tutorial ficam guardados no navegador (`src/core/progress.ts`,
-chave `cubo:progress`, até 12 tutoriais por 60 dias). O mesmo cubo e método sempre geram a mesma
+chave `cubo:progress`, os 4 últimos tutoriais por 60 dias). O mesmo cubo e método sempre geram a mesma
 solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
-progresso antigo é ignorado). A tela inicial mostra os tutoriais em andamento.
+progresso antigo é ignorado). A tela inicial mostra o mais recente e, numa setinha "+ N outros", os outros 3; o X ao lado de cada um faz o site esquecer aquele tutorial.
 
 ## Algoritmos (`/algoritmos`, `/algoritmos/2x2`, `/algoritmos/pyraminx`)
 

@@ -918,6 +918,26 @@ body.timing .pwa-update { display: none; }
 .resume-home { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 460px; }
 .resume-home-title { display: inline-flex; align-items: center; gap: 7px; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
 .resume-home-title .ico { width: 16px; height: 16px; color: var(--accent); }
+.resume-row { display: flex; align-items: center; gap: 6px; }
+.resume-row .resume-item { flex: 1; min-width: 0; }
+.resume-x { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid transparent; background: transparent; color: var(--faint); cursor: pointer; transition: color 0.15s, background 0.15s, border-color 0.15s; }
+.resume-x:hover, .resume-x:focus-visible { color: var(--text); background: var(--surface-2); border-color: var(--border-strong); }
+.resume-x .ico { width: 15px; height: 15px; }
+.resume-more { display: flex; flex-direction: column; gap: 8px; }
+.resume-more summary { cursor: pointer; width: fit-content; display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 600; color: var(--muted); padding: 3px 8px 3px 4px; border-radius: 999px; list-style: none; transition: color 0.15s, background 0.15s; }
+.resume-more summary .ico { width: 16px; height: 16px; transition: transform 0.25s ease; }
+.resume-more[open] summary .ico { transform: rotate(180deg); }
+.resume-more summary:hover { background: var(--surface); }
+/* os outros descem um depois do outro */
+.resume-more[open] .resume-row { animation: resume-drop 0.32s cubic-bezier(.2,.9,.3,1) both; }
+.resume-more[open] .resume-row:nth-of-type(2) { animation-delay: 0.06s; }
+.resume-more[open] .resume-row:nth-of-type(3) { animation-delay: 0.12s; }
+@keyframes resume-drop { from { opacity: 0; transform: translateY(-10px); } }
+@media (prefers-reduced-motion: reduce) { .resume-more[open] .resume-row { animation: none; } .resume-more summary .ico { transition: none; } }
+.resume-more summary::-webkit-details-marker { display: none; }
+.resume-more summary:hover { color: var(--text); }
+.resume-more[open] summary { margin-bottom: 8px; }
+.resume-more .resume-row + .resume-row { margin-top: 8px; }
 .resume-item { display: flex; align-items: center; gap: 12px; text-decoration: none; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px 12px 8px 8px; transition: background 0.2s, border-color 0.2s, transform 0.2s; }
 .resume-item:hover { background: var(--surface-2); border-color: rgba(124,140,255,0.5); transform: translateY(-1px); }
 .resume-icon { flex: none; width: 40px; height: 40px; display: grid; place-items: center; }
