@@ -10,6 +10,7 @@
  * Tempos e configurações ficam no aparelho (localStorage), separados por puzzle.
  */
 import { PUZZLES, loadPuzzle } from '../core/registry';
+import { TIMER_PATH } from '../core/router';
 import { MAX_NAME, challengeQuery, cleanName, readChallenge, type Challenge } from '../core/challenge';
 import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, value, type Penalty, type Solve } from '../core/timerstats';
 import type { PuzzleImpl } from '../core/types';
@@ -100,7 +101,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   app.innerHTML = `
   <section class="page timer-page">
     <div class="tm-top">
-      <a class="back tm-back" href="#/">← Início</a>
+      <a class="back tm-back" href="/">← Início</a>
       <div class="tm-puzzles" role="tablist" aria-label="Puzzle">
         ${available.map((p) => `<button role="tab" class="tm-pz" data-pz="${p.id}">${p.icon}<span>${short(p.name)}</span></button>`).join('')}
       </div>
@@ -492,7 +493,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     const name = cleanName(nameInput.value);
     const v = value(s);
     const ms = Number.isFinite(v) ? v : null;
-    const url = `${location.origin}${location.pathname}#/cronometro?${challengeQuery({ puzzle: cfg.puzzle, scramble: s.scramble.split(' '), ms, name })}`;
+    const url = `${location.origin}${TIMER_PATH}?${challengeQuery({ puzzle: cfg.puzzle, scramble: s.scramble.split(' '), ms, name })}`;
     const text =
       ms === null
         ? `${name ? `${name} tentou` : 'Tentei'} este embaralho do ${puzzleName()} no CuboGuia e não terminou. Consegue?`

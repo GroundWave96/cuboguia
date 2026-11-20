@@ -176,6 +176,8 @@ export interface PuzzleImpl {
 
 export interface PuzzleDefinition {
   id: string;
+  /** endereço da página do puzzle (/3x3, /pyraminx...) */
+  slug: string;
   name: string;
   subtitle: string;
   available: boolean;

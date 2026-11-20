@@ -79,7 +79,7 @@ As cores da câmera são testadas com amostras reais (`tests/fixtures/`):
   no escuro e com luz, Pyraminx e um segundo Megaminx (de outra fábrica, com cores
   bem diferentes). Os testes simulam o site: cada lote só aprende com os próprios centros.
 - **Leituras feitas no próprio site (modo debug)** — abra o site com `?debug` no fim
-  do endereço (ex.: `https://cuboguia.pages.dev/#/p/cube3?debug`), leia o cubo pela
+  do endereço (ex.: `https://cuboguia.pages.dev/3x3?debug`), leia o cubo pela
   câmera, corrija as cores erradas pintando e, no cartão "Leitura da câmera", abra
   **Amostra para treino**: escolha a luz do ambiente e use **Copiar código** (ou
   **Baixar .txt**). Cole os códigos num arquivo de texto (pode ter outras coisas no meio,
@@ -88,6 +88,28 @@ As cores da câmera são testadas com amostras reais (`tests/fixtures/`):
 
 Nada é coletado dos usuários: o código só existe no modo debug e só sai do
 aparelho se você copiar.
+
+## Endereços
+
+Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.ts`:
+
+| Endereço | Página |
+|---|---|
+| `/` | início |
+| `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/pyraminx`, `/skewb`, `/megaminx` | informar as cores |
+| `/3x3/tutorial?m=método&s=estado` | tutorial |
+| `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
+
+Os links antigos (`#/p/cube3`, `#/cronometro?...`) viram o endereço novo sozinhos.
+O Cloudflare Pages entrega o `index.html` em qualquer endereço (o projeto não tem
+`404.html`, então ele trata o site como SPA). `public/sitemap.xml` e `robots.txt`
+apontam as páginas para o Google.
+
+## Contagem de visitas
+
+Cloudflare Web Analytics, ligado no painel do Cloudflare Pages (sem código no
+site, sem cookies, sem pedir permissão ao usuário). Mostra visitas por endereço —
+por isso cada puzzle e o cronômetro têm o próprio endereço.
 
 ## Publicação (Cloudflare Pages)
 

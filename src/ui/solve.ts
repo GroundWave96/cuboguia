@@ -1,5 +1,6 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
 import { decodeState, encodeState, loadSpeed, loadState, saveMethod, saveSpeed } from '../core/store';
+import { navigate, puzzlePath, solvePath } from '../core/router';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
 import { notationHtml } from './notation';
@@ -18,7 +19,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
   const initial: PuzzleState | null = decodeState(params.get('s') ?? '', impl.stickerCount, impl.colors.map((c) => c.key)) ?? loadState(puzzleId);
   if (!initial) {
-    location.hash = `/p/${puzzleId}`;
+    navigate(puzzlePath(puzzleId), true);
     return () => {};
   }
   const valid = impl.validate(initial);
@@ -67,14 +68,14 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   app.innerHTML = `
   <section class="page workspace solve">
     <div class="ws-header">
-      <a class="back" href="#/p/${puzzleId}">← Editar cores</a>
+      <a class="back" href="${puzzlePath(puzzleId)}">← Editar cores</a>
       <h1>Tutorial: resolvendo seu ${def.name.replace('Cubo ', '')}</h1>
       <p>${sol.method} · <b>${steps.length}</b> passo${steps.length === 1 ? '' : 's'} · <b>${flat.length}</b> movimento${flat.length === 1 ? '' : 's'}. ${impl.holdHint} Mantenha essa posição o tempo todo.</p>
       <div class="method-switch" role="group" aria-label="Método">
         ${impl.methods
           .map(
             (m) =>
-              `<a class="${m.id === methodId ? 'on' : ''}" href="#/p/${puzzleId}/solve?m=${m.id}&s=${encodeState(initial, impl.colors.map((c) => c.key))}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
+              `<a class="${m.id === methodId ? 'on' : ''}" href="${solvePath(puzzleId, m.id, encodeState(initial, impl.colors.map((c) => c.key)))}" ${m.id === methodId ? 'aria-current="true"' : ''}>${m.name}<small>${m.tagline}</small></a>`,
           )
           .join('')}
       </div>
@@ -280,7 +281,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         <p>${steps.length ? `Foram ${steps.length} passos e ${flat.length} movimentos. Com a prática, os algoritmos ficam automáticos — tente de novo embaralhando o cubo!` : 'Embaralhe o cubo e informe as cores de novo para ver o tutorial.'}</p>
         <div class="row-actions center">
           ${steps.length ? '<button class="btn ghost" data-act="restart">Rever do início</button>' : ''}
-          <a class="btn primary" href="#/p/${puzzleId}">Resolver outro cubo</a>
+          <a class="btn primary" href="${puzzlePath(puzzleId)}">Resolver outro cubo</a>
         </div>
       </div>`;
   }

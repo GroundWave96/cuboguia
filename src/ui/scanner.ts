@@ -102,7 +102,7 @@ export class CameraScanner {
   private live: RGB[] = [];
   /** últimos quadros, para capturar a mediana (menos borrão/ruído) */
   private history: RGB[][] = [];
-  private debug = /[?&]debug/.test(location.hash) || /[?&]debug/.test(location.search);
+  private debug = new URLSearchParams(location.search).has('debug');
   private lastWarn = '';
   /** adesivo → [face capturada, posição na grade] */
   private where = new Map<number, [number, number]>();

@@ -3,6 +3,7 @@
  * Com muitos puzzles o menu continua do mesmo tamanho; no celular vira um botão ☰.
  */
 import { PUZZLES } from '../core/registry';
+import { TIMER_PATH, puzzlePath } from '../core/router';
 
 const short = (name: string) => name.replace('Cubo ', '');
 
@@ -13,11 +14,11 @@ export function mountHeader() {
 
   const card = (p: (typeof PUZZLES)[number]) =>
     p.available
-      ? `<a class="mm-item" href="#/p/${p.id}" data-nav="${p.id}">${p.icon}<span><b>${p.name}</b><small>${p.subtitle}</small></span></a>`
+      ? `<a class="mm-item" href="${puzzlePath(p.id)}" data-nav="${p.id}">${p.icon}<span><b>${p.name}</b><small>${p.subtitle}</small></span></a>`
       : `<div class="mm-item soon" aria-disabled="true">${p.icon}<span><b>${p.name}</b><small>Em breve</small></span></div>`;
 
   nav.innerHTML = `
-    <a href="#/" data-nav="home">Início</a>
+    <a href="/" data-nav="home">Início</a>
     <div class="nav-dd">
       <button type="button" class="nav-dd-btn" aria-haspopup="true" aria-expanded="false" aria-controls="puzzle-menu">
         <span class="nav-dd-label">Puzzles</span><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -28,8 +29,8 @@ export function mountHeader() {
         ${soon.length ? `<div class="mega-title soon-title">Em breve</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
       </div>
     </div>
-    <a href="#/cronometro" data-nav="timer">Cronômetro</a>
-    <a href="#/" data-scroll="como-funciona" class="nav-extra">Como funciona</a>`;
+    <a href="${TIMER_PATH}" data-nav="timer">Cronômetro</a>
+    <a href="/" data-scroll="como-funciona" class="nav-extra">Como funciona</a>`;
 
   // menu do celular (gaveta)
   const menuBtn = document.createElement('button');
@@ -44,9 +45,9 @@ export function mountHeader() {
   drawer.hidden = true;
   drawer.innerHTML = `
     <div class="drawer-panel" role="dialog" aria-label="Menu">
-      <a class="drawer-link" href="#/" data-nav="home">Início</a>
-      <a class="drawer-link" href="#/cronometro" data-nav="timer">Cronômetro</a>
-      <a class="drawer-link" href="#/" data-scroll="como-funciona">Como funciona</a>
+      <a class="drawer-link" href="/" data-nav="home">Início</a>
+      <a class="drawer-link" href="${TIMER_PATH}" data-nav="timer">Cronômetro</a>
+      <a class="drawer-link" href="/" data-scroll="como-funciona">Como funciona</a>
       <div class="mega-title">Puzzles</div>
       <div class="mega-grid">${available.map(card).join('')}</div>
       ${soon.length ? `<div class="mega-title soon-title">Em breve</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}

@@ -4,6 +4,7 @@ import { cubeIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
 export const PUZZLES: PuzzleDefinition[] = [
   {
     id: 'cube2',
+    slug: '2x2',
     name: 'Cubo 2x2',
     subtitle: 'Pocket cube. Iniciante ou solução ótima.',
     available: true,
@@ -12,6 +13,7 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   {
     id: 'cube3',
+    slug: '3x3',
     name: 'Cubo 3x3',
     subtitle: 'O clássico. Método de iniciante passo a passo.',
     available: true,
@@ -20,6 +22,7 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   {
     id: 'cube4',
+    slug: '4x4',
     name: 'Cubo 4x4',
     subtitle: 'Revenge. Centros, arestas, paridades e fim como 3x3.',
     available: true,
@@ -28,6 +31,7 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   {
     id: 'cube5',
+    slug: '5x5',
     name: 'Cubo 5x5',
     subtitle: 'Professor. Centros, arestas e fim como 3x3.',
     available: true,
@@ -36,6 +40,7 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   {
     id: 'pyraminx',
+    slug: 'pyraminx',
     name: 'Pyraminx',
     subtitle: 'O triângulo. Iniciante ou solução ótima.',
     available: true,
@@ -44,6 +49,7 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   {
     id: 'skewb',
+    slug: 'skewb',
     name: 'Skewb',
     subtitle: 'O cubo que gira pelos cantos. Iniciante ou solução ótima.',
     available: true,
@@ -52,6 +58,7 @@ export const PUZZLES: PuzzleDefinition[] = [
   },
   {
     id: 'megaminx',
+    slug: 'megaminx',
     name: 'Megaminx',
     subtitle: 'Dodecaedro de 12 faces. Camada por camada.',
     available: true,

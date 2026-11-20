@@ -1,4 +1,5 @@
 import { PUZZLES, loadPuzzle } from '../core/registry';
+import { puzzlePath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
 import { icon } from './icons';
 
@@ -35,8 +36,8 @@ export function renderHome(app: HTMLElement) {
         <p class="lead">Mostre como o seu puzzle está — pintando as cores no modelo 3D ou apontando a câmera — e receba um tutorial animado,
         no seu ritmo: do método de iniciante até o CFOP dos speedcubers.</p>
         <div class="hero-cta">
-          <a class="btn primary big" id="hero-go" href="#/p/cube3">Resolver meu <span id="hero-go-name">3x3</span></a>
-          <a class="btn ghost big" href="#/" data-scroll="como-funciona">Como funciona</a>
+          <a class="btn primary big" id="hero-go" href="/3x3">Resolver meu <span id="hero-go-name">3x3</span></a>
+          <a class="btn ghost big" href="/" data-scroll="como-funciona">Como funciona</a>
         </div>
         <ul class="hero-badges">
           <li>${icon('palette')}Pinte ou use a câmera</li>
@@ -94,7 +95,7 @@ export function renderHome(app: HTMLElement) {
     <div class="puzzles">
       ${[...available, ...PUZZLES.filter((p) => !p.available)].map(
         (p) => `
-        <${p.available ? `a href="#/p/${p.id}"` : 'div'} class="pz-card reveal ${p.available ? '' : 'soon'}">
+        <${p.available ? `a href="${puzzlePath(p.id)}"` : 'div'} class="pz-card reveal ${p.available ? '' : 'soon'}">
           ${p.icon}
           <div><h3>${p.name}</h3><p>${p.subtitle}</p></div>
           ${p.available ? '<span class="tag ok">Disponível</span>' : '<span class="tag">Em breve</span>'}
@@ -108,7 +109,7 @@ export function renderHome(app: HTMLElement) {
       <h2>Pronto para resolver o seu?</h2>
       <p>Escolha o puzzle e comece agora — leva menos de um minuto para informar as cores.</p>
       <div class="final-buttons">
-        ${available.map((p) => `<a class="btn ${p.id === 'cube3' ? 'primary' : 'ghost'} big" href="#/p/${p.id}">${short(p.name)}</a>`).join('')}
+        ${available.map((p) => `<a class="btn ${p.id === 'cube3' ? 'primary' : 'ghost'} big" href="${puzzlePath(p.id)}">${short(p.name)}</a>`).join('')}
       </div>
     </div>
   </section>`;
@@ -182,7 +183,7 @@ export function renderHome(app: HTMLElement) {
     view.setAutoRotate?.(true);
     caption.textContent = def.name;
     goName.textContent = short(def.name);
-    goBtn.href = `#/p/${id}`;
+    goBtn.href = puzzlePath(id);
     stage.classList.remove('fading', 'celebrate');
     return im;
   }

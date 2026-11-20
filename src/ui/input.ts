@@ -1,5 +1,6 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
 import { encodeState, loadMethod, loadState, saveMethod, saveState } from '../core/store';
+import { navigate, solvePath } from '../core/router';
 import { UNKNOWN, type PuzzleImpl, type PuzzleState, type PuzzleView } from '../core/types';
 import { CameraScanner, faceLabel, faceThumb } from './scanner';
 import { dropSession, getSession, isActive, isComplete, peekSession, recordEdit, sampleCode, toReadPositions } from './scansession';
@@ -13,7 +14,7 @@ const LIGHTS = [
   ['escuro', 'Escura'],
 ];
 
-export async function renderInput(app: HTMLElement, puzzleId: string) {
+export async function renderInput(app: HTMLElement, puzzleId: string, params = new URLSearchParams()) {
   const def = getPuzzle(puzzleId);
   if (!def?.available) throw new Error('Este puzzle ainda não está disponível.');
   const impl: PuzzleImpl = await loadPuzzle(puzzleId);
@@ -28,7 +29,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   let tab: 'paint' | 'camera' = 'paint';
   let method = loadMethod(impl.methods.map((m) => m.id));
   let scanner: CameraScanner | null = null;
-  const debug = /[?&]debug/.test(location.hash) || /[?&]debug/.test(location.search);
+  const debug = params.has('debug');
   let light = 'claro';
 
   // uma leitura completa só continua valendo se o editor ainda mostra o que ela montou
@@ -42,7 +43,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
   app.innerHTML = `
   <section class="page workspace">
     <div class="ws-header">
-      <a class="back" href="#/">← Início</a>
+      <a class="back" href="/">← Início</a>
       <h1>Como está o seu ${def.name}?</h1>
       <p>${impl.holdHint}${impl.fixedStickers.length ? ' As peças de referência já vêm pintadas — elas nunca mudam de lugar.' : ''}</p>
     </div>
@@ -311,7 +312,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string) {
       return;
     }
     saveState(puzzleId, state);
-    location.hash = `/p/${puzzleId}/solve?m=${method}&s=${encodeState(state, impl.colors.map((c) => c.key))}`;
+    navigate(solvePath(puzzleId, method, encodeState(state, impl.colors.map((c) => c.key))));
   }
 
   function renderCamera(startFace?: number) {
