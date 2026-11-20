@@ -4,6 +4,7 @@
  */
 import { PUZZLES } from '../core/registry';
 import { TIMER_PATH, puzzlePath } from '../core/router';
+import { icon } from './icons';
 
 const short = (name: string) => name.replace('Cubo ', '');
 
@@ -30,7 +31,8 @@ export function mountHeader() {
       </div>
     </div>
     <a href="${TIMER_PATH}" data-nav="timer">Cronômetro</a>
-    <a href="/" data-scroll="como-funciona" class="nav-extra">Como funciona</a>`;
+    <a href="/" data-scroll="como-funciona" class="nav-extra">Como funciona</a>
+    <button type="button" class="nav-install" data-install hidden title="Instalar o CuboGuia como app (funciona sem internet)">${icon('download')}<span class="nav-install-txt">Instalar app</span></button>`;
 
   // menu do celular (gaveta)
   const menuBtn = document.createElement('button');
@@ -48,6 +50,7 @@ export function mountHeader() {
       <a class="drawer-link" href="/" data-nav="home">Início</a>
       <a class="drawer-link" href="${TIMER_PATH}" data-nav="timer">Cronômetro</a>
       <a class="drawer-link" href="/" data-scroll="como-funciona">Como funciona</a>
+      <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}Instalar app (funciona sem internet)</button>
       <div class="mega-title">Puzzles</div>
       <div class="mega-grid">${available.map(card).join('')}</div>
       ${soon.length ? `<div class="mega-title soon-title">Em breve</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}

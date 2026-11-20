@@ -105,6 +105,19 @@ O Cloudflare Pages entrega o `index.html` em qualquer endereço (o projeto não 
 `404.html`, então ele trata o site como SPA). `public/sitemap.xml` e `robots.txt`
 apontam as páginas para o Google.
 
+## Aplicativo e uso sem internet
+
+- `pwa/sw.js` é o service worker; no build, `vite.config.ts` gera o `dist/sw.js` com a
+  lista de todos os arquivos do site e uma versão (hash). Na primeira visita tudo fica
+  guardado no aparelho, e o site abre sem internet (inclusive tutoriais e cronômetro).
+- Versão nova publicada: aparece "Há uma nova versão — Atualizar" (nunca recarrega
+  sozinho). Só funciona no build (`npm run build`), não no `npm run dev`.
+- "Instalar app" no menu: no Android/computador usa o pedido do navegador; no iPhone
+  mostra as instruções (Compartilhar → Adicionar à Tela de Início).
+- `public/_headers`: arquivos de `/assets/` (nome versionado) ficam no cache do navegador
+  por 1 ano; o `sw.js` sempre é conferido.
+- Testar localmente como no Cloudflare: `npm run build` e `npx wrangler pages dev dist`.
+
 ## Contagem de visitas
 
 Cloudflare Web Analytics, ligado no painel do Cloudflare Pages (sem código no

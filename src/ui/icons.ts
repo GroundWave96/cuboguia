@@ -21,6 +21,9 @@ const PATHS = {
   trophy:
     '<path d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z"/><path d="M16.5 5.5h3v1.2a3.8 3.8 0 0 1-3.4 3.8"/><path d="M7.5 5.5h-3v1.2a3.8 3.8 0 0 0 3.4 3.8"/><path d="M12 14v3.5"/><path d="M8 20.5h8"/><path d="M9.5 17.5h5l.5 3h-6z"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="0.6" fill="currentColor"/>',
+  download: '<path d="M12 3.5v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2"/>',
+  /** o ícone de compartilhar do iPhone (quadrado com seta para cima) */
+  shareIos: '<path d="M12 3.5v11"/><path d="M8 7.5 12 3.5l4 4"/><path d="M8.5 10.5h-2a1.5 1.5 0 0 0-1.5 1.5v7a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-2"/>',
   share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
   trash: '<path d="M4 7h16"/><path d="M9.5 7V5h5v2"/><path d="M6.5 7l1 12.5h9L17.5 7"/><path d="M10.5 11v5.5M13.5 11v5.5"/>',
   // ---- entrada de cores

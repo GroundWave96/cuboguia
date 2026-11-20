@@ -693,6 +693,28 @@ body.timing .tm-pad { position: fixed; inset: 0; z-index: 30; border-radius: 0; 
   .tm-times { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ---------- Aplicativo (instalar, versão nova) ---------- */
+.nav-install { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--accent-2); font: 600 0.9rem var(--font); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+.nav-install:hover { background: rgba(63,208,201,0.1); }
+.nav-install .ico { width: 17px; height: 17px; }
+.nav-install[hidden], .drawer-install[hidden] { display: none; }
+/* telas médias: só o ícone (o texto não cabe ao lado do "Resolver agora") */
+@media (max-width: 1100px) {
+  .nav-install { padding: 8px 10px; }
+  .nav-install-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.drawer-install { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; color: var(--accent-2); font: inherit; text-align: left; cursor: pointer; }
+.drawer-install .ico { width: 18px; height: 18px; }
+.pwa-update { position: fixed; z-index: 70; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; width: max-content; max-width: calc(100vw - 24px); padding: 10px 12px 10px 16px; border-radius: 14px; background: #1b2133; border: 1px solid var(--border-strong); box-shadow: var(--shadow); font-size: 0.92rem; animation: tin 0.25s ease-out; }
+body.timing .pwa-update { display: none; }
+.pwa-sheet { position: fixed; inset: 0; z-index: 80; display: grid; place-items: end center; padding: 16px; background: rgba(5,8,18,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.pwa-sheet-box { width: min(100%, 440px); padding: 20px; background: var(--bg-2); display: flex; flex-direction: column; gap: 12px; }
+.pwa-sheet-box h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.pwa-sheet-box h3 .ico { color: var(--accent-2); }
+.pwa-sheet-box ol { margin: 0; padding-left: 1.2em; color: var(--muted); display: flex; flex-direction: column; gap: 8px; }
+.pwa-sheet-box b { color: var(--text); }
+.pwa-sheet-box li .ico { width: 18px; height: 18px; color: #4b9cff; vertical-align: -3px; }
+
 /* ---------- Responsivo ---------- */
 /* computador e tablet deitado: o cubo acompanha a rolagem e cabe na tela */
 @media (min-width: 901px) {

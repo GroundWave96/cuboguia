@@ -2,6 +2,7 @@ import './styles.css';
 import { getPuzzle } from './core/registry';
 import { fromLegacyHash, navigate, parseRoute, setRouteHandler } from './core/router';
 import { mountHeader } from './ui/header';
+import { setupApp } from './ui/pwa';
 import { renderHome } from './ui/home';
 import { renderInput } from './ui/input';
 import { renderSolve } from './ui/solve';
@@ -108,6 +109,7 @@ document.addEventListener('click', (e) => {
   navigate(url.pathname + url.search);
 });
 
+setupApp();
 setRouteHandler(route);
 window.addEventListener('popstate', route);
 
