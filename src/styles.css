@@ -1,3 +1,37 @@
+/* fontes guardadas no próprio site (public/fonts): abre sem internet e sem chamar o Google */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --bg: #0b0e17;
   --bg-2: #111627;
@@ -868,4 +902,32 @@ body.timing .pwa-update { display: none; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------- continuar de onde parou */
+.resume-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(124,140,255,0.1); border: 1px solid rgba(124,140,255,0.35); padding: 8px 8px 8px 12px; border-radius: 12px; font-size: 0.92rem; margin-bottom: 12px; animation: tin 0.25s ease-out; }
+.resume-note[hidden] { display: none; }
+.resume-note > .ico { width: 20px; height: 20px; color: var(--accent); flex: none; }
+.resume-note span { flex: 1 1 180px; }
+.resume-note .icon-btn { width: 32px; height: 32px; }
+.resume-note .icon-btn .ico { width: 16px; height: 16px; }
+.resume-home { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 460px; }
+.resume-home-title { display: inline-flex; align-items: center; gap: 7px; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+.resume-home-title .ico { width: 16px; height: 16px; color: var(--accent); }
+.resume-item { display: flex; align-items: center; gap: 12px; text-decoration: none; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px 12px 8px 8px; transition: background 0.2s, border-color 0.2s, transform 0.2s; }
+.resume-item:hover { background: var(--surface-2); border-color: rgba(124,140,255,0.5); transform: translateY(-1px); }
+.resume-icon { flex: none; width: 40px; height: 40px; display: grid; place-items: center; }
+.resume-icon svg { width: 40px; height: 40px; }
+.resume-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.resume-text b { font-size: 0.95rem; }
+.resume-text small { color: var(--muted); font-size: 0.8rem; }
+.resume-bar { display: block; height: 4px; border-radius: 4px; background: var(--surface-2); margin-top: 6px; overflow: hidden; }
+.resume-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.resume-go { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+.resume-go .ico { width: 16px; height: 16px; }
+.resume-home.resume-top { display: none; }
+@media (max-width: 900px) {
+  /* celular: quem abre o app para continuar vê a lista antes da vitrine */
+  .resume-home.resume-top { display: flex; order: -2; margin: 0; max-width: none; }
+  .resume-home.resume-side { display: none; }
 }

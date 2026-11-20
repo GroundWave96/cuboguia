@@ -20,6 +20,9 @@ const PATHS = {
   warning: '<path d="M10.3 4 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0z"/><path d="M12 9.2v4.3"/><circle cx="12" cy="16.8" r="0.6" fill="currentColor"/>',
   trophy:
     '<path d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z"/><path d="M16.5 5.5h3v1.2a3.8 3.8 0 0 1-3.4 3.8"/><path d="M7.5 5.5h-3v1.2a3.8 3.8 0 0 0 3.4 3.8"/><path d="M12 14v3.5"/><path d="M8 20.5h8"/><path d="M9.5 17.5h5l.5 3h-6z"/>',
+  /** relógio com seta: continuar de onde parou */
+  history: '<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v4.5H8"/><path d="M12 7.5V12l3 2"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="0.6" fill="currentColor"/>',
   download: '<path d="M12 3.5v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2"/>',
   /** o ícone de compartilhar do iPhone (quadrado com seta para cima) */

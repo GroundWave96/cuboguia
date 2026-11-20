@@ -1,0 +1,37 @@
+# Testes a cada envio para o GitHub.
+# O Cloudflare Pages já roda os testes de unidade antes de publicar (npm run build);
+# aqui rodam também os testes de navegador (e2e), que precisam de um Chromium.
+# Se algo quebrar, o GitHub manda um e-mail e mostra um X vermelho no commit.
+name: Testes
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build (tipos + testes de unidade + site)
+        run: npm run build
+      - name: Instalar o Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Testes de navegador
+        run: npm run e2e
+      - name: Relatório (quando falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

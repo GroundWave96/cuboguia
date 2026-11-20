@@ -37,9 +37,23 @@ No Megaminx o esquema de cores fica em `src/puzzles/megaminx/colors.ts`
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # testes do solucionador e da leitura de cores
-npm run build    # gera dist/
+npm test         # testes de unidade (solucionadores, câmera, cronômetro, inglês...)
+npm run build    # tipos + testes de unidade + gera dist/ (falha se algum teste falhar)
+npm run e2e      # testes de navegador (precisa do build; usa o Chrome instalado)
+npm run check    # tudo: build + testes de navegador
 ```
+
+## Testes
+
+- **Testes de unidade** (`tests/`, Vitest): rodam dentro do `npm run build`. Como o Cloudflare
+  publica com `npm run build`, **um teste quebrado impede a publicação** — o site no ar continua
+  na versão anterior.
+- **Testes de navegador** (`e2e/`, Playwright): abrem o site de verdade (com o `wrangler pages dev`,
+  igual ao Cloudflare) no computador e num celular simulado: todos os puzzles do início ao fim,
+  continuar de onde parou, câmera (com uma câmera de mentira), cronômetro com dois dedos, desafio,
+  sem internet e versão em inglês.
+- **GitHub Actions** (`.github/workflows/testes.yml`): roda tudo isso a cada envio para o GitHub e
+  avisa por e-mail se algo quebrar.
 
 ## Estrutura
 
@@ -117,6 +131,13 @@ apontam as páginas para o Google.
 - Avisos de validação comuns ficam em `src/core/messages.ts`.
 - `tests/i18n.test.ts` resolve embaralhados de todos os puzzles em todos os métodos em
   inglês e falha se aparecer qualquer palavra em português — rode ao adicionar textos.
+
+## Tutorial: continuar de onde parou
+
+O passo e o movimento de cada tutorial ficam guardados no navegador (`src/core/progress.ts`,
+chave `cubo:progress`, até 12 tutoriais por 60 dias). O mesmo cubo e método sempre geram a mesma
+solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
+progresso antigo é ignorado). A tela inicial mostra os tutoriais em andamento.
 
 ## Aplicativo e uso sem internet
 
