@@ -35,6 +35,8 @@ async function route() {
   app.innerHTML = '';
   window.scrollTo(0, 0);
   const { parts, params } = parseHash();
+  // o CSS usa para ajustar o layout por página (ex.: celular deitado no tutorial)
+  document.body.dataset.page = parts[0] === 'p' && parts[1] ? (parts[2] === 'solve' ? 'solve' : 'input') : 'home';
   try {
     if (parts[0] === 'p' && parts[1]) {
       setActiveNav(parts[1]);

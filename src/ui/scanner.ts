@@ -187,6 +187,7 @@ export class CameraScanner {
 
   private render() {
     if (this.mode === 'review') return this.renderReview();
+    this.root.classList.remove('reviewing');
     const face = this.impl.scan[this.current];
     const done = this.captured.filter(Boolean).length;
     this.opts.onFace?.(face.grid.flat());
@@ -738,6 +739,7 @@ export class CameraScanner {
   private renderReview() {
     const r = this.review!;
     const res = this.impl.validate(r.state);
+    this.root.classList.add('reviewing');
     this.root.innerHTML = `
       <div class="scan-review">
         <div class="review-head">

@@ -334,10 +334,10 @@ body.no-scroll { overflow: hidden; }
 .tabs button.active { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
 
 /* paleta */
-.palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.palette { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
 .swatch { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: 500 0.88rem var(--font); cursor: pointer; text-align: left; }
 .swatch i { width: 22px; height: 22px; border-radius: 6px; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25); }
-.swatch span { flex: 1; text-transform: capitalize; }
+.swatch span { flex: 1; min-width: 0; text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .swatch small { color: var(--faint); font-variant-numeric: tabular-nums; }
 .swatch small.full { color: var(--ok); }
 .swatch small.over { color: var(--danger); font-weight: 700; }
@@ -532,7 +532,15 @@ body.no-scroll { overflow: hidden; }
 .step-ok { display: flex; align-items: center; gap: 8px; background: rgba(61,220,132,0.1); border: 1px solid rgba(61,220,132,0.3); color: var(--ok); padding: 8px 12px; border-radius: 10px; font-weight: 600; font-size: 0.92rem; animation: tin 0.25s ease-out; }
 .step-ok .ico { width: 20px; height: 20px; }
 .step-ok b { color: #b9f5d2; }
-.controls { display: flex; justify-content: center; gap: 8px; margin-top: 4px; }
+/* controles do tutorial: presos na parte de baixo da tela enquanto o painel passa por ela */
+.step-dock {
+  position: sticky; bottom: 0; z-index: 4;
+  margin: 0 -18px; padding: 10px 18px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: rgba(17, 21, 34, 0.9);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+}
+.controls { display: flex; justify-content: center; gap: 8px; }
 .controls .ctl { flex: 0 1 auto; min-width: 0; }
 .ctl { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 50px; height: 50px; padding: 0; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font: 600 0.95rem var(--font); cursor: pointer; transition: background 0.15s, transform 0.1s, width 0.2s; }
 .ctl .ico { width: 22px; height: 22px; }
@@ -579,6 +587,23 @@ body.no-scroll { overflow: hidden; }
 @keyframes tin { from { opacity: 0; transform: translateY(8px); } }
 
 /* ---------- Responsivo ---------- */
+/* computador e tablet deitado: o cubo acompanha a rolagem e cabe na tela */
+@media (min-width: 901px) {
+  /* cabeçalho do tutorial compacto (método à direita do título): sobra mais altura para o cubo */
+  .workspace { padding-top: 20px; }
+  .solve .ws-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: end; margin-bottom: 14px; }
+  .solve .ws-header > * { grid-column: 1; }
+  .solve .ws-header h1 { font-size: 1.75rem; }
+  .solve .ws-header p { font-size: 0.92rem; }
+  .solve .ws-header .method-switch { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+  .solve .stages { margin-bottom: 12px; }
+  .workspace .ws-view {
+    position: sticky; top: calc(var(--topbar-h, 64px) + 14px);
+    height: min(calc(100vh - var(--topbar-h, 64px) - 28px), 680px);
+    height: min(calc(100svh - var(--topbar-h, 64px) - 28px), 680px);
+    min-height: 360px;
+  }
+}
 @media (max-width: 900px) {
   .hero { grid-template-columns: minmax(0, 1fr); min-height: auto; padding-top: 16px; gap: 18px; }
   .showcase { order: -1; }
@@ -586,9 +611,9 @@ body.no-scroll { overflow: hidden; }
   .how { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .ws-grid { grid-template-columns: minmax(0, 1fr); }
-  .ws-view { height: 52vh; min-height: 300px; }
+  .ws-view { height: 52vh; height: 52svh; min-height: 300px; }
   .solve .ws-view {
-    height: 44vh; position: sticky; top: var(--topbar-h, 64px); z-index: 5;
+    height: 44vh; height: 44svh; position: sticky; top: var(--topbar-h, 64px); z-index: 5;
     border-radius: 0 0 var(--radius) var(--radius); /* encosta na barra do topo, sem frestas */
     /* fica fixo enquanto o texto rola por baixo: fundo desfocado em vez de transparente */
     background: rgba(13, 17, 29, 0.78);
@@ -630,10 +655,66 @@ body.no-scroll { overflow: hidden; }
   .page { padding: 20px 16px; }
   .palette { grid-template-columns: repeat(2, 1fr); }
   .ctl { width: 46px; height: 46px; }
-  .controls { gap: 5px; flex-wrap: wrap; }
+  .controls { gap: 5px; }
   .ctl.main { width: 58px; }
-  .ctl.main.wide { order: -1; flex: 1 0 100%; height: 50px; }
+  /* "Próximo passo" ocupa o espaço que sobra na mesma linha (a barra de baixo fica baixinha) */
+  .ctl.main.wide { flex: 1 1 auto; min-width: 0; padding: 0 10px; font-size: 0.9rem; }
+  .ctl.main.wide .ico { display: none; }
   .move-badge strong { font-size: 1.3rem; min-width: 38px; height: 38px; }
+}
+
+/* ---------- Celular deitado: cubo à esquerda na altura toda, explicação e botões à direita ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  body[data-page="solve"] .topbar, body[data-page="input"] .topbar,
+  body[data-page="solve"] .footer, body[data-page="input"] .footer { display: none; }
+  .workspace {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 14px; align-items: start;
+    padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+  }
+  .workspace.solve { grid-template-rows: auto auto 1fr; }
+  .workspace .ws-grid { display: contents; }
+  .workspace > *, .workspace .ws-panel { grid-column: 2; }
+  .workspace .ws-view, .solve .ws-view {
+    grid-column: 1; grid-row: 1 / -1; position: sticky; top: 0; z-index: 1;
+    height: 100vh; height: 100svh; min-height: 0;
+    border: 0; border-radius: 0; background: transparent; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .ws-header { padding-top: 12px; margin-bottom: 10px; }
+  .ws-header h1 { font-size: 1.25rem; margin-bottom: 4px; }
+  .ws-header p { font-size: 0.85rem; line-height: 1.45; }
+  .back { margin-bottom: 4px; }
+  .method-switch { margin-top: 8px; }
+  .method-switch a { padding: 5px 10px; font-size: 0.82rem; }
+  .stages { margin-bottom: 10px; }
+  .stages button { padding: 6px 10px; font-size: 0.8rem; }
+  .ws-panel { padding: 12px; margin-bottom: 12px; }
+  .step-dock { margin: 0 -12px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .step-title { font-size: 1.2rem; }
+  .move-badge { top: 10px; left: 10px; }
+  .view-reset { top: 10px; right: 10px; }
+
+  /* câmera: vídeo à esquerda, título, botões e miniaturas à direita */
+  .workspace.scanning { grid-template-columns: minmax(0, 1fr); }
+  .workspace.scanning > *, .workspace.scanning .ws-panel { grid-column: 1; }
+  .workspace.scanning .ws-view, .workspace.scanning .ws-header { display: none; }
+  .workspace.scanning .ws-panel { margin-top: 10px; padding: 10px; }
+  .workspace.scanning .tabs { margin-bottom: 10px; }
+  .scanner:not(.reviewing) { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto 1fr; column-gap: 16px; align-items: start; }
+  .scanner:not(.reviewing) > * { grid-column: 2; }
+  .workspace.scanning .scanner:not(.reviewing) .scan-stage { grid-column: 1; grid-row: 1 / -1; width: calc(100vh - 100px); width: calc(100svh - 100px); min-width: 200px; }
+  .scanner:not(.reviewing) .scan-actions { margin: 4px 0 10px; }
+  .scanner:not(.reviewing) .scan-up-hint { margin-left: 0; text-align: left; flex-basis: 100%; }
+  .review-faces, .review-faces.many { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .scan-warn { font-size: 0.74rem; padding: 4px 8px; line-height: 1.3; }
+  .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* página inicial: cubo e texto lado a lado */
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; padding-top: 12px; gap: 18px; }
+  .showcase { order: 0; }
+  .showcase-stage { height: calc(100vh - 210px); height: calc(100svh - 210px); min-height: 160px; }
+  .hero h1 { font-size: 1.9rem; }
+  .lead { font-size: 0.98rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }

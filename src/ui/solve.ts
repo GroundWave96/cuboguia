@@ -90,8 +90,9 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       </div>
       <div class="ws-panel card step-panel">
         <div class="step-body"></div>
-        <div class="step-foot">
-          <div class="step-ok" hidden>${icon('checkCircle')}<span>Passo concluído! Avance para o <b>próximo passo</b>.</span></div>
+        <div class="step-ok" hidden>${icon('checkCircle')}<span>Passo concluído! Avance para o <b>próximo passo</b>.</span></div>
+        <!-- controles: ficam presos na parte de baixo da tela enquanto o painel passa por ela -->
+        <div class="step-dock">
           <div class="controls">
             <button class="ctl" data-act="prevStep" title="Passo anterior (PageUp)" aria-label="Passo anterior">${icon('stepPrev')}</button>
             <button class="ctl" data-act="prevMove" title="Desfazer movimento (←)" aria-label="Desfazer movimento">${icon('movePrev')}</button>
@@ -99,6 +100,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
             <button class="ctl" data-act="nextMove" title="Próximo movimento (→)" aria-label="Próximo movimento">${icon('moveNext')}</button>
             <button class="ctl" data-act="nextStep" title="Próximo passo (PageDown)" aria-label="Próximo passo">${icon('stepNext')}</button>
           </div>
+        </div>
+        <div class="step-foot">
           <label class="speed">Velocidade <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
           <details class="notation">
             <summary>Como ler os movimentos?</summary>
@@ -119,6 +122,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const panel = app.querySelector<HTMLElement>('.step-panel')!;
   const body = panel.querySelector<HTMLElement>('.step-body')!;
   const foot = panel.querySelector<HTMLElement>('.step-foot')!;
+  const dock = panel.querySelector<HTMLElement>('.step-dock')!;
   const doneHost = panel.querySelector<HTMLElement>('.done-host')!;
   const stepOk = panel.querySelector<HTMLElement>('.step-ok')!;
   const mainBtn = panel.querySelector<HTMLButtonElement>('[data-act="main"]')!;
@@ -249,7 +253,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <div class="moves">${segHtml}</div>`;
     const wasBuilt = built !== null;
     built = cur;
-    body.hidden = foot.hidden = false;
+    body.hidden = foot.hidden = dock.hidden = false;
     doneHost.hidden = true;
     doneHost.innerHTML = '';
     if (wasBuilt) revealTitle();
@@ -267,7 +271,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
   function buildDone() {
     built = -1;
-    body.hidden = foot.hidden = true;
+    body.hidden = foot.hidden = dock.hidden = stepOk.hidden = true;
     doneHost.hidden = false;
     doneHost.innerHTML = `
       <div class="done-panel">
@@ -389,12 +393,31 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   };
   window.addEventListener('keydown', onKey);
 
+  // tela sempre acesa durante o tutorial (as mãos estão no cubo); o navegador solta
+  // o pedido quando a aba some, então pede de novo ao voltar
+  let wake: WakeLockSentinel | null = null;
+  let alive = true;
+  const keepAwake = async () => {
+    if (!alive || document.visibilityState !== 'visible' || !('wakeLock' in navigator)) return;
+    try {
+      wake = await navigator.wakeLock.request('screen');
+      if (!alive) wake.release().catch(() => {});
+    } catch {
+      /* sem permissão ou sem suporte: só não mantém acesa */
+    }
+  };
+  document.addEventListener('visibilitychange', keepAwake);
+  keepAwake();
+
   view.setState(initial);
   if (steps.length) goToStep(0);
   else render();
 
   return () => {
     playing = false;
+    alive = false;
+    document.removeEventListener('visibilitychange', keepAwake);
+    wake?.release().catch(() => {});
     window.removeEventListener('keydown', onKey);
     view.dispose();
   };
