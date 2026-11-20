@@ -15,6 +15,7 @@ import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, v
 import type { PuzzleImpl } from '../core/types';
 import { icon } from './icons';
 import { netSvg } from './net';
+import { notationHtml } from './notation';
 import { toast } from './toast';
 import { keepScreenOn } from './wakelock';
 
@@ -65,6 +66,13 @@ function saveSolves(puzzle: string, solves: Solve[]) {
 }
 
 const short = (name: string) => name.replace('Cubo ', '');
+
+/** como segurar o puzzle resolvido antes de embaralhar (a posição do desenho) */
+const SCRAMBLE_HOLD: Record<string, string> = {
+  pyraminx: 'com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo',
+  megaminx: 'com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você',
+};
+const DEFAULT_HOLD = 'com o <b>amarelo</b> em cima e o <b>verde</b> de frente para você';
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 function loadName(): string {
   try {
@@ -104,9 +112,13 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     </div>
     <div class="tm-challenge card" hidden></div>
     <div class="tm-scramble card">
-      <div class="tm-scr-head"><span class="tm-label">Embaralho</span><button class="btn ghost sm" data-act="new">${icon('shuffle')}Outro</button></div>
+      <div class="tm-scr-head">
+        <span class="tm-label">Embaralho<button class="tm-info-btn" aria-expanded="false" aria-controls="tm-info" title="O que é o embaralho e como fazer">${icon('info')}<span class="sr-only">O que é o embaralho e como fazer</span></button></span>
+        <button class="btn ghost sm" data-act="new">${icon('shuffle')}Outro</button>
+      </div>
       <p class="tm-scr-text" aria-live="polite"></p>
       <div class="tm-preview"></div>
+      <div class="tm-info" id="tm-info"><div class="tm-info-in"></div></div>
     </div>
     <div class="tm-pad" tabindex="0" aria-label="Cronômetro">
       <div class="tm-time">0.00</div>
@@ -146,6 +158,8 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   const lastEl = $<HTMLElement>('.tm-last');
   const scrText = $<HTMLElement>('.tm-scr-text');
   const preview = $<HTMLElement>('.tm-preview');
+  const info = $<HTMLElement>('.tm-info');
+  const infoBtn = $<HTMLButtonElement>('.tm-info-btn');
 
   let impl: PuzzleImpl | null = null;
   let solves = loadSolves(cfg.puzzle);
@@ -584,6 +598,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       saveCfg(cfg);
       renderOpts();
       renderPreview();
+      renderInfo();
       paint();
     }),
   );
@@ -602,7 +617,47 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     impl = im;
     newScramble(challenge?.puzzle === id);
     renderChallenge();
+    renderInfo();
   }
+
+  // ---- ⓘ: o que é o embaralho, como segurar e o que cada movimento quer dizer
+  function renderInfo() {
+    if (!impl) return;
+    info.querySelector('.tm-info-in')!.innerHTML = `
+      <div class="tm-info-cols">
+        <div>
+          <h4>O que é o embaralho?</h4>
+          <p>É uma sequência de giros sorteada que deixa o ${puzzleName()} bagunçado de um jeito "justo" — o mesmo para todo mundo que fizer a mesma sequência. É assim nas competições, e é o que vai junto quando você desafia um amigo.</p>
+          <h4>Como fazer</h4>
+          <ol>
+            <li>Comece com o ${puzzleName()} <b>resolvido</b>, ${SCRAMBLE_HOLD[cfg.puzzle] ?? DEFAULT_HOLD}.</li>
+            <li>Faça os giros na ordem, da esquerda para a direita, <b>sem virar o puzzle na mão</b> no meio do caminho.</li>
+            <li>Confira com o desenho${cfg.preview ? '' : ' (ligue a opção "Desenho")'}: ele mostra como o puzzle deve ter ficado, visto ${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? 'aberto' : 'aberto em cruz (a face de cima no alto, a da frente no meio)'}.</li>
+          </ol>
+        </div>
+        <div>
+          <h4>O que cada movimento quer dizer</h4>
+          ${notationHtml(impl)}
+        </div>
+      </div>`;
+  }
+  /** aberto pelo clique (fica) ou pelo mouse por cima (fecha ao sair) */
+  let infoPinned = false;
+  const setInfo = (open: boolean) => {
+    info.classList.toggle('open', open);
+    infoBtn.setAttribute('aria-expanded', String(open));
+    infoBtn.classList.toggle('on', open);
+  };
+  infoBtn.addEventListener('click', () => {
+    infoPinned = !infoPinned || !info.classList.contains('open');
+    setInfo(infoPinned);
+  });
+  infoBtn.addEventListener('pointerenter', (e) => {
+    if (e.pointerType === 'mouse' && !infoPinned) setInfo(true);
+  });
+  $<HTMLElement>('.tm-scramble').addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'mouse' && !infoPinned) setInfo(false);
+  });
   app.querySelectorAll<HTMLButtonElement>('[data-pz]').forEach((b) =>
     b.addEventListener('click', () => {
       if (phase === 'idle' && b.dataset.pz !== cfg.puzzle) choose(b.dataset.pz!);

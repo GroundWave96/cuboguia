@@ -549,7 +549,7 @@ body.no-scroll { overflow: hidden; }
 .speed span { font-variant-numeric: tabular-nums; min-width: 3ch; }
 .notation { border-top: 1px solid var(--border); padding-top: 10px; font-size: 0.9rem; color: var(--muted); }
 .notation summary { cursor: pointer; color: var(--text); font-weight: 600; }
-.notation ul { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; padding: 0; list-style: none; }
+.notation-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; padding: 0; list-style: none; }
 
 .done-panel { text-align: center; padding: 30px 10px; position: relative; overflow: hidden; }
 .done-panel h2 { font-size: 1.9rem; }
@@ -601,6 +601,21 @@ body.no-scroll { overflow: hidden; }
 .tm-scr-text.long { font-size: 0.95rem; }
 .tm-preview { grid-column: 2; grid-row: 1 / span 2; }
 .tm-preview[hidden] { display: none; }
+/* ⓘ do embaralho: abre a caixa um pouco para baixo */
+.tm-label { display: inline-flex; align-items: center; gap: 6px; }
+.tm-info-btn { display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; }
+.tm-info-btn .ico { width: 18px; height: 18px; }
+.tm-info-btn:hover, .tm-info-btn.on { color: var(--accent-2); border-color: rgba(63,208,201,0.4); background: rgba(63,208,201,0.08); }
+.tm-info { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
+.tm-info.open { grid-template-rows: 1fr; }
+.tm-info-in { overflow: hidden; min-height: 0; }
+.tm-info-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; padding: 12px 0 4px; margin-top: 8px; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--muted); }
+.tm-info-cols h4 { margin: 8px 0 4px; color: var(--text); font: 600 0.95rem var(--display); }
+.tm-info-cols p, .tm-info-cols ol { margin: 0 0 6px; }
+.tm-info-cols ol { padding-left: 1.2em; }
+.tm-info-cols li { margin-bottom: 3px; }
+.tm-info-cols b { color: var(--text); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .net-mini { display: block; width: 150px; max-height: 120px; }
 .tm-pad {
   position: relative; min-height: 46vh; min-height: 46svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
@@ -659,6 +674,7 @@ body.timing .tm-pad { position: fixed; inset: 0; z-index: 30; border-radius: 0; 
   .tm-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tm-scramble { grid-template-columns: minmax(0, 1fr); }
   .tm-preview { grid-column: 1; grid-row: auto; justify-self: center; }
+  .tm-info-cols { grid-template-columns: 1fr; }
   .tm-scr-text { font-size: 1rem; }
   .tm-scr-text.long { font-size: 0.85rem; }
 }

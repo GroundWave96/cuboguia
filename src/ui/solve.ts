@@ -2,6 +2,7 @@ import { getPuzzle, loadPuzzle } from '../core/registry';
 import { decodeState, encodeState, loadSpeed, loadState, saveMethod, saveSpeed } from '../core/store';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
+import { notationHtml } from './notation';
 import { keepScreenOn } from './wakelock';
 
 interface FlatMove {
@@ -106,10 +107,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
           <label class="speed">Velocidade <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
           <details class="notation">
             <summary>Como ler os movimentos?</summary>
-            <p>${impl.notationIntro ?? 'Cada letra é uma face. Gire-a olhando <b>de frente para ela</b>:'}</p>
-            <ul>${impl.notationHelp.map((h) => `<li><code>${h.move}</code> ${h.text}</li>`).join('')}</ul>
-            ${impl.notationNote ?? `<p><code>R</code> = sentido horário · <code>R'</code> = anti-horário · <code>R2</code> = meia volta.</p>
-            <p>Letra minúscula (<code>r</code>) = a face <b>e</b> a camada do meio juntas (duas camadas).</p>`}
+            ${notationHtml(impl)}
           </details>
         </div>
         <div class="done-host" hidden></div>
