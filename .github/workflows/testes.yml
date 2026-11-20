@@ -1,13 +1,11 @@
-# Testes a cada envio para o GitHub.
-# O Cloudflare Pages já roda os testes de unidade antes de publicar (npm run build);
-# aqui rodam também os testes de navegador (e2e), que precisam de um Chromium.
-# Se algo quebrar, o GitHub manda um e-mail e mostra um X vermelho no commit.
+# Testes completos no GitHub, só quando chamados à mão (aba Actions → Testes → Run workflow).
+# Não rodam sozinhos: a máquina do GitHub não tem placa de vídeo e leva ~15 min, e a proteção
+# do dia a dia já existe — o Cloudflare roda os testes de unidade antes de publicar
+# (npm run build) e os testes de navegador rodam no computador antes de juntar na main (npm run check).
 name: Testes
 
 on:
-  push:
-    branches: ['**']
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   testes:

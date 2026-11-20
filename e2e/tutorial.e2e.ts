@@ -81,3 +81,24 @@ test('continua de onde parou (recarregando e pela tela inicial)', async ({ page 
   await expect(page.locator('.resume-item')).toHaveCount(0);
   check();
 });
+
+test('trocar o idioma no meio do tutorial mantém o passo', async ({ page }, info) => {
+  test.skip(info.project.name !== 'computador', 'o seletor fica no menu do celular');
+  const check = trackErrors(page);
+  await openRandomTutorial(page, '3x3');
+  await page.click('[data-act="nextStep"]');
+  await page.click('[data-act="nextMove"]');
+  await expect(page.locator('.chip.done')).toHaveCount(1);
+  await page.click('.nav-lang [data-lang="en"]');
+  await expect(page).toHaveURL(/\/en\/3x3\/tutorial/);
+  await expect(page.locator('.step-meta')).toContainText('Step 2 of');
+  await expect(page.locator('.chip.done')).toHaveCount(1);
+  await expect(page.locator('.resume-note')).toBeHidden();
+  await page.click('.nav-lang [data-lang="pt"]');
+  await expect(page.locator('.step-meta')).toContainText('Passo 2 de');
+  await expect(page.locator('.chip.done')).toHaveCount(1);
+  // recarregar de verdade continua mostrando o aviso
+  await page.reload();
+  await expect(page.locator('.resume-note')).toBeVisible();
+  check();
+});

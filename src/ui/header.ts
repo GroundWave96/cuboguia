@@ -131,6 +131,8 @@ export function mountHeader() {
     if (!l) return;
     try {
       localStorage.setItem('cubo:lang', l);
+      // no tutorial: continua no mesmo passo, sem o aviso "continuando de onde parou"
+      if (document.body.dataset.page === 'solve') sessionStorage.setItem('cubo:langSwitch', '1');
     } catch {
       /* sem armazenamento */
     }

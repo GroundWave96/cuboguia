@@ -54,6 +54,14 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const stateCode = encodeState(initial, impl.colors.map((c) => c.key));
   const sig = movesSignature(flat.map((f) => f.move));
   const saved = steps.length ? loadProgress(puzzleId, methodId, stateCode, sig) : null;
+  // veio da troca de idioma: continua no mesmo passo, sem o aviso "continuando de onde parou"
+  let langSwitch = false;
+  try {
+    langSwitch = sessionStorage.getItem('cubo:langSwitch') === '1';
+    sessionStorage.removeItem('cubo:langSwitch');
+  } catch {
+    /* sem armazenamento */
+  }
 
   const faceText = Object.fromEntries(impl.notationHelp.map((h) => [h.move, h.text]));
   const describeMove = (m: string) => {
@@ -442,10 +450,10 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       `Continuando de onde você parou: <b>passo ${cur + 1} de ${steps.length}</b>.`,
       `Picking up where you left off: <b>step ${cur + 1} of ${steps.length}</b>.`,
     );
-    resumeNote.hidden = false;
+    resumeNote.hidden = langSwitch;
     // celular: o cubo fica fixo no topo; rola até o aviso aparecer logo abaixo dele
     requestAnimationFrame(() => {
-      if (getComputedStyle(viewCard).position !== 'sticky') return;
+      if (langSwitch || getComputedStyle(viewCard).position !== 'sticky') return;
       const stuckTop = parseFloat(getComputedStyle(viewCard).top) || 0;
       const y = window.scrollY + resumeNote.getBoundingClientRect().top - (stuckTop + viewCard.offsetHeight + 8);
       if (y > window.scrollY) window.scrollTo({ top: y });

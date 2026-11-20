@@ -52,8 +52,10 @@ npm run check    # tudo: build + testes de navegador
   igual ao Cloudflare) no computador e num celular simulado: todos os puzzles do início ao fim,
   continuar de onde parou, câmera (com uma câmera de mentira), cronômetro com dois dedos, desafio,
   sem internet e versão em inglês.
-- **GitHub Actions** (`.github/workflows/testes.yml`): roda tudo isso a cada envio para o GitHub e
-  avisa por e-mail se algo quebrar.
+- **Antes de juntar na `main`**: `npm run check` no computador (build + testes de navegador).
+- **GitHub Actions** (`.github/workflows/testes.yml`): os mesmos testes no GitHub, **só quando chamados
+  à mão** (aba Actions → Testes → Run workflow). Não roda sozinho porque lá não há placa de vídeo e
+  leva uns 15 minutos.
 
 ## Estrutura
 
