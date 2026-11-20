@@ -47,3 +47,30 @@ describe('cronômetro — estatísticas (padrão WCA)', () => {
     expect(inspectionPenalty(17500)).toBe('dnf');
   });
 });
+
+describe('cronômetro — desafio pelo link', async () => {
+  const { challengeQuery, readChallenge } = await import('../src/core/challenge');
+  const P = ['cube3', 'megaminx', 'pyraminx'];
+  it('ida e volta: embaralho, tempo e nome', () => {
+    const c = { puzzle: 'cube3', scramble: ["R", "U'", "F2", "2R", "Rw'"], ms: 12340, name: 'Gabi' };
+    expect(readChallenge(new URLSearchParams(challengeQuery(c)), P)).toEqual(c);
+    const dnf = { ...c, ms: null, name: '' };
+    expect(readChallenge(new URLSearchParams(challengeQuery(dnf)), P)).toEqual(dnf);
+    const mega = { puzzle: 'megaminx', scramble: ["DBR2'", 'BL', "u'"], ms: 90000, name: '' };
+    expect(readChallenge(new URLSearchParams(challengeQuery(mega)), P)).toEqual(mega);
+  });
+  it('recusa links estranhos', () => {
+    const q = (o: Record<string, string>) => readChallenge(new URLSearchParams(o), P);
+    expect(q({ p: 'cube9', e: 'R', t: '1000' })).toBeNull(); // puzzle que não existe
+    expect(q({ p: 'cube3', e: '<script>', t: '1000' })).toBeNull(); // movimento sem formato de movimento
+    expect(q({ p: 'cube3', e: 'R', t: '-5' })).toBeNull();
+    expect(q({ p: 'cube3', e: 'R', t: '1e9' })).toBeNull();
+    expect(q({ p: 'cube3', e: Array(200).fill('R').join(' '), t: '1000' })).toBeNull(); // embaralho enorme
+    expect(q({ p: 'cube3', t: '1000' })).toBeNull();
+  });
+  it('nome: sem tags nem caracteres de controle, no máximo 24 letras', () => {
+    const c = readChallenge(new URLSearchParams({ p: 'cube3', e: 'R', t: '1000', n: '  <b>Ana</b>\u0007 ' + 'x'.repeat(40) }), P)!;
+    expect(c.name).not.toMatch(/[<>\u0007]/);
+    expect(c.name.length).toBeLessThanOrEqual(24);
+  });
+});

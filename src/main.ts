@@ -41,7 +41,7 @@ async function route() {
   try {
     if (parts[0] === 'cronometro') {
       setActiveNav('timer');
-      cleanup = await renderTimer(app);
+      cleanup = await renderTimer(app, params);
     } else if (parts[0] === 'p' && parts[1]) {
       setActiveNav(parts[1]);
       if (parts[2] === 'solve') cleanup = await renderSolve(app, parts[1], params);

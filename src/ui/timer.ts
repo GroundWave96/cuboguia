@@ -10,10 +10,12 @@
  * Tempos e configurações ficam no aparelho (localStorage), separados por puzzle.
  */
 import { PUZZLES, loadPuzzle } from '../core/registry';
-import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, type Penalty, type Solve } from '../core/timerstats';
+import { MAX_NAME, challengeQuery, cleanName, readChallenge, type Challenge } from '../core/challenge';
+import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, value, type Penalty, type Solve } from '../core/timerstats';
 import type { PuzzleImpl } from '../core/types';
 import { icon } from './icons';
 import { netSvg } from './net';
+import { toast } from './toast';
 import { keepScreenOn } from './wakelock';
 
 /** quanto tempo segurar até ficar verde (como o Stackmat) */
@@ -63,11 +65,29 @@ function saveSolves(puzzle: string, solves: Solve[]) {
 }
 
 const short = (name: string) => name.replace('Cubo ', '');
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+function loadName(): string {
+  try {
+    return cleanName(localStorage.getItem('cubo:timer:name') ?? '');
+  } catch {
+    return '';
+  }
+}
+function saveName(n: string) {
+  try {
+    localStorage.setItem('cubo:timer:name', n);
+  } catch {
+    /* sem armazenamento */
+  }
+}
 
-export async function renderTimer(app: HTMLElement) {
+export async function renderTimer(app: HTMLElement, params = new URLSearchParams()) {
   const available = PUZZLES.filter((p) => p.available);
   const cfg = loadCfg();
   if (!available.some((p) => p.id === cfg.puzzle)) cfg.puzzle = 'cube3';
+  // desafio recebido pelo link: abre no puzzle dele, com o embaralho dele
+  const received = readChallenge(params, available.map((p) => p.id));
+  if (received) cfg.puzzle = received.puzzle;
 
   app.innerHTML = `
   <section class="page timer-page">
@@ -82,6 +102,7 @@ export async function renderTimer(app: HTMLElement) {
         <button class="tm-opt" data-opt="preview" aria-pressed="false" title="Mostrar como o puzzle fica depois de embaralhar"><span class="sw" aria-hidden="true"></span>Desenho</button>
       </div>
     </div>
+    <div class="tm-challenge card" hidden></div>
     <div class="tm-scramble card">
       <div class="tm-scr-head"><span class="tm-label">Embaralho</span><button class="btn ghost sm" data-act="new">${icon('shuffle')}Outro</button></div>
       <p class="tm-scr-text" aria-live="polite"></p>
@@ -94,12 +115,27 @@ export async function renderTimer(app: HTMLElement) {
         <button class="btn ghost sm" data-last="2">+2</button>
         <button class="btn ghost sm" data-last="dnf">DNF</button>
         <button class="btn ghost sm" data-last="del">Apagar</button>
+        <button class="btn primary sm" data-last="share">${icon('share')}Desafiar</button>
       </div>
     </div>
     <div class="tm-stats card"></div>
     <div class="tm-list card">
       <div class="tm-list-head"><span class="tm-label">Tempos</span><button class="btn ghost sm" data-act="clear">Limpar sessão</button></div>
       <ol class="tm-times"></ol>
+    </div>
+    <div class="tm-share" hidden>
+      <div class="tm-share-box card" role="dialog" aria-modal="true" aria-labelledby="tm-share-title">
+        <h3 id="tm-share-title">${icon('share')}Desafiar um amigo</h3>
+        <p class="tm-share-sub">Quem abrir o link recebe <b>o mesmo embaralho</b> e vê o seu tempo para tentar bater.</p>
+        <label class="tm-name">Seu nome (opcional)<input type="text" maxlength="${MAX_NAME}" autocomplete="nickname" placeholder="Ex.: Gabriel"></label>
+        <p class="tm-share-msg"></p>
+        <input class="tm-share-link" type="text" readonly aria-label="Link do desafio">
+        <div class="row-actions">
+          ${'share' in navigator ? `<button class="btn primary" data-share="native">${icon('share')}Compartilhar</button>` : ''}
+          <button class="btn ${'share' in navigator ? 'ghost' : 'primary'}" data-share="copy">Copiar link</button>
+          <button class="btn ghost" data-share="close">Fechar</button>
+        </div>
+      </div>
     </div>
   </section>`;
 
@@ -114,6 +150,11 @@ export async function renderTimer(app: HTMLElement) {
   let impl: PuzzleImpl | null = null;
   let solves = loadSolves(cfg.puzzle);
   let scramble: string[] = [];
+  /** desafio aberto: o embaralho e o tempo de quem desafiou (since = desde quando vale) */
+  let challenge: (Challenge & { since: number }) | null = received ? { ...received, since: Date.now() } : null;
+  const banner = $<HTMLElement>('.tm-challenge');
+  const shareEl = $<HTMLElement>('.tm-share');
+  let shareSolve: Solve | null = null;
 
   // ---- estado do cronômetro
   type Phase = 'idle' | 'inspect' | 'running';
@@ -199,6 +240,7 @@ export async function renderTimer(app: HTMLElement) {
     navigator.vibrate?.(40);
     newScramble();
     renderStats();
+    renderChallenge();
     paint();
   }
 
@@ -272,6 +314,11 @@ export async function renderTimer(app: HTMLElement) {
   pad.addEventListener('contextmenu', (e) => e.preventDefault());
 
   const onKeyDown = (e: KeyboardEvent) => {
+    // com a janela de compartilhar aberta, o cronômetro não reage
+    if (!shareEl.hidden) {
+      if (e.key === 'Escape') closeShare();
+      return;
+    }
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
     if (phase === 'running') {
@@ -289,7 +336,7 @@ export async function renderTimer(app: HTMLElement) {
     onPress();
   };
   const onKeyUp = (e: KeyboardEvent) => {
-    if (e.code !== 'Space') return;
+    if (e.code !== 'Space' || !shareEl.hidden) return;
     e.preventDefault();
     spaceDown = false;
     onRelease();
@@ -298,9 +345,19 @@ export async function renderTimer(app: HTMLElement) {
   window.addEventListener('keyup', onKeyUp);
 
   // ---- embaralho
-  function newScramble() {
+  function newScramble(fromChallenge = false) {
     if (!impl) return;
     scramble = impl.scramble();
+    if (fromChallenge && challenge && challenge.puzzle === cfg.puzzle) {
+      try {
+        // confere se os movimentos existem neste puzzle (o link pode ter sido alterado)
+        challenge.scramble.reduce((s, m) => impl!.applyMove(s, m), impl.solvedState());
+        scramble = [...challenge.scramble];
+      } catch {
+        challenge = null;
+        toast('O link do desafio tem um embaralho inválido — usando um novo.');
+      }
+    }
     scrText.textContent = scramble.join(' ');
     scrText.classList.toggle('long', scramble.length > 30);
     renderPreview();
@@ -337,6 +394,7 @@ export async function renderTimer(app: HTMLElement) {
                 <button class="${s.pen === 2 ? 'on' : ''}" data-pen="2" aria-pressed="${s.pen === 2}">+2</button>
                 <button class="${s.pen === 'dnf' ? 'on' : ''}" data-pen="dnf" aria-pressed="${s.pen === 'dnf'}">DNF</button>
                 <button data-del aria-label="Apagar este tempo">${icon('trash')}</button>
+                <button data-share-i aria-label="Desafiar um amigo com este tempo" title="Desafiar um amigo">${icon('share')}</button>
               </span>
             </li>`,
           )
@@ -351,14 +409,127 @@ export async function renderTimer(app: HTMLElement) {
     saveSolves(cfg.puzzle, solves);
     if (i === solves.length - 1 && phase === 'idle') timeEl.textContent = fmtSolve(s);
     renderStats();
+    renderChallenge();
   }
   function remove(i: number) {
     solves.splice(i, 1);
     saveSolves(cfg.puzzle, solves);
     if (i === solves.length && phase === 'idle') timeEl.textContent = solves.length ? fmtSolve(solves[solves.length - 1]) : '0.00';
     renderStats();
+    renderChallenge();
     paint();
   }
+
+  // ---- desafio: o aviso de quem desafiou e o resultado da sua tentativa
+  const puzzleName = (id = cfg.puzzle) => short(available.find((p) => p.id === id)!.name);
+  function renderChallenge() {
+    banner.hidden = !challenge || challenge.puzzle !== cfg.puzzle;
+    if (!challenge || banner.hidden) return;
+    const c = challenge;
+    const key = c.scramble.join(' ');
+    const who = c.name ? `<b>${esc(c.name)}</b>` : 'Um amigo';
+    const theirs = c.ms;
+    const attempt = [...solves].reverse().find((s) => s.scramble === key && s.at >= c.since);
+    const onIt = scramble.join(' ') === key;
+    let html: string;
+    if (!attempt)
+      html = `${icon('target')}<div class="tm-ch-text">${
+        theirs === null
+          ? `${who} tentou este embaralho do ${puzzleName()} e <b>não terminou</b>. Termine e ganhe!`
+          : `${who} fez <b>${fmt(theirs)}</b> neste embaralho do ${puzzleName()}. Embaralhe seu cubo igual e tente bater!`
+      }</div><div class="tm-ch-acts">${onIt ? '' : '<button class="btn primary sm" data-ch="retry">Usar o embaralho do desafio</button>'}<button class="btn ghost sm" data-ch="close">Fechar</button></div>`;
+    else {
+      const mine = value(attempt);
+      const diff = (a: number, b: number) => `${(Math.abs(a - b) / 1000).toFixed(2)} s`;
+      const result = !Number.isFinite(mine)
+        ? theirs === null
+          ? 'Os dois não terminaram — empate!'
+          : `Você não terminou (DNF). ${c.name ? esc(c.name) : 'Seu amigo'} ganhou desta vez.`
+        : theirs === null || mine < theirs
+          ? `Você fez <b>${fmt(mine)}</b> — <b class="win">ganhou${theirs === null ? '' : ` por ${diff(mine, theirs)}`}!</b>`
+          : mine === theirs
+            ? `Você fez <b>${fmt(mine)}</b> — empate!`
+            : `Você fez <b>${fmt(mine)}</b> — faltou ${diff(mine, theirs)}.`;
+      html = `${icon('trophy')}<div class="tm-ch-text">${result} <span class="tm-ch-vs">(${who}: ${theirs === null ? 'DNF' : fmt(theirs)})</span></div>
+        <div class="tm-ch-acts"><button class="btn ghost sm" data-ch="retry">Tentar de novo</button><button class="btn primary sm" data-ch="reply">${icon('share')}Responder</button><button class="btn ghost sm" data-ch="close">Fechar</button></div>`;
+    }
+    banner.innerHTML = html;
+  }
+  banner.addEventListener('click', (e) => {
+    const act = (e.target as HTMLElement).closest<HTMLElement>('[data-ch]')?.dataset.ch;
+    if (act === 'close') {
+      challenge = null;
+      renderChallenge();
+    } else if (act === 'retry') {
+      newScramble(true);
+      renderChallenge();
+    } else if (act === 'reply' && challenge) {
+      const key = challenge.scramble.join(' ');
+      const attempt = [...solves].reverse().find((s) => s.scramble === key);
+      if (attempt) openShare(attempt);
+    }
+  });
+
+  // ---- compartilhar: link com o mesmo embaralho e o seu tempo
+  const nameInput = shareEl.querySelector<HTMLInputElement>('.tm-name input')!;
+  const linkInput = shareEl.querySelector<HTMLInputElement>('.tm-share-link')!;
+  function shareData() {
+    const s = shareSolve!;
+    const name = cleanName(nameInput.value);
+    const v = value(s);
+    const ms = Number.isFinite(v) ? v : null;
+    const url = `${location.origin}${location.pathname}#/cronometro?${challengeQuery({ puzzle: cfg.puzzle, scramble: s.scramble.split(' '), ms, name })}`;
+    const text =
+      ms === null
+        ? `${name ? `${name} tentou` : 'Tentei'} este embaralho do ${puzzleName()} no CuboGuia e não terminou. Consegue?`
+        : `${name ? `${name} fez` : 'Fiz'} ${fmt(ms)} neste embaralho do ${puzzleName()} no CuboGuia. Consegue bater? É o mesmo embaralho:`;
+    return { url, text };
+  }
+  function refreshShare() {
+    const { url, text } = shareData();
+    shareEl.querySelector('.tm-share-msg')!.textContent = text;
+    linkInput.value = url;
+  }
+  function openShare(s: Solve) {
+    if (phase !== 'idle') return;
+    shareSolve = s;
+    nameInput.value = loadName();
+    refreshShare();
+    shareEl.hidden = false;
+  }
+  function closeShare() {
+    shareEl.hidden = true;
+    shareSolve = null;
+  }
+  nameInput.addEventListener('input', () => {
+    saveName(cleanName(nameInput.value));
+    refreshShare();
+  });
+  shareEl.addEventListener('click', async (e) => {
+    if (e.target === shareEl) return closeShare();
+    const act = (e.target as HTMLElement).closest<HTMLElement>('[data-share]')?.dataset.share;
+    if (!act || !shareSolve) return;
+    if (act === 'close') return closeShare();
+    const { url, text } = shareData();
+    if (act === 'native') {
+      try {
+        await navigator.share({ title: 'Desafio no CuboGuia', text, url });
+        closeShare();
+      } catch {
+        /* a pessoa cancelou */
+      }
+      return;
+    }
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      ok = true;
+    } catch {
+      linkInput.select();
+      ok = document.execCommand('copy');
+    }
+    toast(ok ? 'Link copiado! Mande para o seu amigo.' : 'Não deu para copiar sozinho — o link está selecionado, copie na mão.');
+  });
 
   app.querySelector('.tm-times')!.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
@@ -368,15 +539,20 @@ export async function renderTimer(app: HTMLElement) {
     if (!b) return;
     if (b.dataset.pen) setPenalty(i, b.dataset.pen === 'dnf' ? 'dnf' : 2);
     else if (b.hasAttribute('data-del')) remove(i);
+    else if (b.hasAttribute('data-share-i')) openShare(solves[i]);
   });
   lastEl.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-last]');
     if (!b || !solves.length) return;
     const i = solves.length - 1;
+    if (b.dataset.last === 'share') return openShare(solves[i]);
     if (b.dataset.last === 'del') remove(i);
     else setPenalty(i, b.dataset.last === 'dnf' ? 'dnf' : 2);
   });
-  $<HTMLElement>('[data-act="new"]').addEventListener('click', newScramble);
+  $<HTMLElement>('[data-act="new"]').addEventListener('click', () => {
+    newScramble();
+    renderChallenge();
+  });
   $<HTMLElement>('[data-act="clear"]').addEventListener('click', () => {
     if (!solves.length || !confirm(`Apagar os ${solves.length} tempos deste puzzle?`)) return;
     solves = [];
@@ -424,7 +600,8 @@ export async function renderTimer(app: HTMLElement) {
     const im = await loadPuzzle(id);
     if (!alive || cfg.puzzle !== id) return;
     impl = im;
-    newScramble();
+    newScramble(challenge?.puzzle === id);
+    renderChallenge();
   }
   app.querySelectorAll<HTMLButtonElement>('[data-pz]').forEach((b) =>
     b.addEventListener('click', () => {

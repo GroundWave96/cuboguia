@@ -633,6 +633,25 @@ body.no-scroll { overflow: hidden; }
 .tm-acts button.on { color: #fff; background: var(--accent); border-color: var(--accent); }
 .tm-acts button .ico { width: 14px; height: 14px; }
 .tm-acts button:hover { color: var(--text); }
+/* desafio de um amigo */
+.tm-challenge { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-color: rgba(255,181,71,0.45); background: linear-gradient(135deg, rgba(255,181,71,0.12), rgba(124,140,255,0.08)); }
+.tm-challenge[hidden] { display: none; }
+.tm-challenge > .ico { width: 26px; height: 26px; color: var(--warn); flex: none; }
+.tm-ch-text { flex: 1 1 260px; font-size: 0.95rem; }
+.tm-ch-text .win { color: var(--ok); }
+.tm-ch-vs { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.tm-ch-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.tm-share { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(5,8,18,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.tm-share[hidden] { display: none; }
+.tm-share-box { width: min(100%, 460px); padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-2); }
+.tm-share-box h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.tm-share-box h3 .ico { color: var(--accent-2); }
+.tm-share-sub { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.tm-name { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+.tm-name input, .tm-share-link { font: 500 1rem var(--font); color: var(--text); background: #05070c; border: 1px solid var(--border-strong); border-radius: 10px; padding: 9px 12px; width: 100%; }
+.tm-share-link { font-size: 0.8rem; color: var(--muted); }
+.tm-share-msg { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface); font-size: 0.92rem; }
+.tm-share .row-actions { margin: 0; }
 /* contando: só o tempo na tela */
 body.timing .topbar, body.timing .footer, body.timing .tm-top, body.timing .tm-scramble, body.timing .tm-stats, body.timing .tm-list { visibility: hidden; }
 body.timing .tm-pad { position: fixed; inset: 0; z-index: 30; border-radius: 0; border: 0; background: var(--bg); min-height: 0; }
