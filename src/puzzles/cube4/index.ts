@@ -1,31 +1,17 @@
+import { describeNxNMove, faceNotation } from '../nxn/text';
+import { tr } from '../../core/i18n';
 import type { PuzzleImpl } from '../../core/types';
-import { COLOR_HEX, CUBE3_COLORS, FACE_NAME } from '../cube3/colors';
-import { invertMove, parseMove } from '../nxn/geometry';
+import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
+import { invertMove } from '../nxn/geometry';
 import { NxNView } from '../nxn/NxNView';
-import { buildNet, buildScan } from '../nxn/layout';
+import { ANY_FACE_HINTS, buildNet, buildScan } from '../nxn/layout';
 import { geo4 as geo } from './pieces';
 import { validateCube4 } from './validate';
 import { solveCube4 } from './solver';
 
-const FACE_TEXT: Record<string, string> = {
-  U: 'Cima',
-  D: 'Baixo',
-  F: 'Frente',
-  B: 'Trás',
-  R: 'Direita',
-  L: 'Esquerda',
-};
-
 /** sem centro fixo: começa por qualquer face (como no 2x2) */
 const SCAN = buildScan(geo, CUBE3_COLORS, {
-  hints: {
-    F: 'Comece por <b>qualquer face</b>',
-    R: 'Gire o cubo ¼ de volta para a esquerda',
-    B: 'Mais ¼ para a esquerda',
-    L: 'Mais ¼ para a esquerda',
-    U: 'Volte à primeira face e incline: topo para a câmera',
-    D: 'Agora a base para a câmera',
-  },
+  hints: ANY_FACE_HINTS,
 });
 
 /** gira a imagem 4x4 de uma face ¼ de volta (sentido horário na tela) */
@@ -85,10 +71,18 @@ function scramble(len = 40): string[] {
 
 const cube4: PuzzleImpl = {
   colors: CUBE3_COLORS,
-  holdHint:
-    'O 4x4 não tem centro fixo: segure do jeito que quiser, mas <b>não vire o cubo na mão</b> depois — a face de frente é a do meio da planificação. O tutorial monta o branco embaixo e o amarelo em cima nessa posição.',
-  scanHint:
-    'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. A primeira face lida é a da frente no tutorial.',
+  get holdHint() {
+    return tr(
+      'O 4x4 não tem centro fixo: segure do jeito que quiser, mas <b>não vire o cubo na mão</b> depois — a face de frente é a do meio da planificação. O tutorial monta o branco embaixo e o amarelo em cima nessa posição.',
+      'The 4x4 has no fixed center: hold it however you like, but <b>don’t rotate the cube</b> afterwards — the front face is the middle one in the flat layout. The tutorial builds white on the bottom and yellow on top in that position.',
+    );
+  },
+  get scanHint() {
+    return tr(
+      'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. A primeira face lida é a da frente no tutorial.',
+      'You can start with <b>any face</b>, holding the cube however you like — just don’t change your grip between faces: turn it to the left as the arrows show. The first face you scan becomes the front in the tutorial.',
+    );
+  },
   stickerCount: geo.count,
   solvedState: () => geo.solved(),
   fixedStickers: [],
@@ -99,48 +93,42 @@ const cube4: PuzzleImpl = {
   validate: validateCube4,
   repairScan: (state) => pick(state, scanOrder(state)),
   scanOrder,
-  methods: [
-    {
-      id: 'beginner',
-      name: 'Redução (iniciante)',
-      tagline: 'Para aprender · ~250 movimentos',
-      description:
-        'Monta os centros, junta as arestas, corrige as paridades do 4x4 e termina como um 3x3 pelo método de camadas.',
-    },
-    {
-      id: 'cfop',
-      name: 'Redução + CFOP',
-      tagline: 'Para quem já faz CFOP · ~200 movimentos',
-      description: 'Mesmos centros, arestas e paridades, mas a parte de 3x3 é feita com Cross, F2L, OLL e PLL.',
-    },
-  ],
+  get methods() {
+    return [
+      {
+        id: 'beginner',
+        name: tr('Redução (iniciante)', 'Reduction (beginner)'),
+        tagline: tr('Para aprender · ~250 movimentos', 'To learn · ~250 moves'),
+        description: tr(
+          'Monta os centros, junta as arestas, corrige as paridades do 4x4 e termina como um 3x3 pelo método de camadas.',
+          'Builds the centers, pairs the edges, fixes the 4x4 parities and finishes like a 3x3 with the layer method.',
+        ),
+      },
+      {
+        id: 'cfop',
+        name: tr('Redução + CFOP', 'Reduction + CFOP'),
+        tagline: tr('Para quem já faz CFOP · ~200 movimentos', 'If you already know CFOP · ~200 moves'),
+        description: tr(
+          'Mesmos centros, arestas e paridades, mas a parte de 3x3 é feita com Cross, F2L, OLL e PLL.',
+          'Same centers, edges and parities, but the 3x3 part uses Cross, F2L, OLL and PLL.',
+        ),
+      },
+    ];
+  },
   solve: (state, methodId) => solveCube4(state, methodId === 'cfop' ? 'cfop' : 'beginner'),
   createView: (container) => new NxNView(container, geo, COLOR_HEX),
   net: buildNet(4),
   scan: SCAN,
-  describeMove: (m) => {
-    const dir = m.endsWith("'") ? 'anti-horário ↺' : m.endsWith('2') && !/^2[URFDLB]$/.test(m) ? 'meia volta (180°)' : 'horário ↻';
-    const mv = parseMove(m);
-    const what =
-      mv.from === 2 && mv.depth === 2
-        ? `2ª camada da ${FACE_NAME[mv.face].toLowerCase()} (fatia de dentro)`
-        : mv.depth > 1
-          ? `${FACE_TEXT[mv.face]} + ${mv.depth - 1} camada${mv.depth > 2 ? 's' : ''} de dentro (${mv.depth} camadas juntas)`
-          : FACE_TEXT[mv.face];
-    return `${what} · ${dir}`;
+  describeMove: (m) => describeNxNMove(m, false),
+  get notationNote() {
+    return tr(
+      "<p><code>R</code> gira só a face. <code>2R</code> gira só a <b>2ª camada</b> (a fatia logo atrás da face), no mesmo sentido do <code>R</code>. <code>Uw</code> gira as 2 camadas de cima juntas; <code>3Rw</code> gira 3 camadas juntas (tudo menos a face oposta). <code>'</code> = anti-horário · <code>2</code> no fim = meia volta.</p>",
+      "<p><code>R</code> turns just the face. <code>2R</code> turns just the <b>2nd layer</b> (the slice right behind the face), the same way as <code>R</code>. <code>Uw</code> turns the 2 top layers together; <code>3Rw</code> turns 3 layers together (everything but the opposite face). <code>'</code> = counterclockwise · <code>2</code> at the end = half turn.</p>",
+    );
   },
-  notationNote:
-    "<p><code>R</code> gira só a face. <code>2R</code> gira só a <b>2ª camada</b> (a fatia logo atrás da face), no mesmo sentido do <code>R</code>. <code>Uw</code> gira as 2 camadas de cima juntas; <code>3Rw</code> gira 3 camadas juntas (tudo menos a face oposta). <code>'</code> = anti-horário · <code>2</code> no fim = meia volta.</p>",
-  notationHelp: [
-    { move: 'U', text: 'Cima' },
-    { move: 'D', text: 'Baixo' },
-    { move: 'F', text: 'Frente' },
-    { move: 'B', text: 'Trás' },
-    { move: 'R', text: 'Direita' },
-    { move: 'L', text: 'Esquerda' },
-    { move: '2R', text: '2ª camada da direita' },
-    { move: 'Uw', text: '2 camadas de cima' },
-  ],
+  get notationHelp() {
+    return [...faceNotation(false), { move: '2R', text: tr('2ª camada da direita', '2nd layer from the right') }, { move: 'Uw', text: tr('2 camadas de cima', '2 top layers') }];
+  },
 };
 
 export default cube4;

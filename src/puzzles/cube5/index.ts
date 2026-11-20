@@ -1,25 +1,13 @@
+import { describeNxNMove, faceNotation } from '../nxn/text';
+import { tr } from '../../core/i18n';
 import type { PuzzleImpl } from '../../core/types';
-import { invertMove, parseMove } from '../nxn/geometry';
+import { invertMove } from '../nxn/geometry';
 import { NxNView } from '../nxn/NxNView';
 import { buildNet, buildScan } from '../nxn/layout';
-import { COLOR_HEX, CUBE3_COLORS, FACE_NAME } from '../cube3/colors';
+import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
 import { MID_CENTERS, geo5 as geo } from './pieces';
 import { validateCube5 } from './validate';
 import { solveCube5 } from './solver';
-
-const FACE_TEXT: Record<string, string> = {
-  U: 'Cima (amarelo)',
-  D: 'Baixo (branco)',
-  F: 'Frente (verde)',
-  B: 'Trás (azul)',
-  R: 'Direita (laranja)',
-  L: 'Esquerda (vermelho)',
-};
-const MIDDLE_TEXT: Record<string, string> = {
-  M: 'Fatia do meio vertical (sentido da esquerda)',
-  E: 'Fatia do meio horizontal (sentido de baixo)',
-  S: 'Fatia do meio da frente (sentido da frente)',
-};
 
 /** embaralho com faces e fatias internas (a fatia do meio fica parada: centros fixos) */
 function scramble(len = 60): string[] {
@@ -41,7 +29,12 @@ function scramble(len = 60): string[] {
 
 const cube5: PuzzleImpl = {
   colors: CUBE3_COLORS,
-  holdHint: 'Segure o cubo com o <b>amarelo</b> em cima e o <b>verde</b> de frente (olhe o adesivo do meio de cada face).',
+  get holdHint() {
+    return tr(
+      'Segure o cubo com o <b>amarelo</b> em cima e o <b>verde</b> de frente (olhe o adesivo do meio de cada face).',
+      'Hold the cube with <b>yellow</b> on top and <b>green</b> in front (look at the middle sticker of each face).',
+    );
+  },
   stickerCount: geo.count,
   solvedState: () => geo.solved(),
   fixedStickers: MID_CENTERS,
@@ -50,50 +43,39 @@ const cube5: PuzzleImpl = {
   locationMap: (m) => geo.locationMap(m),
   scramble,
   validate: validateCube5,
-  methods: [
-    {
-      id: 'beginner',
-      name: 'Redução (iniciante)',
-      tagline: 'Para aprender · ~400 movimentos',
-      description:
-        'Monta os centros, junta as arestas e termina como um 3x3 pelo método de camadas. É o caminho que quase todo mundo usa no 5x5.',
-    },
-    {
-      id: 'cfop',
-      name: 'Redução + CFOP',
-      tagline: 'Para quem já faz CFOP · ~350 movimentos',
-      description: 'Mesmos centros e arestas, mas a parte de 3x3 é feita com Cross, F2L, OLL e PLL.',
-    },
-  ],
+  get methods() {
+    return [
+      {
+        id: 'beginner',
+        name: tr('Redução (iniciante)', 'Reduction (beginner)'),
+        tagline: tr('Para aprender · ~400 movimentos', 'To learn · ~400 moves'),
+        description: tr(
+          'Monta os centros, junta as arestas e termina como um 3x3 pelo método de camadas. É o caminho que quase todo mundo usa no 5x5.',
+          'Builds the centers, pairs the edges and finishes like a 3x3 with the layer method. It’s how almost everyone solves the 5x5.',
+        ),
+      },
+      {
+        id: 'cfop',
+        name: tr('Redução + CFOP', 'Reduction + CFOP'),
+        tagline: tr('Para quem já faz CFOP · ~350 movimentos', 'If you already know CFOP · ~350 moves'),
+        description: tr('Mesmos centros e arestas, mas a parte de 3x3 é feita com Cross, F2L, OLL e PLL.', 'Same centers and edges, but the 3x3 part uses Cross, F2L, OLL and PLL.'),
+      },
+    ];
+  },
   solve: (state, methodId) => solveCube5(state, methodId === 'cfop' ? 'cfop' : 'beginner'),
   createView: (container) => new NxNView(container, geo, COLOR_HEX),
   net: buildNet(5),
   scan: buildScan(geo, CUBE3_COLORS),
-  describeMove: (m) => {
-    const dir = m.endsWith("'") ? 'anti-horário ↺' : m.endsWith('2') && !/^2[URFDLB]$/.test(m) ? 'meia volta (180°)' : 'horário ↻';
-    const letter = m.replace(/[^URFDLBMES]/g, '');
-    if (MIDDLE_TEXT[letter]) return `${MIDDLE_TEXT[letter]} · ${dir}`;
-    const mv = parseMove(m);
-    const what =
-      mv.from === 2 && mv.depth === 2
-        ? `2ª camada da ${FACE_NAME[mv.face].toLowerCase()} (fatia de dentro)`
-        : mv.depth > 1
-          ? `${FACE_TEXT[mv.face]} + ${mv.depth - 1} camadas de dentro (${mv.depth} camadas juntas)`
-          : FACE_TEXT[mv.face];
-    return `${what} · ${dir}`;
+  describeMove: (m) => describeNxNMove(m, true),
+  get notationNote() {
+    return tr(
+      "<p><code>R</code> gira só a face. <code>2R</code> gira só a <b>2ª camada</b> (a fatia logo atrás da face), no mesmo sentido do <code>R</code>. <code>M</code> é a fatia do meio, no sentido do <code>L</code>. <code>4Rw</code> gira 4 camadas juntas (tudo menos a face oposta). <code>'</code> = anti-horário · <code>2</code> no fim = meia volta.</p>",
+      "<p><code>R</code> turns just the face. <code>2R</code> turns just the <b>2nd layer</b> (the slice right behind the face), the same way as <code>R</code>. <code>M</code> is the middle slice, the same way as <code>L</code>. <code>4Rw</code> turns 4 layers together (everything but the opposite face). <code>'</code> = counterclockwise · <code>2</code> at the end = half turn.</p>",
+    );
   },
-  notationNote:
-    "<p><code>R</code> gira só a face. <code>2R</code> gira só a <b>2ª camada</b> (a fatia logo atrás da face), no mesmo sentido do <code>R</code>. <code>M</code> é a fatia do meio, no sentido do <code>L</code>. <code>4Rw</code> gira 4 camadas juntas (tudo menos a face oposta). <code>'</code> = anti-horário · <code>2</code> no fim = meia volta.</p>",
-  notationHelp: [
-    { move: 'U', text: 'Cima (amarelo)' },
-    { move: 'D', text: 'Baixo (branco)' },
-    { move: 'F', text: 'Frente (verde)' },
-    { move: 'B', text: 'Trás (azul)' },
-    { move: 'R', text: 'Direita (laranja)' },
-    { move: 'L', text: 'Esquerda (vermelho)' },
-    { move: '2R', text: '2ª camada da direita' },
-    { move: 'M', text: 'Fatia do meio' },
-  ],
+  get notationHelp() {
+    return [...faceNotation(true), { move: '2R', text: tr('2ª camada da direita', '2nd layer from the right') }, { move: 'M', text: tr('Fatia do meio', 'Middle slice') }];
+  },
 };
 
 export default cube5;

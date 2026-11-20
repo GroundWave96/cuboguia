@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n';
 /**
  * Solução ÓTIMA do 2x2 (o menor número possível de movimentos, no máximo 11).
  *
@@ -143,21 +144,24 @@ export function solveOptimal2(state: PuzzleState): Solution {
   for (let i = 0; i < moves.length; i += 4) parts.push(moves.slice(i, i + 4));
   const steps = parts.map((mv, i) => ({
     stageId: 'opt',
-    title: `Parte ${i + 1} de ${parts.length}`,
+    title: tr(`Parte ${i + 1} de ${parts.length}`, `Part ${i + 1} of ${parts.length}`),
     description:
       (i === 0
-        ? `Esta é a <b>menor solução possível</b> para o seu cubo: <b>${moves.length} movimentos</b> (nenhum caminho é mais curto — um 2x2 nunca precisa de mais de 11). `
+        ? tr(
+            `Esta é a <b>menor solução possível</b> para o seu cubo: <b>${moves.length} movimentos</b> (nenhum caminho é mais curto — um 2x2 nunca precisa de mais de 11). `,
+            `This is the <b>shortest possible solution</b> for your cube: <b>${moves.length} moves</b> (no path is shorter — a 2x2 never needs more than 11). `,
+          )
         : '') +
       (i === parts.length - 1
-        ? 'Último trecho! Depois destes movimentos o cubo fica resolvido.'
-        : 'Faça estes movimentos com calma, sempre segurando o cubo na mesma posição.') +
-      ' Soluções ótimas não seguem etapas humanas — são ótimas para comparar e descobrir atalhos.',
-    segments: [{ label: `Movimentos ${i * 4 + 1}–${i * 4 + mv.length}`, moves: mv }],
+        ? tr('Último trecho! Depois destes movimentos o cubo fica resolvido.', 'Last stretch! After these moves the cube is solved.')
+        : tr('Faça estes movimentos com calma, sempre segurando o cubo na mesma posição.', 'Do these moves calmly, always holding the cube in the same position.')) +
+      tr(' Soluções ótimas não seguem etapas humanas — são ótimas para comparar e descobrir atalhos.', ' Optimal solutions don’t follow human steps — they’re great for comparing and discovering shortcuts.'),
+    segments: [{ label: tr(`Movimentos ${i * 4 + 1}–${i * 4 + mv.length}`, `Moves ${i * 4 + 1}–${i * 4 + mv.length}`), moves: mv }],
     focus: [],
   }));
   return {
-    method: 'Solução ótima (computador)',
-    stages: [{ id: 'opt', name: 'Solução ótima', goal: 'Resolver com o menor número possível de movimentos.' }],
+    method: tr('Solução ótima (computador)', 'Optimal solution (computer)'),
+    stages: [{ id: 'opt', name: tr('Solução ótima', 'Optimal solution'), goal: tr('Resolver com o menor número possível de movimentos.', 'Solve it in the fewest possible moves.') }],
     steps,
   };
 }

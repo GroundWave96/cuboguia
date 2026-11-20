@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n';
 /** Ferramentas do 2x2: estado em bytes, macros e busca (mesma ideia do 3x3). */
 import type { PuzzleState, SolutionStep, StepSegment } from '../../../core/types';
 import { FACE_ORDER, NxNGeometry } from '../../nxn/geometry';
@@ -114,7 +115,8 @@ export function pushStep(ctx: Ctx, stageId: string, title: string, description: 
   ctx.s = applyPerm(ctx.s, composePerm(moves));
 }
 
-export const setupText = (setup: string[]) => (setup.length ? `Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. ` : '');
+export const setupText = (setup: string[]) =>
+  setup.length ? tr(`Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. `, `First turn the top layer: <b>${setup.join(' ')}</b>. `) : '';
 
 /** Junta ajustes do topo ao algoritmo seguinte e cria um passo por algoritmo. */
 export function stepsFromMacros(
@@ -134,11 +136,18 @@ export function stepsFromMacros(
     const afterSetup = applyPerm(before, composePerm(setup));
     const d = describe(m, setup, afterSetup, applyPerm(afterSetup, m.perm));
     pushStep(ctx, stageId, d.title, d.text, [
-      { label: 'Ajuste do topo', moves: setup },
+      { label: tr('Ajuste do topo', 'Top adjustment'), moves: setup },
       { label: d.algLabel, moves: m.moves },
     ], focusFn(before));
     setup = [];
   }
   if (setup.length)
-    pushStep(ctx, stageId, 'Ajuste da camada de cima', 'Gire a camada de cima para alinhar com a de baixo.', [{ label: 'Ajuste do topo', moves: setup }], focusFn(ctx.s));
+    pushStep(
+      ctx,
+      stageId,
+      tr('Ajuste da camada de cima', 'Top layer adjustment'),
+      tr('Gire a camada de cima para alinhar com a de baixo.', 'Turn the top layer to line it up with the bottom one.'),
+      [{ label: tr('Ajuste do topo', 'Top adjustment'), moves: setup }],
+      focusFn(ctx.s),
+    );
 }

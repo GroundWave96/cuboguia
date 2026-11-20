@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n';
 /** Peças, movimentos e busca de macros compartilhados pelos métodos do 3x3. */
 import type { PuzzleState, SolutionStep, StepSegment } from '../../../core/types';
 import { NxNGeometry } from '../../nxn/geometry';
@@ -218,7 +219,7 @@ export const edgeFaceletsOf = (colors: number[]) => findEdge(solvedS, colors);
 export const solvedS = Uint8Array.from({ length: 54 }, (_, i) => (i / 9) | 0);
 
 export function setupText(setup: string[]) {
-  return setup.length ? `Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. ` : '';
+  return setup.length ? tr(`Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. `, `First turn the top layer: <b>${setup.join(' ')}</b>. `) : '';
 }
 
 export function stepsFromMacros(
@@ -244,7 +245,7 @@ export function stepsFromMacros(
       d.title,
       d.text,
       [
-        { label: 'Ajuste do topo', moves: setup },
+        { label: tr('Ajuste do topo', 'Top adjustment'), moves: setup },
         { label: d.algLabel, moves: m.moves },
       ],
       focusFn(before),
@@ -252,7 +253,14 @@ export function stepsFromMacros(
     setup = [];
   }
   if (setup.length) {
-    pushStep(ctx, stageId, 'Ajuste da camada de cima', 'Gire a camada de cima para alinhar as peças com os centros.', [{ label: 'Ajuste do topo', moves: setup }], focusFn(ctx.s));
+    pushStep(
+      ctx,
+      stageId,
+      tr('Ajuste da camada de cima', 'Top layer adjustment'),
+      tr('Gire a camada de cima para alinhar as peças com os centros.', 'Turn the top layer to line the pieces up with the centers.'),
+      [{ label: tr('Ajuste do topo', 'Top adjustment'), moves: setup }],
+      focusFn(ctx.s),
+    );
   }
 }
 

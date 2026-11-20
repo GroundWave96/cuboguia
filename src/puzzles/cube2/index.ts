@@ -1,7 +1,9 @@
+import { faceNotation } from '../nxn/text';
+import { tr } from '../../core/i18n';
 import type { PuzzleImpl } from '../../core/types';
 import { NxNGeometry, invertMove } from '../nxn/geometry';
 import { NxNView } from '../nxn/NxNView';
-import { buildNet, buildScan } from '../nxn/layout';
+import { ANY_FACE_HINTS, buildNet, buildScan } from '../nxn/layout';
 import { cornerFacelets } from '../nxn/pieces';
 import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
 import { makeValidate2 } from './validate';
@@ -57,14 +59,7 @@ const validate2 = makeValidate2(geo);
 
 /** sem canto fixo na câmera: começa por qualquer face e o site acha a posição no fim */
 const SCAN = buildScan(geo, CUBE3_COLORS, {
-  hints: {
-    F: 'Comece por <b>qualquer face</b>',
-    R: 'Gire o cubo ¼ de volta para a esquerda',
-    B: 'Mais ¼ para a esquerda',
-    L: 'Mais ¼ para a esquerda',
-    U: 'Volte à primeira face e incline: topo para a câmera',
-    D: 'Agora a base para a câmera',
-  },
+  hints: ANY_FACE_HINTS,
 });
 
 /** gira a imagem 2x2 de uma face ¼ de volta (sentido horário na tela) */
@@ -112,8 +107,12 @@ function scanOrder(state: string[]): number[] {
 
 const cube2: PuzzleImpl = {
   colors: CUBE3_COLORS,
-  holdHint:
-    'Segure o cubo com o canto <b>branco-azul-vermelho</b> atrás, embaixo, à esquerda — com o <b>branco para baixo</b>. Ele é a referência e não sai do lugar.',
+  get holdHint() {
+    return tr(
+      'Segure o cubo com o canto <b>branco-azul-vermelho</b> atrás, embaixo, à esquerda — com o <b>branco para baixo</b>. Ele é a referência e não sai do lugar.',
+      'Hold the cube with the <b>white-blue-red</b> corner at the back, bottom, left — with <b>white facing down</b>. It’s the reference and never moves.',
+    );
+  },
   stickerCount: geo.count,
   solvedState: () => geo.solved(),
   fixedStickers: REFERENCE,
@@ -133,37 +132,44 @@ const cube2: PuzzleImpl = {
     return out;
   },
   validate: validate2,
-  methods: [
-    {
-      id: 'beginner',
-      name: 'Iniciante (camadas)',
-      tagline: 'Para aprender · ~60 movimentos',
-      description: 'Face branca, depois face amarela (Sune) e por fim trocar os cantos (T-perm). Só 3 algoritmos.',
-    },
-    {
-      id: 'optimal',
-      name: 'Avançado (ótimo)',
-      tagline: 'A menor solução · ≤ 11 movimentos',
-      description: 'O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.',
-    },
-  ],
+  get methods() {
+    return [
+      {
+        id: 'beginner',
+        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
+        tagline: tr('Para aprender · ~60 movimentos', 'To learn · ~60 moves'),
+        description: tr(
+          'Face branca, depois face amarela (Sune) e por fim trocar os cantos (T-perm). Só 3 algoritmos.',
+          'White face, then yellow face (Sune) and finally swap the corners (T-perm). Only 3 algorithms.',
+        ),
+      },
+      {
+        id: 'optimal',
+        name: tr('Avançado (ótimo)', 'Advanced (optimal)'),
+        tagline: tr('A menor solução · ≤ 11 movimentos', 'The shortest solution · ≤ 11 moves'),
+        description: tr(
+          'O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.',
+          'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.',
+        ),
+      },
+    ];
+  },
   solve: (state, methodId) => (methodId === 'optimal' ? solveOptimal2(state) : solveBeginner2(state)),
   createView: (container) => new NxNView(container, geo, COLOR_HEX),
   net: buildNet(2),
   scan: SCAN,
-  scanHint:
-    'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
+  get scanHint() {
+    return tr(
+      'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
+      'You can start with <b>any face</b>, holding the cube however you like — just don’t change your grip between faces: turn it to the left as the arrows show. At the end, the site works out by itself how the cube was held.',
+    );
+  },
   normalize: normalizeScan,
   repairScan,
   scanOrder,
-  notationHelp: [
-    { move: 'U', text: 'Cima' },
-    { move: 'R', text: 'Direita' },
-    { move: 'F', text: 'Frente' },
-    { move: 'D', text: 'Baixo' },
-    { move: 'L', text: 'Esquerda' },
-    { move: 'B', text: 'Trás' },
-  ],
+  get notationHelp() {
+    return faceNotation(false, ['U', 'R', 'F', 'D', 'L', 'B']);
+  },
 };
 
 export default cube2;

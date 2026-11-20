@@ -1,3 +1,4 @@
+import { tr } from '../../core/i18n';
 /**
  * 5x5 pelo método de redução — o jeito como quase todo mundo aprende:
  *
@@ -39,6 +40,7 @@ type S = Uint8Array;
 const toS = (state: PuzzleState): S => Uint8Array.from(state, (c) => FACES5.indexOf(c));
 const fromS = (s: S): PuzzleState => Array.from(s, (f) => FACES5[f]);
 const cname = (f: number) => COLOR_NAME[FACES5[f]];
+const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 // ---------------------------------------------------------------------------
 // Movimentos e macros
@@ -267,6 +269,18 @@ interface Ctx {
   steps: SolutionStep[];
 }
 
+/** rótulos dos trechos (guardados em português na biblioteca; traduzidos ao mostrar) */
+const SEG_LABELS: Record<string, [string, string]> = {
+  Posicionar: ['Posicionar', 'Setup'],
+  Gatilho: ['Gatilho', 'Trigger'],
+  'Comutador de centros': ['Comutador de centros', 'Center commutator'],
+  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle'],
+  'Paridade das arestas': ['Paridade das arestas', 'Edge parity'],
+  'Paridade OLL': ['Paridade OLL', 'OLL parity'],
+  'Paridade PLL': ['Paridade PLL', 'PLL parity'],
+};
+const segLabel = (l: string) => (SEG_LABELS[l] ? tr(...SEG_LABELS[l]) : l);
+
 function segmentsOf(path: Macro[]): StepSegment[] {
   const segs: StepSegment[] = [];
   for (const m of path) {
@@ -275,7 +289,10 @@ function segmentsOf(path: Macro[]): StepSegment[] {
     if (last && last.label === label && m.kind === 'turn') last.moves.push(...m.moves);
     else segs.push({ label, moves: [...m.moves] });
   }
-  for (const s of segs) s.moves = simplify(s.moves);
+  for (const s of segs) {
+    s.moves = simplify(s.moves);
+    s.label = segLabel(s.label);
+  }
   return segs.filter((s) => s.moves.length);
 }
 
@@ -311,14 +328,17 @@ function solveCenters(ctx: Ctx) {
       push(
         ctx,
         stage,
-        `Centro ${cname(f)}: ${ready} de 8`,
+        tr(`Centro ${cname(f)}: ${ready} de 8`, `${cap(cname(f))} center: ${ready} of 8`),
         order === 0
-          ? `Leve adesivos ${cname(f)} para o centro ${cname(f)}, em volta do adesivo fixo do meio.`
+          ? tr(`Leve adesivos ${cname(f)} para o centro ${cname(f)}, em volta do adesivo fixo do meio.`, `Bring ${cname(f)} stickers to the ${cname(f)} center, around the fixed middle sticker.`)
           : order === 1
-            ? `Monte o centro ${cname(f)} sem desmanchar o centro branco.`
+            ? tr(`Monte o centro ${cname(f)} sem desmanchar o centro branco.`, `Build the ${cname(f)} center without breaking the white center.`)
             : order < 5
-              ? `Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`
-              : `Os dois últimos centros (${cname(5)} e ${cname(4)}) se montam juntos, trocando peças entre eles.`,
+              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`)
+              : tr(
+                  `Os dois últimos centros (${cname(5)} e ${cname(4)}) se montam juntos, trocando peças entre eles.`,
+                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`,
+                ),
         r.path,
         FACE_CENTERS[f],
       );
@@ -434,8 +454,11 @@ function solveEdges(ctx: Ctx) {
       push(
         ctx,
         'edges',
-        'Paridade das arestas',
-        'Sobraram duas pontas trocadas — isso acontece no 5x5 e não tem como resolver só com ciclos de 3 peças. Este algoritmo troca as duas pontas de uma aresta; os centros se mexem no meio e voltam no fim.',
+        tr('Paridade das arestas', 'Edge parity'),
+        tr(
+          'Sobraram duas pontas trocadas — isso acontece no 5x5 e não tem como resolver só com ciclos de 3 peças. Este algoritmo troca as duas pontas de uma aresta; os centros se mexem no meio e voltam no fim.',
+          'Two wings are left swapped — this happens on a 5x5 and can’t be fixed with 3-piece cycles alone. This algorithm swaps the two wings of one edge; the centers move along the way and come back at the end.',
+        ),
         [m],
         [open[0].at, partner(open[0].at), open[1].at, partner(open[1].at), ...open[0].midge],
       );
@@ -463,8 +486,11 @@ function solveEdges(ctx: Ctx) {
     push(
       ctx,
       'edges',
-      bestGain > 1 ? `Pontas ${names.join(' e ')}` : `Ponta ${names[0]}`,
-      `Um ciclo de 3 pontas: ${bestGain > 1 ? 'duas pontas vão' : 'uma ponta vai'} para o lado do meio da ${bestGain > 1 ? 'aresta delas' : 'aresta dela'}. Só essas 3 pontas se mexem — os centros e o resto saem do lugar no meio do algoritmo e voltam no fim. (${paired()} de 12 arestas completas antes deste passo.)`,
+      bestGain > 1 ? tr(`Pontas ${names.join(' e ')}`, `${names.join(' and ')} wings`) : tr(`Ponta ${names[0]}`, `${names[0]} wing`),
+      tr(
+        `Um ciclo de 3 pontas: ${bestGain > 1 ? 'duas pontas vão' : 'uma ponta vai'} para o lado do meio da ${bestGain > 1 ? 'aresta delas' : 'aresta dela'}. Só essas 3 pontas se mexem — os centros e o resto saem do lugar no meio do algoritmo e voltam no fim. (${paired()} de 12 arestas completas antes deste passo.)`,
+        `A 3-wing cycle: ${bestGain > 1 ? 'two wings go' : 'one wing goes'} next to the middle of ${bestGain > 1 ? 'their edge' : 'its edge'}. Only these 3 wings move — the centers and everything else leave their spots during the algorithm and come back at the end. (${paired()} of 12 edges complete before this step.)`,
+      ),
       [m],
       [...best.p.flatMap((x) => [x, partner(x)]), ...placedNow.flatMap((w) => w.midge)],
     );
@@ -473,11 +499,11 @@ function solveEdges(ctx: Ctx) {
 }
 
 // ---------------------------------------------------------------------------
-export const CUBE5_STAGES: SolutionStage[] = [
-  { id: 'c-white', name: 'Centro branco', goal: 'Montar os 9 adesivos do centro da face branca.' },
-  { id: 'c-yellow', name: 'Centro amarelo', goal: 'Montar o centro amarelo, do lado oposto ao branco.' },
-  { id: 'c-sides', name: 'Centros laterais', goal: 'Montar os 4 centros dos lados sem desmanchar os que já estão prontos.' },
-  { id: 'edges', name: 'Arestas', goal: 'Juntar as duas pontas de cada aresta ao meio dela, formando 12 arestas inteiras.' },
+export const CUBE5_STAGES = (): SolutionStage[] => [
+  { id: 'c-white', name: tr('Centro branco', 'White center'), goal: tr('Montar os 9 adesivos do centro da face branca.', 'Build the 9 stickers of the white face’s center.') },
+  { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center'), goal: tr('Montar o centro amarelo, do lado oposto ao branco.', 'Build the yellow center, opposite the white one.') },
+  { id: 'c-sides', name: tr('Centros laterais', 'Side centers'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.') },
+  { id: 'edges', name: tr('Arestas', 'Edges'), goal: tr('Juntar as duas pontas de cada aresta ao meio dela, formando 12 arestas inteiras.', 'Bring the two wings of each edge next to its middle, forming 12 complete edges.') },
 ];
 
 export function solveCube5(state: PuzzleState, method: 'beginner' | 'cfop' = 'beginner'): Solution {
@@ -500,8 +526,8 @@ export function solveCube5(state: PuzzleState, method: 'beginner' | 'cfop' = 'be
     })),
   ];
   return {
-    method: method === 'cfop' ? 'Redução + CFOP' : 'Redução (iniciante)',
-    stages: [...CUBE5_STAGES, ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: `Como 3x3: ${sg.name}` }))],
+    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)'),
+    stages: [...CUBE5_STAGES(), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`) }))],
     steps,
   };
 }
