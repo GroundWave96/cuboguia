@@ -109,6 +109,8 @@ export interface PuzzleView {
   resetCamera(): void;
   setAutoRotate?(on: boolean): void;
   focusCamera?(stickers: number[]): void;
+  /** seta no 3D mostrando o próximo giro (null = esconde) */
+  showMoveHint?(move: string | null): void;
   dispose(): void;
 }
 

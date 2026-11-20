@@ -304,6 +304,9 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       b.classList.toggle('empty', !hasSteps);
     });
 
+    // seta no 3D: o próximo giro, quando parado (a animação e o "play" não precisam dela)
+    view.showMoveHint?.(!busy && !playing && pos < stepEnd(cur) ? flat[pos].move : null);
+
     // selo do movimento atual/próximo
     if (busy && pos < flat.length) {
       badge.querySelector('strong')!.textContent = flat[pos].move;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PuzzleState, PuzzleView } from '../../core/types';
 import { roundedPolyhedron } from './rounded';
+import { MoveArrow, arrowFor } from '../movearrow';
 
 type V3 = [number, number, number];
 
@@ -125,6 +126,8 @@ export class PolyView implements PuzzleView {
   private disposed = false;
   private readonly defaultCamPos: THREE.Vector3;
   private camTween: { from: THREE.Vector3; to: THREE.Vector3; t0: number; dur: number } | null = null;
+  private arrow = new MoveArrow();
+  private hintMove: string | null = null;
   private camWaiters: (() => void)[] = [];
 
   constructor(container: HTMLElement, private o: PolyViewOptions) {
@@ -155,6 +158,7 @@ export class PolyView implements PuzzleView {
     fill.position.set(-6, -3, -4);
     this.scene.add(fill);
     this.scene.add(this.root);
+    this.root.add(this.arrow.group);
 
     this.body = this.buildBody(o.bodyFaces.map((f) => f.map(v3)));
     if (o.pieces) {
@@ -281,6 +285,7 @@ export class PolyView implements PuzzleView {
     this.raf = requestAnimationFrame(this.loop);
     this.updateCamTween();
     this.controls.update();
+    this.arrow.tick(performance.now());
     if (this.highlight.size) {
       const t = performance.now() / 1000;
       const k = 0.18 + 0.17 * (0.5 + 0.5 * Math.sin(t * 4.5));
@@ -374,6 +379,22 @@ export class PolyView implements PuzzleView {
     this.controls.update();
   }
 
+  showMoveHint(move: string | null) {
+    if (move === this.hintMove) return;
+    this.hintMove = move;
+    if (!move) return this.arrow.set(null, this.camera.position);
+    const info = this.o.moveInfo(move);
+    const inLayer = new Set(info.layer);
+    const layer = this.o.stickers
+      .filter((s) => inLayer.has(s.index))
+      .map((s) => ({
+        pos: s.poly.reduce((a, p) => a.add(v3(p)), new THREE.Vector3()).multiplyScalar(1 / s.poly.length),
+        normal: v3(s.normal).normalize(),
+      }));
+    const view = this.camTween ? this.camTween.to : this.camera.position;
+    this.arrow.set(arrowFor(v3(info.axis), info.angle, layer, this.o.radius), view);
+  }
+
   animateMove(move: string, durationMs: number): Promise<void> {
     this.queue = this.queue.then(() => (durationMs > 0 ? this.cameraSettled() : undefined)).then(() => this.runMove(move, durationMs));
     return this.queue;
@@ -381,6 +402,7 @@ export class PolyView implements PuzzleView {
 
   private runMove(move: string, durationMs: number): Promise<void> {
     if (this.disposed) return Promise.resolve();
+    this.showMoveHint(null);
     const finish = () => {
       const map = this.o.locationMap(move);
       this.state = this.o.apply(this.state, move);
@@ -447,6 +469,7 @@ export class PolyView implements PuzzleView {
 
   dispose() {
     this.disposed = true;
+    this.arrow.clear();
     this.releaseCamWaiters();
     cancelAnimationFrame(this.raf);
     this.ro.disconnect();

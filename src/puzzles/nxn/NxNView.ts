@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { PuzzleState, PuzzleView } from '../../core/types';
 import { FACE_FRAME, NxNGeometry, layerHit, parseMove } from './geometry';
+import { MoveArrow, arrowFor } from '../movearrow';
 
 const UNKNOWN_HEX = '#3b4152';
 
@@ -51,6 +52,8 @@ export class NxNView implements PuzzleView {
   private hovered = -1;
   private disposed = false;
   private readonly defaultCamPos: THREE.Vector3;
+  private arrow = new MoveArrow();
+  private hintMove: string | null = null;
 
   constructor(
     container: HTMLElement,
@@ -89,6 +92,7 @@ export class NxNView implements PuzzleView {
     fill.position.set(-6, -3, -4);
     this.scene.add(fill);
     this.scene.add(this.root);
+    this.root.add(this.arrow.group);
 
     this.build();
     this.setState(this.state);
@@ -189,6 +193,7 @@ export class NxNView implements PuzzleView {
     this.raf = requestAnimationFrame(this.loop);
     this.updateCamTween();
     this.controls.update();
+    this.arrow.tick(performance.now());
     if (this.highlight.size) {
       const t = performance.now() / 1000;
       const k = 0.18 + 0.17 * (0.5 + 0.5 * Math.sin(t * 4.5));
@@ -316,6 +321,21 @@ export class NxNView implements PuzzleView {
     this.controls.update();
   }
 
+  showMoveHint(move: string | null) {
+    if (move === this.hintMove) return;
+    this.hintMove = move;
+    if (!move) return this.arrow.set(null, this.camera.position);
+    const mv = parseMove(move);
+    const axisArr = FACE_FRAME[mv.face].n;
+    const angle = mv.turns === 3 ? Math.PI / 2 : (-Math.PI / 2) * mv.turns;
+    const layer = this.geo.stickers
+      .filter((s) => this.geo.inLayer(s, mv))
+      .map((s) => ({ pos: new THREE.Vector3(...s.cubie2).multiplyScalar(0.5).add(new THREE.Vector3(...s.normal).multiplyScalar(0.5)), normal: new THREE.Vector3(...s.normal) }));
+    // o lado do arco é escolhido pela posição final da câmera (ela pode estar girando)
+    const view = this.camTween ? this.camTween.to : this.camera.position;
+    this.arrow.set(arrowFor(new THREE.Vector3(...axisArr), angle, layer, this.geo.n / 2), view);
+  }
+
   animateMove(move: string, durationMs: number): Promise<void> {
     // primeiro a câmera termina de girar; só depois o movimento é animado
     this.queue = this.queue.then(() => (durationMs > 0 ? this.cameraSettled() : undefined)).then(() => this.runMove(move, durationMs));
@@ -324,6 +344,7 @@ export class NxNView implements PuzzleView {
 
   private runMove(move: string, durationMs: number): Promise<void> {
     if (this.disposed) return Promise.resolve();
+    this.showMoveHint(null);
     const mv = parseMove(move);
     const finish = () => {
       const map = this.geo.locationMap(move);
@@ -368,6 +389,7 @@ export class NxNView implements PuzzleView {
 
   dispose() {
     this.disposed = true;
+    this.arrow.clear();
     this.releaseCamWaiters();
     cancelAnimationFrame(this.raf);
     this.ro.disconnect();
