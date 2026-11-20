@@ -1,5 +1,5 @@
 import { getLang, tr } from '../core/i18n';
-import { listProgress } from '../core/progress';
+import { clearProgress, listProgress, type Progress } from '../core/progress';
 import { PUZZLES, loadPuzzle } from '../core/registry';
 import { homePath, puzzlePath, solvePath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
@@ -26,25 +26,38 @@ function ago(t: number): string {
   return tr('agora há pouco', 'just now');
 }
 
-/** tutoriais em andamento neste aparelho (os 3 mais recentes) */
-function resumeHtml(cls = ''): string {
+/** a tela inicial mostra o mais recente; os outros (até 3, o que fica guardado) ficam em "+ N outros" */
+const RESUME_MAX = 4;
+const resumeKey = (p: Progress) => `${p.puzzle}|${p.method}|${p.state}`;
+
+function resumeRow(p: Progress): string {
+  const def = PUZZLES.find((d) => d.id === p.puzzle)!;
+  return `<div class="resume-row" data-key="${resumeKey(p)}">
+    <a class="resume-item" href="${solvePath(p.puzzle, p.method, p.state)}">
+      <span class="resume-icon" aria-hidden="true">${def.icon}</span>
+      <span class="resume-text"><b>${def.name}</b><small>${tr(`Passo ${p.step + 1} de ${p.steps}`, `Step ${p.step + 1} of ${p.steps}`)} · ${ago(p.t)}</small>
+        <span class="resume-bar"><span style="width:${Math.round((p.pos / p.total) * 100)}%"></span></span></span>
+      <span class="resume-go">${icon('play')}</span>
+    </a>
+    <button type="button" class="resume-x" data-forget="${resumeKey(p)}" aria-label="${tr(`Esquecer o tutorial do ${def.short}`, `Forget the ${def.short} tutorial`)}" title="${tr('Esquecer este tutorial', 'Forget this tutorial')}">${icon('close')}</button>
+  </div>`;
+}
+
+/** tutoriais em andamento neste aparelho: o mais recente à vista, os outros guardados num "+ N outros" */
+function resumeHtml(cls = '', open = false): string {
   const list = listProgress()
     .filter((p) => PUZZLES.some((d) => d.id === p.puzzle && d.available))
-    .slice(0, 3);
+    .slice(0, RESUME_MAX);
   if (!list.length) return '';
+  const [first, ...rest] = list;
   return `<div class="resume-home ${cls}">
     <span class="resume-home-title">${icon('history')}${tr('Continue de onde parou', 'Pick up where you left off')}</span>
-    ${list
-      .map((p) => {
-        const def = PUZZLES.find((d) => d.id === p.puzzle)!;
-        return `<a class="resume-item" href="${solvePath(p.puzzle, p.method, p.state)}">
-          <span class="resume-icon" aria-hidden="true">${def.icon}</span>
-          <span class="resume-text"><b>${def.name}</b><small>${tr(`Passo ${p.step + 1} de ${p.steps}`, `Step ${p.step + 1} of ${p.steps}`)} · ${ago(p.t)}</small>
-            <span class="resume-bar"><span style="width:${Math.round((p.pos / p.total) * 100)}%"></span></span></span>
-          <span class="resume-go">${icon('play')}</span>
-        </a>`;
-      })
-      .join('')}
+    ${resumeRow(first)}
+    ${
+      rest.length
+        ? `<details class="resume-more" ${open ? 'open' : ''}><summary>${icon('chevronDown')}<span>${tr(`+ ${rest.length} ${rest.length > 1 ? 'outros' : 'outro'}`, `+ ${rest.length} more`)}</span></summary>${rest.map(resumeRow).join('')}</details>`
+        : ''
+    }
   </div>`;
 }
 
@@ -157,6 +170,27 @@ export function renderHome(app: HTMLElement) {
       </div>
     </div>
   </section>`;
+
+  // ---------------------------------------------------------------- esquecer um tutorial em andamento (o X)
+  const hero = app.querySelector<HTMLElement>('.hero')!;
+  hero.addEventListener('click', (e) => {
+    const x = (e.target as HTMLElement).closest<HTMLElement>('[data-forget]');
+    if (!x) return;
+    const [puzzle, method, state] = x.dataset.forget!.split('|');
+    clearProgress(puzzle, method, state);
+    // remonta as duas listas (a do celular e a do computador), mantendo o "+ N outros" aberto se estava
+    for (const cls of ['resume-top', 'resume-side']) {
+      const old = hero.querySelector<HTMLElement>(`.resume-home.${cls}`);
+      if (!old) continue;
+      const open = !!old.querySelector('details[open]');
+      const html = resumeHtml(cls, open);
+      if (html) old.outerHTML = html;
+      else old.remove();
+    }
+    // o foco não se perde: vai para o próximo X (ou o botão principal)
+    const visible = [...hero.querySelectorAll<HTMLElement>('.resume-x')].find((b) => b.offsetParent !== null);
+    (visible ?? hero.querySelector<HTMLElement>('#hero-go'))?.focus({ preventScroll: true });
+  });
 
   // ---------------------------------------------------------------- aparecer ao rolar + contadores
   const io = new IntersectionObserver(
