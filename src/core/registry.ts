@@ -3,20 +3,20 @@ import { cubeIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
 
 export const PUZZLES: PuzzleDefinition[] = [
   {
-    id: 'cube3',
-    name: 'Cubo 3x3',
-    subtitle: 'O clássico. Método de iniciante passo a passo.',
-    available: true,
-    icon: cubeIcon(3),
-    load: () => import('../puzzles/cube3').then((m) => m.default as PuzzleImpl),
-  },
-  {
     id: 'cube2',
     name: 'Cubo 2x2',
     subtitle: 'Pocket cube. Iniciante ou solução ótima.',
     available: true,
     icon: cubeIcon(2),
     load: () => import('../puzzles/cube2').then((m) => m.default as PuzzleImpl),
+  },
+  {
+    id: 'cube3',
+    name: 'Cubo 3x3',
+    subtitle: 'O clássico. Método de iniciante passo a passo.',
+    available: true,
+    icon: cubeIcon(3),
+    load: () => import('../puzzles/cube3').then((m) => m.default as PuzzleImpl),
   },
   {
     id: 'cube4',
