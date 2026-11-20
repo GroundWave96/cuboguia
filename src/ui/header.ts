@@ -1,5 +1,5 @@
 /**
- * Cabeçalho: Início · Puzzles ▾ (painel com todos os puzzles) · Como funciona.
+ * Cabeçalho: Início · Puzzles ▾ (painel com todos os puzzles) · Cronômetro · Como funciona.
  * Com muitos puzzles o menu continua do mesmo tamanho; no celular vira um botão ☰.
  */
 import { PUZZLES } from '../core/registry';
@@ -28,6 +28,7 @@ export function mountHeader() {
         ${soon.length ? `<div class="mega-title soon-title">Em breve</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
       </div>
     </div>
+    <a href="#/cronometro" data-nav="timer">Cronômetro</a>
     <a href="#/" data-scroll="como-funciona" class="nav-extra">Como funciona</a>`;
 
   // menu do celular (gaveta)
@@ -44,6 +45,7 @@ export function mountHeader() {
   drawer.innerHTML = `
     <div class="drawer-panel" role="dialog" aria-label="Menu">
       <a class="drawer-link" href="#/" data-nav="home">Início</a>
+      <a class="drawer-link" href="#/cronometro" data-nav="timer">Cronômetro</a>
       <a class="drawer-link" href="#/" data-scroll="como-funciona">Como funciona</a>
       <div class="mega-title">Puzzles</div>
       <div class="mega-grid">${available.map(card).join('')}</div>

@@ -3,6 +3,7 @@ import { mountHeader } from './ui/header';
 import { renderHome } from './ui/home';
 import { renderInput } from './ui/input';
 import { renderSolve } from './ui/solve';
+import { renderTimer } from './ui/timer';
 
 export type Cleanup = () => void;
 
@@ -36,9 +37,12 @@ async function route() {
   window.scrollTo(0, 0);
   const { parts, params } = parseHash();
   // o CSS usa para ajustar o layout por página (ex.: celular deitado no tutorial)
-  document.body.dataset.page = parts[0] === 'p' && parts[1] ? (parts[2] === 'solve' ? 'solve' : 'input') : 'home';
+  document.body.dataset.page = parts[0] === 'p' && parts[1] ? (parts[2] === 'solve' ? 'solve' : 'input') : parts[0] === 'cronometro' ? 'timer' : 'home';
   try {
-    if (parts[0] === 'p' && parts[1]) {
+    if (parts[0] === 'cronometro') {
+      setActiveNav('timer');
+      cleanup = await renderTimer(app);
+    } else if (parts[0] === 'p' && parts[1]) {
       setActiveNav(parts[1]);
       if (parts[2] === 'solve') cleanup = await renderSolve(app, parts[1], params);
       else cleanup = await renderInput(app, parts[1]);

@@ -2,6 +2,7 @@ import { getPuzzle, loadPuzzle } from '../core/registry';
 import { decodeState, encodeState, loadSpeed, loadState, saveMethod, saveSpeed } from '../core/store';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
+import { keepScreenOn } from './wakelock';
 
 interface FlatMove {
   move: string;
@@ -393,21 +394,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   };
   window.addEventListener('keydown', onKey);
 
-  // tela sempre acesa durante o tutorial (as mãos estão no cubo); o navegador solta
-  // o pedido quando a aba some, então pede de novo ao voltar
-  let wake: WakeLockSentinel | null = null;
-  let alive = true;
-  const keepAwake = async () => {
-    if (!alive || document.visibilityState !== 'visible' || !('wakeLock' in navigator)) return;
-    try {
-      wake = await navigator.wakeLock.request('screen');
-      if (!alive) wake.release().catch(() => {});
-    } catch {
-      /* sem permissão ou sem suporte: só não mantém acesa */
-    }
-  };
-  document.addEventListener('visibilitychange', keepAwake);
-  keepAwake();
+  // tela sempre acesa durante o tutorial (as mãos estão no cubo)
+  const releaseScreen = keepScreenOn();
 
   view.setState(initial);
   if (steps.length) goToStep(0);
@@ -415,9 +403,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
   return () => {
     playing = false;
-    alive = false;
-    document.removeEventListener('visibilitychange', keepAwake);
-    wake?.release().catch(() => {});
+    releaseScreen();
     window.removeEventListener('keydown', onKey);
     view.dispose();
   };

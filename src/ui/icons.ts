@@ -20,6 +20,7 @@ const PATHS = {
   warning: '<path d="M10.3 4 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0z"/><path d="M12 9.2v4.3"/><circle cx="12" cy="16.8" r="0.6" fill="currentColor"/>',
   trophy:
     '<path d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z"/><path d="M16.5 5.5h3v1.2a3.8 3.8 0 0 1-3.4 3.8"/><path d="M7.5 5.5h-3v1.2a3.8 3.8 0 0 0 3.4 3.8"/><path d="M12 14v3.5"/><path d="M8 20.5h8"/><path d="M9.5 17.5h5l.5 3h-6z"/>',
+  trash: '<path d="M4 7h16"/><path d="M9.5 7V5h5v2"/><path d="M6.5 7l1 12.5h9L17.5 7"/><path d="M10.5 11v5.5M13.5 11v5.5"/>',
   // ---- entrada de cores
   palette:
     '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.6 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6h1.9a4.8 4.8 0 0 0 4.8-4.8C21 6.5 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="10" cy="7.3" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.3" cy="7.3" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.2" cy="10.6" r="1.3" fill="currentColor" stroke="none"/>',
