@@ -100,4 +100,24 @@
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms"/>
   </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/algoritmos/2x2</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/2x2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/2x2"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/algorithms/2x2</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/2x2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/2x2"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/algoritmos/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/algorithms/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/pyraminx"/>
+  </url>
 </urlset>

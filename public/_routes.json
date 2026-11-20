@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "description": "Só as páginas passam pela função da prévia dos links; os arquivos vão direto.",
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/fonts/*",
+    "/sw.js",
+    "/favicon.svg",
+    "/logo.svg",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/apple-touch-icon.png",
+    "/og.png",
+    "/og-desafio.png",
+    "/site.webmanifest",
+    "/robots.txt",
+    "/sitemap.xml"
+  ]
+}

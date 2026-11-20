@@ -17,11 +17,16 @@ const BELOW = geo.stickers.filter((s) => s.cubie2[1] !== 2).map((s) => s.index);
 const U_FACE = geo.stickers.filter((s) => s.face === 'U').map((s) => s.index);
 const AUF = [[], ['U'], ['U2'], ["U'"]];
 
-/** o algoritmo (com ajustes da camada de cima antes e depois) leva o estado a resolvido */
-function solvesWithAuf(state: string[], alg: string) {
-  for (const a of AUF) for (const b of AUF) if (uprightState(applyAll(state, [...a, ...splitAlg(alg), ...b])).every((c, i) => c === solved[i])) return true;
+/**
+ * o algoritmo (com ajustes da camada de cima antes e depois) resolve o estado:
+ * PLL = cubo resolvido; OLL = só o topo todo amarelo (as peças podem ficar em outros lugares)
+ */
+function solvesWithAuf(state: string[], alg: string, onlyOrient = false) {
+  const done = (s: string[]) => (onlyOrient ? BELOW.every((i) => s[i] === solved[i]) && U_FACE.every((i) => s[i] === 'U') : s.every((c, i) => c === solved[i]));
+  for (const a of AUF) for (const b of AUF) if (done(uprightState(applyAll(state, [...a, ...splitAlg(alg), ...b])))) return true;
   return false;
 }
+const isOll = (set: string) => set !== 'pll';
 
 /** as peças da camada de cima: posição → posição de origem (pelas cores) */
 function lastLayerPerm(state: string[]) {
@@ -54,7 +59,9 @@ const opposite = (a: string, b: string) => a.split(',').every((v, i) => Number(v
 describe('algoritmos da última camada', () => {
   it('todo caso pertence a um grupo que existe', () => {
     for (const c of ALG_CASES) expect(ALG_GROUPS.some((g) => g.id === c.group && g.set === c.set), c.id).toBe(true);
-    expect(ALG_CASES.filter((c) => c.set === 'oll')).toHaveLength(10);
+    expect(ALG_CASES.filter((c) => c.set === 'oll2')).toHaveLength(10);
+    expect(ALG_CASES.filter((c) => c.set === 'oll')).toHaveLength(57);
+    expect(new Set(ALG_CASES.filter((c) => c.set === 'oll').map((c) => c.name)).size).toBe(57);
     expect(ALG_CASES.filter((c) => c.set === 'pll')).toHaveLength(21);
   });
 
@@ -66,13 +73,13 @@ describe('algoritmos da última camada', () => {
       const yellowUp = U_FACE.filter((i) => s[i] === 'U').length;
       if (c.set === 'pll') expect(yellowUp, 'PLL: topo todo amarelo').toBe(9);
       else expect(yellowUp).toBeLessThan(9);
-      if (c.alt) expect(solvesWithAuf(s, c.alt), `alternativo: ${c.alt}`).toBe(true);
+      if (c.alt) expect(solvesWithAuf(s, c.alt, isOll(c.set)), `alternativo: ${c.alt}`).toBe(true);
     });
 
   it('os casos são todos diferentes', () => {
     for (const a of ALG_CASES)
       for (const b of ALG_CASES)
-        if (a.id < b.id && a.set === b.set) expect(solvesWithAuf(caseState(a.alg), b.alg), `${a.id} = ${b.id}?`).toBe(false);
+        if (a.id < b.id && a.set === b.set) expect(solvesWithAuf(caseState(a.alg), b.alg, isOll(a.set)), `${a.id} = ${b.id}?`).toBe(false);
   });
 
   it('OLL: o formato combina com o nome', () => {
@@ -90,6 +97,34 @@ describe('algoritmos da última camada', () => {
     for (const id of ['oll-sune', 'oll-antisune']) expect(cornersUp(id), id).toBe(1);
     for (const id of ['oll-h', 'oll-pi']) expect(cornersUp(id), id).toBe(0);
     for (const id of ['oll-u', 'oll-t', 'oll-bowtie']) expect(cornersUp(id), id).toBe(2);
+  });
+
+  it('OLL completa: o formato combina com o grupo', () => {
+    for (const c of ALG_CASES.filter((x) => x.set === 'oll')) {
+      const s = caseState(c.alg);
+      const edges = [1, 3, 5, 7].filter((i) => s[i] === 'U').length;
+      const corners = [0, 2, 6, 8].filter((i) => s[i] === 'U').length;
+      const where = `${c.id}: arestas ${edges}, cantos ${corners}`;
+      if (c.group === 'ollf-ocll') expect(edges, where).toBe(4);
+      else if (c.group === 'ollf-edges') {
+        expect(corners, where).toBe(4);
+        expect(edges, where).toBe(2);
+      } else if (c.group === 'ollf-dot') expect(edges, where).toBe(0);
+      else expect(edges, where).toBe(2);
+      if (c.group === 'ollf-square') expect(corners, where).toBe(1);
+    }
+  });
+
+  it('OLL completa: os 7 casos com a cruz são os da OLL em 2 etapas', () => {
+    const same: [string, string][] = [
+      ['ollf-27', 'oll-sune'], ['ollf-26', 'oll-antisune'], ['ollf-21', 'oll-h'], ['ollf-22', 'oll-pi'],
+      ['ollf-23', 'oll-u'], ['ollf-24', 'oll-t'], ['ollf-25', 'oll-bowtie'],
+    ];
+    for (const [full, two] of same) {
+      const a = ALG_CASES.find((c) => c.id === full)!;
+      const b = ALG_CASES.find((c) => c.id === two)!;
+      expect(solvesWithAuf(caseState(b.alg), a.alg, true), `${full} = ${two}`).toBe(true);
+    }
   });
 
   it('PLL: o tipo de troca combina com o grupo', () => {

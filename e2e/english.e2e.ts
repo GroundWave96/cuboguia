@@ -44,6 +44,14 @@ test('telas em inglês, do início ao fim do tutorial', async ({ page }, info) =
   await page.click('[data-tab="train"]');
   await page.click('[data-treveal]');
   bad.push(...(await portugueseLeft(page, '/en/algorithms practice')));
+  for (const slug of ['2x2', 'pyraminx']) {
+    await page.goto(`/en/algorithms/${slug}`);
+    await page.click('details.notation summary');
+    bad.push(...(await portugueseLeft(page, `/en/algorithms/${slug}`)));
+    await page.locator('[data-open]').first().click();
+    bad.push(...(await portugueseLeft(page, `/en/algorithms/${slug} 3D`)));
+    await page.keyboard.press('Escape');
+  }
   await page.goto('/en/nothing-here');
   bad.push(...(await portugueseLeft(page, '/en/404')));
   expect([...new Set(bad)]).toEqual([]);

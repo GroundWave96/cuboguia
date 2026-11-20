@@ -12,6 +12,8 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
     ['/en/skewb', /Skewb/],
     ['/algoritmos', /OLL e PLL/],
     ['/en/algorithms', /OLL and PLL/],
+    ['/algoritmos/2x2', /2x2/],
+    ['/en/algorithms/pyraminx', /Pyraminx/],
   ] as const) {
     const res = await page.goto(path);
     expect(res?.status(), path).toBe(200);
@@ -69,4 +71,18 @@ test('fontes vêm do próprio site, sem chamar o Google', async ({ page }) => {
   expect(external.filter((h) => /google|gstatic/.test(h))).toEqual([]);
   expect(await page.evaluate(async () => (await document.fonts.load('600 16px "Space Grotesk"')).length > 0)).toBe(true);
   expect(await page.evaluate(async () => (await document.fonts.load('400 16px "Inter"')).length > 0)).toBe(true);
+});
+
+test('prévia dos links: cada página com o título e o idioma dela', async ({ request }) => {
+  const meta = async (path: string) => {
+    const html = await (await request.get(path)).text();
+    const get = (re: RegExp) => html.match(re)?.[1];
+    return { lang: get(/<html lang="([^"]+)"/), title: get(/<meta property="og:title" content="([^"]*)"/), image: get(/<meta property="og:image" content="([^"]*)"/) };
+  };
+  expect(await meta('/en/3x3')).toMatchObject({ lang: 'en', title: 'How to solve the 3x3 Cube — step-by-step 3D tutorial | CuboGuia' });
+  expect(await meta('/pyraminx')).toMatchObject({ lang: 'pt-BR', title: 'Como resolver o Pyraminx — tutorial passo a passo em 3D | CuboGuia' });
+  expect((await meta('/en/algorithms/2x2')).title).toContain('2x2 algorithms');
+  expect((await meta('/en/timer?p=cube2&e=R%20U&t=4560&n=Sam')).title).toBe('Sam challenged you: 4.56 on the 2x2');
+  expect((await meta('/cronometro?p=cube3&e=R&t=dnf')).image).toMatch(/og-desafio\.png$/);
+  expect((await meta('/en')).image).toMatch(/og\.png$/);
 });
