@@ -7,7 +7,7 @@
  * tests/meta.test.ts confere que batem com o registro e com o roteador.
  */
 export type MetaLang = 'pt' | 'en';
-export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs' | 'notation'; id: string };
+export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'faq' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs' | 'notation'; id: string };
 
 /** id → [nome pt, nome en, nome curto] */
 export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string; short: string }> = {
@@ -32,6 +32,14 @@ export function pageMeta(p: MetaPage, lang: MetaLang): { title: string; descript
     'Enter your Rubik’s cube colors (painting in 3D or with the camera) and follow an animated step-by-step tutorial to solve it.',
   );
   if (p.page === 'home') return { title: t(`${SITE} — resolva seu cubo mágico passo a passo`, `${SITE} — solve your Rubik’s cube step by step`), description: home };
+  if (p.page === 'faq')
+    return {
+      title: t(`Perguntas frequentes sobre o cubo mágico — ${SITE}`, `Rubik’s cube FAQ — ${SITE}`),
+      description: t(
+        'Cubo "impossível", quanto tempo leva para aprender, iniciante ou CFOP, como usar a câmera, qual cubo comprar e como ficar mais rápido.',
+        'An “impossible” cube, how long it takes to learn, beginner or CFOP, using the camera, which cube to buy and how to get faster.',
+      ),
+    };
   if (p.page === 'notfound') return { title: t(`Página não encontrada — ${SITE}`, `Page not found — ${SITE}`), description: home };
   if (p.page === 'timer')
     return {
@@ -119,6 +127,7 @@ export function metaRoute(pathname: string): { lang: MetaLang; meta: MetaPage } 
   // arquivos (com extensão) não são páginas
   if (parts[parts.length - 1].includes('.')) return null;
   if ((parts[0] === 'cronometro' || parts[0] === 'timer') && parts.length === 1) return { lang, meta: { page: 'timer' } };
+  if ((parts[0] === 'perguntas' || parts[0] === 'faq') && parts.length === 1) return { lang, meta: { page: 'faq' } };
   if (parts[0] === 'algoritmos' || parts[0] === 'algorithms') {
     if (parts.length === 1) return { lang, meta: { page: 'algs', id: 'cube3' } };
     const id = bySlug(parts[1]);
@@ -135,4 +144,66 @@ export function metaRoute(pathname: string): { lang: MetaLang; meta: MetaPage } 
   if (id && parts.length === 1) return { lang, meta: { page: 'input', id } };
   if (id && parts.length === 2 && parts[1] === 'tutorial') return { lang, meta: { page: 'solve', id } };
   return { lang, meta: { page: 'notfound' } };
+}
+
+/** endereço de uma página (sem o roteador do site, que traria o registro dos puzzles) */
+function metaPath(p: MetaPage, lang: MetaLang): string {
+  const en = lang === 'en';
+  const slug = 'id' in p ? (META_PUZZLES[p.id]?.slug ?? '3x3') : '';
+  const pre = en ? '/en' : '';
+  switch (p.page) {
+    case 'home':
+    case 'notfound':
+      return en ? '/en' : '/';
+    case 'timer':
+      return en ? '/en/timer' : '/cronometro';
+    case 'faq':
+      return en ? '/en/faq' : '/perguntas';
+    case 'algs':
+      return (en ? '/en/algorithms' : '/algoritmos') + (p.id === 'cube3' ? '' : `/${slug}`);
+    case 'notation':
+      return (en ? '/en/notation' : '/notacao') + (p.id === 'cube3' ? '' : `/${slug}`);
+    case 'input':
+      return `${pre}/${slug}`;
+    case 'solve':
+      return `${pre}/${slug}/tutorial`;
+  }
+}
+
+/** a "trilha" da página (Início › Cubo 3x3 › Tutorial), como o Google mostra no resultado */
+export function breadcrumbs(p: MetaPage, lang: MetaLang): { name: string; path: string }[] {
+  const t = (pt: string, en: string) => (lang === 'en' ? en : pt);
+  if (p.page === 'home' || p.page === 'notfound') return [];
+  const out = [{ name: t('Início', 'Home'), path: metaPath({ page: 'home' }, lang) }];
+  const pz = 'id' in p ? META_PUZZLES[p.id] : undefined;
+  const name = pz ? t(pz.pt, pz.en) : '';
+  if (p.page === 'timer') out.push({ name: t('Cronômetro', 'Timer'), path: metaPath(p, lang) });
+  else if (p.page === 'faq') out.push({ name: t('Perguntas frequentes', 'FAQ'), path: metaPath(p, lang) });
+  else if (p.page === 'algs' || p.page === 'notation') {
+    const top = { page: p.page, id: 'cube3' } as MetaPage;
+    out.push({ name: p.page === 'algs' ? t('Algoritmos', 'Algorithms') : t('Notação', 'Notation'), path: metaPath(top, lang) });
+    if (p.id !== 'cube3') out.push({ name: pz!.short, path: metaPath(p, lang) });
+  } else if (p.page === 'input') out.push({ name, path: metaPath(p, lang) });
+  else if (p.page === 'solve') {
+    out.push({ name, path: metaPath({ page: 'input', id: p.id }, lang) });
+    out.push({ name: t('Tutorial', 'Tutorial'), path: metaPath(p, lang) });
+  }
+  return out;
+}
+
+/** dados estruturados (schema.org) da página: o nome do site na inicial e a trilha nas outras */
+export function structuredData(p: MetaPage, lang: MetaLang, origin: string): string | null {
+  const crumbs = breadcrumbs(p, lang);
+  const data =
+    p.page === 'home'
+      ? { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE, url: origin + metaPath(p, lang), inLanguage: lang === 'en' ? 'en' : 'pt-BR' }
+      : crumbs.length
+        ? {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: origin + c.path })),
+          }
+        : null;
+  // "<" escapado: o texto não pode fechar a tag <script>
+  return data ? JSON.stringify(data).replace(/</g, '\u003c') : null;
 }

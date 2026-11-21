@@ -1,9 +1,9 @@
 import { getLang, tr } from '../core/i18n';
 import { clearProgress, listProgress, type Progress } from '../core/progress';
 import { PUZZLES, loadPuzzle } from '../core/registry';
-import { homePath, puzzlePath, solvePath } from '../core/router';
+import { algsPath, faqPath, homePath, notationPath, puzzlePath, solvePath, timerPath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
-import { icon } from './icons';
+import { icon, type IconName } from './icons';
 
 /** quantos movimentos de embaralho e a velocidade da vitrine para cada puzzle */
 const SHOW: Record<string, { scramble: number; ms: number }> = {
@@ -18,6 +18,85 @@ const SHOW: Record<string, { scramble: number; ms: number }> = {
   megaminx: { scramble: 14, ms: 200 },
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** os mais pesados de montar em 3D: ficam fora da vitrine em aparelho fraco */
+const HEAVY = new Set(['cube6', 'cube7', 'megaminx']);
+
+/** aparelho com pouco processador ou memória */
+export function weakDevice(nav: { hardwareConcurrency?: number; deviceMemory?: number } = navigator): boolean {
+  return (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+}
+
+/**
+ * Ordem da vitrine: começa sempre pelo 3x3 (o mais conhecido e leve) e depois sorteia sem
+ * repetir o anterior. Em aparelho fraco, pula os puzzles pesados.
+ */
+export function showcaseOrder(ids: string[], weak: boolean, rand: () => number = Math.random) {
+  const pool = weak ? ids.filter((id) => !HEAVY.has(id)) : ids;
+  let last = '';
+  return () => {
+    if (!last && pool.includes('cube3')) return (last = 'cube3');
+    const opts = pool.filter((id) => id !== last);
+    return (last = opts[Math.floor(rand() * opts.length)] ?? pool[0]);
+  };
+}
+
+/** renderizadores que desenham o 3D no processador */
+export const isSoftwareRenderer = (name: string) => /swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/i.test(name);
+
+/**
+ * Sem placa de vídeo (o navegador desenha o 3D no processador), a vitrine animada deixa
+ * tudo lento: aí ela vira um desenho parado.
+ */
+function slowGraphics(): boolean {
+  try {
+    const c = document.createElement('canvas');
+    const opts = { failIfMajorPerformanceCaveat: true };
+    const gl = (c.getContext('webgl2', opts) ?? c.getContext('webgl', opts)) as WebGLRenderingContext | null;
+    if (!gl) return true;
+    // o nome da placa de vídeo entrega o desenho por software (SwiftShader, llvmpipe…)
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return isSoftwareRenderer(name);
+  } catch {
+    return true;
+  }
+}
+
+/** os cartões "Depois de resolver": o resto do site, para quem já resolveu o primeiro */
+function afterCards(): { href: string; icon: IconName; title: string; text: string; go: string }[] {
+  return [
+    {
+      href: notationPath(),
+      icon: 'info',
+      title: tr('Aprenda a notação', 'Learn the notation'),
+      text: tr("O que significam R, U', F2 e as outras letras, cada movimento animado no 3D.", "What R, U', F2 and the other letters mean, each move animated in 3D."),
+      go: tr('Ver os movimentos', 'See the moves'),
+    },
+    {
+      href: timerPath(),
+      icon: 'history',
+      title: tr('Cronômetro', 'Timer'),
+      text: tr('Estilo competição, com embaralho, médias, recordes e gráfico da sua evolução.', 'Competition style, with scrambles, averages, records and a progress chart.'),
+      go: tr('Cronometrar', 'Start timing'),
+    },
+    {
+      href: algsPath(),
+      icon: 'sparkles',
+      title: tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms'),
+      text: tr('Os algoritmos do CFOP para ficar rápido, com animação e modo treino.', 'The CFOP algorithms to get fast, with animation and a practice mode.'),
+      go: tr('Ver os algoritmos', 'See the algorithms'),
+    },
+    {
+      href: timerPath(),
+      icon: 'trophy',
+      title: tr('Desafie um amigo', 'Challenge a friend'),
+      text: tr('Resolva no cronômetro e mande o link: o amigo recebe o mesmo embaralho para tentar bater o seu tempo.', 'Solve on the timer and send the link: your friend gets the same scramble to try to beat your time.'),
+      go: tr('Criar um desafio', 'Create a challenge'),
+    },
+  ];
+}
 
 /** "há 2 horas" / "2 hours ago" */
 function ago(t: number): string {
@@ -163,14 +242,22 @@ export function renderHome(app: HTMLElement) {
     </div>
   </section>
 
-  <section class="page final-cta reveal">
-    <div class="final-card">
-      <h2>${tr('Pronto para resolver o seu?', 'Ready to solve yours?')}</h2>
-      <p>${tr('Escolha o puzzle e comece agora — leva menos de um minuto para informar as cores.', 'Pick your puzzle and start now — it takes less than a minute to enter the colors.')}</p>
-      <div class="final-buttons">
-        ${available.map((p) => `<a class="btn ${p.id === 'cube3' ? 'primary' : 'ghost'} big" href="${puzzlePath(p.id)}">${p.short}</a>`).join('')}
-      </div>
+  <section class="page after" id="depois">
+    <h2 class="section-title reveal">${tr('Depois de resolver', 'After you solve it')}</h2>
+    <p class="after-sub reveal">${tr('Resolveu o primeiro? Agora dá para aprender a ler os movimentos, ficar mais rápido e desafiar os amigos.', 'Solved your first one? Now you can learn to read the moves, get faster and challenge your friends.')}</p>
+    <div class="after-grid">
+      ${afterCards()
+        .map(
+          (c) => `<a class="after-card card reveal" href="${c.href}">
+            <span class="after-ico">${icon(c.icon)}</span>
+            <h3>${c.title}</h3>
+            <p>${c.text}</p>
+            <span class="after-go">${c.go} →</span>
+          </a>`,
+        )
+        .join('')}
     </div>
+    <p class="after-faq reveal">${tr('Ficou com alguma dúvida?', 'Got a question?')} <a href="${faqPath()}">${tr('Veja as perguntas frequentes', 'See the FAQ')} →</a></p>
   </section>`;
 
   // ---------------------------------------------------------------- esquecer um tutorial em andamento (o X)
@@ -246,12 +333,10 @@ export function renderHome(app: HTMLElement) {
     return alive;
   };
 
-  /** sorteio sem repetir o anterior */
-  let last = '';
-  const nextId = () => {
-    const ids = available.map((p) => p.id).filter((id) => id !== last);
-    return (last = ids[Math.floor(Math.random() * ids.length)]);
-  };
+  const nextId = showcaseOrder(
+    available.map((p) => p.id),
+    weakDevice(navigator as Navigator & { deviceMemory?: number }),
+  );
 
   async function show(id: string): Promise<PuzzleImpl | null> {
     const def = available.find((p) => p.id === id)!;
@@ -303,7 +388,7 @@ export function renderHome(app: HTMLElement) {
   const lightMode = !!conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType ?? '');
   const start = () => {
     if (!alive) return;
-    if (lightMode) {
+    if (lightMode || slowGraphics()) {
       const def = available.find((p) => p.id === 'cube3') ?? available[0];
       stage.insertAdjacentHTML('beforeend', `<div class="showcase-static" aria-hidden="true">${def.icon}</div>`);
       caption.textContent = def.name;

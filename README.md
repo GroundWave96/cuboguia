@@ -128,12 +128,17 @@ Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.t
 | `/notacao`, `/notacao/5x5` (e `/pyraminx`, `/skewb`, `/megaminx`) | notação com cada movimento animado (`/en/notation`) |
 | `/3x3/tutorial?m=método&s=estado` | tutorial |
 | `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
+| `/perguntas` | perguntas frequentes (`/en/faq`, `src/ui/faq.ts`) |
 | `/en`, `/en/3x3`, `/en/3x3/tutorial`, `/en/timer` | as mesmas páginas em inglês |
 
 Os links antigos (`#/p/cube3`, `#/cronometro?...`) viram o endereço novo sozinhos.
 O Cloudflare Pages entrega o `index.html` em qualquer endereço (o projeto não tem
-`404.html`, então ele trata o site como SPA). `public/sitemap.xml` e `robots.txt`
-apontam as páginas para o Google.
+`404.html`, então ele trata o site como SPA); a função `server/page-preview.ts` devolve o
+código **404** quando o endereço não existe (a tela continua "Página não encontrada"), para o
+Google não indexar páginas falsas. Ela também coloca os dados estruturados (schema.org): o nome
+do site na inicial e a trilha (Início › Cubo 3x3 › Tutorial) nas outras (`structuredData` em
+`src/core/meta.ts`). `public/sitemap.xml`, `robots.txt` e `llms.txt` (resumo para ferramentas de
+IA) apontam as páginas.
 
 ## Idiomas (português e inglês)
 
@@ -171,7 +176,20 @@ a mesma solução, desde o passo 1 — pelo menu do aparelho, ou copia o link qu
 A tela inicial só baixa o próprio código: as outras páginas (`src/ui/input.ts`, `solve.ts`,
 `timer.ts`, `algs.ts`, `notationPage.ts`) são carregadas quando abertas, o total de métodos vem
 do registro (`methods` em `src/core/registry.ts`, conferido em `tests/sessions.test.ts`) e a
-vitrine 3D só começa depois do evento `load`; com economia de dados ou 2G ela fica num desenho parado.
+vitrine 3D só começa depois do evento `load`; com economia de dados, 2G ou sem placa de vídeo
+(o 3D desenhado no processador, como no teste do PageSpeed) ela fica num desenho parado. Ela
+começa sempre pelo 3x3 e, em aparelho fraco (até 4 núcleos ou 4 GB), pula 6x6, 7x7 e Megaminx.
+
+O 3D (`NxNView`, `PolyView`) só redesenha quando algo muda: cubo parado não gasta bateria.
+Os ícones dos puzzles juntam os adesivos da mesma cor num só desenho (`mergePaths` em
+`src/core/icons.ts`): o 7x7 tem 147 adesivos e 6 elementos.
+
+## Tema claro e escuro
+
+Sem escolha, segue o aparelho; o botão de sol/lua no menu troca e fica guardado (`cubo:theme`).
+Um script no `<head>` do `index.html` aplica o tema antes de desenhar (sem piscar) e
+`src/ui/theme.ts` cuida do botão e da cor da barra do navegador. As cores são variáveis no
+começo de `src/styles.css` (`:root` e `:root[data-theme='light']`).
 
 ## Sugestões e erros
 

@@ -186,23 +186,32 @@ export class NxNView implements PuzzleView {
     const fit = w / h < 1 ? 1 / Math.max(w / h, 0.55) : 1;
     this.camera.zoom = 1 / Math.min(fit, 1.6);
     this.camera.updateProjectionMatrix();
+    this.dirty = 2;
   }
+
+  /** quadros que ainda precisam ser desenhados (algo mudou na cena) */
+  private dirty = 2;
 
   private loop = () => {
     if (this.disposed) return;
     this.raf = requestAnimationFrame(this.loop);
+    const tween = !!this.camTween;
     this.updateCamTween();
-    this.controls.update();
+    const moved = this.controls.update();
     this.arrow.tick(performance.now());
     if (this.highlight.size) {
       const t = performance.now() / 1000;
       const k = 0.18 + 0.17 * (0.5 + 0.5 * Math.sin(t * 4.5));
       for (const i of this.highlight) this.stickerMeshes[i].material.emissive.setRGB(k, k, k);
     }
+    // com o cubo parado, não redesenha nada (poupa bateria e processador)
+    if (!(moved || tween || this.dirty > 0 || this.highlight.size || this.arrow.active)) return;
+    if (this.dirty > 0) this.dirty--;
     this.renderer.render(this.scene, this.camera);
   };
 
   private refreshColors() {
+    this.dirty = 2;
     const dim = this.highlight.size > 0;
     this.stickerMeshes.forEach((m, i) => {
       const key = this.state[i];
@@ -322,6 +331,7 @@ export class NxNView implements PuzzleView {
   }
 
   showMoveHint(move: string | null) {
+    this.dirty = 2;
     if (move === this.hintMove) return;
     this.hintMove = move;
     if (!move) return this.arrow.set(null, this.camera.position);
@@ -368,6 +378,7 @@ export class NxNView implements PuzzleView {
       const t0 = performance.now();
       const step = () => {
         if (this.disposed) return resolve();
+        this.dirty = 2;
         const t = Math.min(1, (performance.now() - t0) / dur);
         pivot.quaternion.setFromAxisAngle(axis, total * easeInOut(t));
         if (t < 1) {

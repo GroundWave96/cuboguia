@@ -38,7 +38,28 @@ function shrink(pts: P[], k: number): P[] {
   return pts.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k]);
 }
 
-const wrap = (content: string) => `<svg viewBox="-4 -4 128 133" class="pz-icon" aria-hidden="true">${content}</svg>`;
+/**
+ * Junta adesivos seguidos da mesma cor num só <path> (o desenho fica idêntico): o 7x7 cai de
+ * ~150 elementos para ~6, e a página fica bem mais leve com os ícones no menu e na tela inicial.
+ */
+export function mergePaths(svg: string): string {
+  return svg.replace(/(?:<path d="[^"]*" fill="[^"]*"\/>)+/g, (run) => {
+    const out: string[] = [];
+    let fill = '';
+    let d = '';
+    for (const m of run.matchAll(/<path d="([^"]*)" fill="([^"]*)"\/>/g)) {
+      if (m[2] !== fill && d) {
+        out.push(`<path d="${d}" fill="${fill}"/>`);
+        d = '';
+      }
+      fill = m[2];
+      d += m[1];
+    }
+    if (d) out.push(`<path d="${d}" fill="${fill}"/>`);
+    return out.join('');
+  });
+}
+const wrap = (content: string) => `<svg viewBox="-4 -4 128 133" class="pz-icon" aria-hidden="true">${mergePaths(content)}</svg>`;
 
 // ---------------------------------------------------------------------------
 // Cubo NxN isométrico
@@ -52,13 +73,15 @@ export function cubeIcon(n: number): string {
   const radius = n <= 2 ? 6 : n === 3 ? 4.2 : n === 4 ? 3 : n === 5 ? 2.4 : 1.8;
   // cor de cada face já com a luz: topo claro, frente esquerda média, direita mais escura
   const TOP = '#ffd83a', LEFT = '#00a651', RIGHT = '#f2600f';
-  for (let i = 0; i < n; i++)
-    for (let j = 0; j < n; j++) {
-      const a0 = i * d, a1 = (i + 1) * d, b0 = j * d, b1 = (j + 1) * d;
-      out.push(sticker(shrink([proj(a0, b0, 1), proj(a1, b0, 1), proj(a1, b1, 1), proj(a0, b1, 1)], k), TOP, radius));
-      out.push(sticker(shrink([proj(a0, 1, 1 - b0), proj(a1, 1, 1 - b0), proj(a1, 1, 1 - b1), proj(a0, 1, 1 - b1)], k), LEFT, radius));
-      out.push(sticker(shrink([proj(1, 1 - a0, 1 - b0), proj(1, 1 - a1, 1 - b0), proj(1, 1 - a1, 1 - b1), proj(1, 1 - a0, 1 - b1)], k), RIGHT, radius));
-    }
+  // uma face de cada vez (os adesivos da mesma cor seguidos viram um desenho só)
+  const faces: [(a0: number, a1: number, b0: number, b1: number) => P[], string][] = [
+    [(a0, a1, b0, b1) => [proj(a0, b0, 1), proj(a1, b0, 1), proj(a1, b1, 1), proj(a0, b1, 1)], TOP],
+    [(a0, a1, b0, b1) => [proj(a0, 1, 1 - b0), proj(a1, 1, 1 - b0), proj(a1, 1, 1 - b1), proj(a0, 1, 1 - b1)], LEFT],
+    [(a0, a1, b0, b1) => [proj(1, 1 - a0, 1 - b0), proj(1, 1 - a1, 1 - b0), proj(1, 1 - a1, 1 - b1), proj(1, 1 - a0, 1 - b1)], RIGHT],
+  ];
+  for (const [quad, color] of faces)
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) out.push(sticker(shrink(quad(i * d, (i + 1) * d, j * d, (j + 1) * d), k), color, radius));
   // leve brilho no topo e sombra na direita
   out.push(shade([proj(0, 0, 1), proj(1, 0, 1), proj(1, 1, 1), proj(0, 1, 1)], '#ffffff', 0.06));
   out.push(shade([proj(1, 1, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0)], '#3a1200', 0.12));

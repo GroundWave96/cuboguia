@@ -3,6 +3,7 @@ import { getLang, setLang, tr } from './core/i18n';
 import { pageMeta, type MetaPage } from './core/meta';
 import { fromLegacyHash, homePath, navigate, parseRoute, pathInLang, setRouteHandler } from './core/router';
 import { mountHeader } from './ui/header';
+import { initTheme } from './ui/theme';
 import { setupApp } from './ui/pwa';
 import { renderHome } from './ui/home';
 
@@ -18,6 +19,7 @@ const topbar = document.querySelector<HTMLElement>('.topbar')!;
 new ResizeObserver(() => document.documentElement.style.setProperty('--topbar-h', `${topbar.offsetHeight}px`)).observe(topbar);
 
 // menu montado a partir do registro: novos puzzles aparecem sozinhos no painel
+initTheme();
 const setActiveNav = mountHeader();
 
 /** título e descrição de cada página (o que aparece na aba e nos resultados do Google) — os mesmos da prévia dos links */
@@ -86,6 +88,10 @@ async function route() {
       setActiveNav('algs');
       setMeta({ page: 'algs', id: r.id });
       cleanup = await (await import('./ui/algs')).renderAlgs(app, r.id);
+    } else if (r.page === 'faq') {
+      setActiveNav('faq');
+      setMeta({ page: 'faq' });
+      (await import('./ui/faq')).renderFaq(app);
     } else if (r.page === 'notation') {
       setActiveNav('notation');
       setMeta({ page: 'notation', id: r.id });

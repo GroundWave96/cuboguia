@@ -6,9 +6,13 @@
 import { getLang, tr, type Lang } from '../core/i18n';
 import { PUZZLES } from '../core/registry';
 import { FEEDBACK_EMAIL, feedbackLabel, wireFeedback } from './feedback';
-import { algsPath, homePath, notationPath, pathInLang, puzzlePath, timerPath } from '../core/router';
+import { algsPath, faqPath, homePath, notationPath, pathInLang, puzzlePath, timerPath } from '../core/router';
 import { icon } from './icons';
 import { refreshInstall } from './pwa';
+import { toggleTheme } from './theme';
+
+/** botão do tema: mostra o sol no escuro (vai para o claro) e a lua no claro */
+const themeLabel = () => tr('Trocar entre tema claro e escuro', 'Switch between light and dark theme');
 
 export function mountHeader() {
   const nav = document.getElementById('main-nav')!;
@@ -59,6 +63,7 @@ export function mountHeader() {
       <a href="${notationPath()}" data-nav="notation">${tr('Notação', 'Notation')}</a>
       <a href="${homePath()}" data-scroll="como-funciona" class="nav-extra">${tr('Como funciona', 'How it works')}</a>
       <button type="button" class="nav-install" data-install hidden title="${tr('Instalar o CuboGuia como app (funciona sem internet)', 'Install CuboGuia as an app (works offline)')}">${icon('download')}<span class="nav-install-txt">${tr('Instalar app', 'Install app')}</span></button>
+      <button type="button" class="theme-btn" data-theme-toggle aria-label="${themeLabel()}" title="${themeLabel()}">${icon('sun', 'when-dark')}${icon('moon', 'when-light')}</button>
       ${langSwitch('nav-lang')}`;
     drawer.innerHTML = `
       <div class="drawer-panel" role="dialog" aria-label="Menu">
@@ -68,6 +73,8 @@ export function mountHeader() {
         <a class="drawer-link" href="${algsPath()}" data-nav="algs">${tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms')}</a>
         <a class="drawer-link" href="${notationPath()}" data-nav="notation">${tr("Notação (o que é R, U', F2…)", "Notation (what R, U', F2… mean)")}</a>
         <a class="drawer-link" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
+        <a class="drawer-link" href="${faqPath()}" data-nav="faq">${tr('Perguntas frequentes', 'FAQ')}</a>
+        <button type="button" class="drawer-link drawer-theme" data-theme-toggle><span class="when-dark">${icon('sun')}${tr('Tema claro', 'Light theme')}</span><span class="when-light">${icon('moon')}${tr('Tema escuro', 'Dark theme')}</span></button>
         <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}${tr('Instalar app (funciona sem internet)', 'Install app (works offline)')}</button>
         <div class="mega-title">Puzzles</div>
         <div class="mega-grid">${available.map(card).join('')}</div>
@@ -92,6 +99,11 @@ export function mountHeader() {
     if (sub) sub.textContent = tr('Aprenda a resolver o cubo mágico, passo a passo.', 'Learn to solve the Rubik’s cube, step by step.');
     const fb = document.querySelector('.footer-feedback');
     if (fb) fb.innerHTML = `${icon('mail')}${feedbackLabel()}`;
+    const faq = document.querySelector<HTMLAnchorElement>('.footer-faq');
+    if (faq) {
+      faq.href = faqPath();
+      faq.innerHTML = `${icon('info')}${tr('Perguntas frequentes', 'FAQ')}`;
+    }
     const credit = document.querySelector('.footer-credit');
     if (credit?.firstChild?.nodeType === Node.TEXT_NODE) credit.firstChild.textContent = tr('\n          Desenvolvido por\n          ', '\n          Made by\n          ');
     refreshInstall();
@@ -132,6 +144,9 @@ export function mountHeader() {
     }
   });
   wireFeedback();
+  document.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-theme-toggle]')) toggleTheme();
+  });
   // a escolha de idioma fica lembrada (para o convite "Prefer English?" não voltar)
   document.addEventListener('click', (e) => {
     const l = (e.target as HTMLElement).closest<HTMLElement>('[data-lang]')?.dataset.lang;
