@@ -8,7 +8,7 @@
  * Arquivos (js, css, imagens) nem passam por aqui: veja public/_routes.json.
  */
 import { PREVIEW_NAMES, challengePreview, readChallenge } from '../src/core/challenge';
-import { metaRoute, pageMeta, structuredData } from '../src/core/meta';
+import { metaPath, metaRoute, pageMeta, structuredData } from '../src/core/meta';
 
 /** o pedaço do HTMLRewriter do Cloudflare que usamos */
 interface RewriterElement {
@@ -48,7 +48,7 @@ export async function pagePreview(ctx: PagesContext): Promise<Response> {
   }
   const content = (value: string) => ({ element: (el: RewriterElement) => el.setAttribute('content', value) });
   const out = new HTMLRewriter()
-    .on('html', { element: (el) => el.setAttribute('lang', route.lang === 'en' ? 'en' : 'pt-BR') })
+    .on('html', { element: (el) => el.setAttribute('lang', { pt: 'pt-BR', en: 'en', es: 'es' }[route.lang]) })
     .on('title', { element: (el) => el.setInnerContent(title) })
     .on('meta[name="description"]', content(description))
     .on('meta[property="og:title"]', content(title))
@@ -56,7 +56,7 @@ export async function pagePreview(ctx: PagesContext): Promise<Response> {
     .on('meta[property="og:url"]', content(ogUrl))
     .on('meta[property="og:image"]', content(image))
     .on('meta[property="og:image:alt"]', content(title))
-    .on('meta[property="og:locale"]', content(route.lang === 'en' ? 'en_US' : 'pt_BR'))
+    .on('meta[property="og:locale"]', content({ pt: 'pt_BR', en: 'en_US', es: 'es_ES' }[route.lang]))
     .on('meta[name="twitter:title"]', content(title))
     .on('meta[name="twitter:description"]', content(description))
     .on('link[rel="canonical"]', { element: (el) => el.setAttribute('href', url.origin + url.pathname) })
@@ -64,6 +64,10 @@ export async function pagePreview(ctx: PagesContext): Promise<Response> {
       element: (el) => {
         const ld = structuredData(route.meta, route.lang, url.origin);
         if (ld) el.append(`<script type="application/ld+json">${ld}</script>`, { html: true });
+        // a mesma página nos outros idiomas (o Google mostra a versão certa para cada pessoa)
+        if (route.meta.page !== 'notfound')
+          for (const [l, hl] of [['pt', 'pt-BR'], ['en', 'en'], ['es', 'es'], ['pt', 'x-default']] as const)
+            el.append(`<link rel="alternate" hreflang="${hl}" href="${url.origin}${metaPath(route.meta, l)}" />`, { html: true });
       },
     })
     .transform(res);

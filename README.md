@@ -141,17 +141,21 @@ do site na inicial e a trilha (Início › Cubo 3x3 › Tutorial) nas outras (`s
 `src/core/meta.ts`). `public/sitemap.xml`, `robots.txt` e `llms.txt` (resumo para ferramentas de
 IA) apontam as páginas.
 
-## Idiomas (português e inglês)
+## Idiomas (português, inglês e espanhol)
 
-- O idioma vem do endereço: `/3x3` é português, `/en/3x3` é inglês (o cronômetro é
-  `/cronometro` e `/en/timer`). O seletor **PT | EN** do menu leva para a mesma página
-  no outro idioma; navegador em inglês na versão em português vê um convite discreto.
-- Os textos ficam junto do código: `tr('Próximo passo', 'Next step')` (`src/core/i18n.ts`).
-  Como o idioma pode mudar sem recarregar, texto nunca vai para constante no carregamento:
-  use getters (`get holdHint() { return tr(...) }`), funções (`STAGES()`) ou `i18nMap`.
+- O idioma vem do endereço: `/3x3` é português, `/en/3x3` inglês e `/es/3x3` espanhol. Os
+  nomes das páginas mudam com o idioma (`/cronometro`, `/en/timer`, `/es/cronometro`;
+  `/notacao`, `/en/notation`, `/es/notacion`…) e ficam em `SEGMENTS` (`src/core/meta.ts`);
+  o nome em qualquer idioma é aceito, então links antigos continuam valendo.
+- O seletor **PT | EN | ES** do menu leva para a mesma página no outro idioma; navegador em
+  espanhol (ou em outro idioma) na versão em português vê um convite discreto.
+- Os textos ficam junto do código: `tr('Próximo passo', 'Next step', 'Siguiente paso')`
+  (`src/core/i18n.ts`); tabelas usam trios `[pt, en, es]`. Como o idioma pode mudar sem
+  recarregar, texto nunca vai para constante no carregamento: use getters, funções ou `i18nMap`.
 - Avisos de validação comuns ficam em `src/core/messages.ts`.
-- `tests/i18n.test.ts` resolve embaralhados de todos os puzzles em todos os métodos em
-  inglês e falha se aparecer qualquer palavra em português — rode ao adicionar textos.
+- `tests/i18n.test.ts` resolve embaralhados de todos os puzzles em todos os métodos em inglês
+  e em espanhol e falha se sobrar texto de outro idioma; `e2e/english.e2e.ts` percorre as
+  telas em `/en` e `/es`.
 
 ## Tutorial: continuar de onde parou
 

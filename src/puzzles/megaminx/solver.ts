@@ -353,18 +353,20 @@ interface Ctx {
 
 function viewText(v?: Macro['view']) {
   if (!v) return '';
-  return tr(`frente ${cname(v.F)} · direita ${cname(v.R)} · cima ${cname(v.U)}`, `front ${cname(v.F)} · right ${cname(v.R)} · top ${cname(v.U)}`);
+  return tr(`frente ${cname(v.F)} · direita ${cname(v.R)} · cima ${cname(v.U)}`, `front ${cname(v.F)} · right ${cname(v.R)} · top ${cname(v.U)}`, `frente ${cname(v.F)} · derecha ${cname(v.R)} · arriba ${cname(v.U)}`);
 }
 
 /** nomes dos algoritmos e gatilhos (guardados em português nos macros; traduzidos ao mostrar) */
-const ALG_WORDS: [string, string][] = [
-  ['Sune + Sune inverso', 'Sune + inverse Sune'],
-  ['Ciclo de cantos', 'Corner cycle'],
-  ['Girar cantos', 'Twist corners'],
-  ['Estrela', 'Star'],
-  ['Gatilho', 'Trigger'],
+const ALG_WORDS: [string, string, string][] = [
+  ['Sune + Sune inverso', 'Sune + inverse Sune', 'Sune + Sune inverso'],
+  ['Ciclo de cantos', 'Corner cycle', 'Ciclo de esquinas'],
+  ['Girar cantos', 'Twist corners', 'Girar esquinas'],
+  ['Estrela', 'Star', 'Estrella'],
+  ['Gatilho', 'Trigger', 'Truco'],
 ];
-const algLabel = (a: string) => tr(a, ALG_WORDS.reduce((s, [pt, en]) => s.split(pt).join(en), a));
+/** troca as palavras do rótulo pelas do idioma (1 = inglês, 2 = espanhol) */
+const wordsIn = (a: string, k: 1 | 2) => ALG_WORDS.reduce((s, w) => s.split(w[0]).join(w[k]), a);
+const algLabel = (a: string) => tr(a, wordsIn(a, 1), wordsIn(a, 2));
 
 /** Junta giros livres e repetições do mesmo algoritmo em partes legíveis. */
 function segmentsOf(path: Macro[]): StepSegment[] {
@@ -375,7 +377,7 @@ function segmentsOf(path: Macro[]): StepSegment[] {
     if (m.kind === 'turn') {
       const moves: string[] = [];
       while (i < path.length && path[i].kind === 'turn') moves.push(...path[i++].moves);
-      segs.push({ label: tr('Posicionar', 'Setup'), moves });
+      segs.push({ label: tr('Posicionar', 'Setup', 'Preparación'), moves });
       continue;
     }
     let n = 1;
@@ -476,7 +478,7 @@ function solvePieces(ctx: Ctx, stageId: string, pieces: number[][], pool: Macro[
       }
     }
     if (!best) throw new Error(`Não encontrei solução (etapa ${stageId}, faltando ${remaining.length}) — confira se as cores foram pintadas corretamente.`);
-    const title = best.piece.length === 3 ? tr(`Canto ${pieceName(best.piece)}`, `${pieceName(best.piece)} corner`) : tr(`Aresta ${pieceName(best.piece)}`, `${pieceName(best.piece)} edge`);
+    const title = best.piece.length === 3 ? tr(`Canto ${pieceName(best.piece)}`, `${pieceName(best.piece)} corner`, `Esquina ${pieceName(best.piece)}`) : tr(`Aresta ${pieceName(best.piece)}`, `${pieceName(best.piece)} edge`, `Arista ${pieceName(best.piece)}`);
     push(ctx, stageId, title, text(best.piece, best.path), best.path, currentStickers(ctx.s, best.piece));
     ctx.keep.push(...best.piece);
     remaining = remaining.filter((p) => p !== best!.piece);
@@ -490,7 +492,7 @@ const algHint = (path: Macro[]) =>
   path.some((m) => m.kind === 'alg' && m.view)
     ? tr(
         ' Nos algoritmos, as letras são relativas: segure com as faces indicadas em “frente”, “direita” e “cima” — os movimentos absolutos estão logo abaixo.',
-        ' In the algorithms the letters are relative: hold it with the faces shown as “front”, “right” and “top” — the absolute moves are right below.',
+        ' In the algorithms the letters are relative: hold it with the faces shown as “front”, “right” and “top” — the absolute moves are right below.', ' En los algoritmos las letras son relativas: sujétalo con las caras indicadas como “frente”, “derecha” y “arriba”; los movimientos absolutos están justo debajo.',
       )
     : '';
 
@@ -499,21 +501,21 @@ function solveF2L(ctx: Ctx) {
   solvePieces(ctx, 'star', edgesD, F2L_POOL(), (p, path) =>
     tr(
       `Leve a aresta <b>${pieceName(p)}</b> para a face branca, com o branco para baixo e a outra cor combinando com o centro vizinho.`,
-      `Bring the <b>${pieceName(p)}</b> edge to the white face, with white facing down and the other color matching the neighboring center.`,
+      `Bring the <b>${pieceName(p)}</b> edge to the white face, with white facing down and the other color matching the neighboring center.`, `Lleva la arista <b>${pieceName(p)}</b> a la cara blanca, con el blanco hacia abajo y el otro color coincidiendo con el centro vecino.`,
     ) + algHint(path),
   );
   const cornersD = geo.corners.filter((c) => touches(c, D));
   solvePieces(ctx, 'dcorners', cornersD, F2L_POOL(), (p, path) =>
     tr(
       `Encaixe o canto <b>${pieceName(p)}</b> na face branca. Deixe-o acima do lugar dele e repita o gatilho até ele entrar com o branco para baixo.`,
-      `Insert the <b>${pieceName(p)}</b> corner into the white face. Put it above its slot and repeat the trigger until it goes in with white facing down.`,
+      `Insert the <b>${pieceName(p)}</b> corner into the white face. Put it above its slot and repeat the trigger until it goes in with white facing down.`, `Coloca la esquina <b>${pieceName(p)}</b> en la cara blanca. Ponla encima de su hueco y repite el truco hasta que entre con el blanco hacia abajo.`,
     ) + algHint(path),
   );
   const edges2 = geo.edges.filter((e) => has(e, LOWER));
   solvePieces(ctx, 'layer2', edges2, F2L_POOL(), (p, path) =>
     tr(
       `Encaixe a aresta <b>${pieceName(p)}</b> entre as duas faces de baixo dessas cores, como na segunda camada do 3x3.`,
-      `Insert the <b>${pieceName(p)}</b> edge between the two lower faces of those colors, like the second layer of a 3x3.`,
+      `Insert the <b>${pieceName(p)}</b> edge between the two lower faces of those colors, like the second layer of a 3x3.`, `Coloca la arista <b>${pieceName(p)}</b> entre las dos caras de abajo de esos colores, como la segunda capa de un 3x3.`,
     ) + algHint(path),
   );
   const lowerCount = (p: number[]) => p.map(faceOf).filter((f) => LOWER.includes(f)).length;
@@ -524,8 +526,8 @@ function solveF2L(ctx: Ctx) {
   for (const layer3 of [e3, c3])
   solvePieces(ctx, 'layer3', layer3, F2L_POOL(), (p, path) =>
     (p.length === 3
-      ? tr(`Encaixe o canto <b>${pieceName(p)}</b> na terceira camada (entre duas faces de baixo e uma de cima).`, `Insert the <b>${pieceName(p)}</b> corner into the third layer (between two lower faces and one upper face).`)
-      : tr(`Encaixe a aresta <b>${pieceName(p)}</b> na terceira camada (entre uma face de baixo e uma de cima).`, `Insert the <b>${pieceName(p)}</b> edge into the third layer (between a lower face and an upper face).`)) + algHint(path),
+      ? tr(`Encaixe o canto <b>${pieceName(p)}</b> na terceira camada (entre duas faces de baixo e uma de cima).`, `Insert the <b>${pieceName(p)}</b> corner into the third layer (between two lower faces and one upper face).`, `Coloca la esquina <b>${pieceName(p)}</b> en la tercera capa (entre dos caras de abajo y una de arriba).`)
+      : tr(`Encaixe a aresta <b>${pieceName(p)}</b> na terceira camada (entre uma face de baixo e uma de cima).`, `Insert the <b>${pieceName(p)}</b> edge into the third layer (between a lower face and an upper face).`, `Coloca la arista <b>${pieceName(p)}</b> en la tercera capa (entre una cara de abajo y una de arriba).`)) + algHint(path),
   );
   const layer4 = [
     ...geo.corners.filter((c) => lowerCount(c) === 1 && upperCount(c) === 2),
@@ -533,8 +535,8 @@ function solveF2L(ctx: Ctx) {
   ];
   solvePieces(ctx, 'layer4', layer4, F2L_POOL(), (p, path) =>
     (p.length === 3
-      ? tr(`Encaixe o canto <b>${pieceName(p)}</b> na quarta camada (entre uma face de baixo e duas de cima).`, `Insert the <b>${pieceName(p)}</b> corner into the fourth layer (between one lower face and two upper faces).`)
-      : tr(`Encaixe a aresta <b>${pieceName(p)}</b> entre as duas faces de cima dessas cores.`, `Insert the <b>${pieceName(p)}</b> edge between the two upper faces of those colors.`)) + algHint(path),
+      ? tr(`Encaixe o canto <b>${pieceName(p)}</b> na quarta camada (entre uma face de baixo e duas de cima).`, `Insert the <b>${pieceName(p)}</b> corner into the fourth layer (between one lower face and two upper faces).`, `Coloca la esquina <b>${pieceName(p)}</b> en la cuarta capa (entre una cara de abajo y dos de arriba).`)
+      : tr(`Encaixe a aresta <b>${pieceName(p)}</b> entre as duas faces de cima dessas cores.`, `Insert the <b>${pieceName(p)}</b> edge between the two upper faces of those colors.`, `Coloca la arista <b>${pieceName(p)}</b> entre las dos caras de arriba de esos colores.`)) + algHint(path),
   );
 }
 
@@ -553,7 +555,7 @@ function solveLastLayer(ctx: Ctx) {
     intro +
     tr(
       ' Gire a face cinza (U) quando indicado e aplique os algoritmos com as faces de “frente/direita/cima” mostradas em cada parte.',
-      ' Turn the gray face (U) when shown and apply the algorithms with the “front/right/top” faces given in each part.',
+      ' Turn the gray face (U) when shown and apply the algorithms with the “front/right/top” faces given in each part.', ' Gira la cara gris (U) cuando se indique y aplica los algoritmos con las caras “frente/derecha/arriba” de cada parte.',
     );
 
   // 6. estrela cinza: arestas com o cinza para cima
@@ -569,8 +571,8 @@ function solveLastLayer(ctx: Ctx) {
   push(
     ctx,
     'ustar',
-    tr('Estrela cinza', 'Gray star'),
-    describeSeq(eo, tr('Deixe as 5 arestas da última face com o cinza virado para cima, formando uma estrela.', 'Get the 5 last-face edges with gray facing up, forming a star.')),
+    tr('Estrela cinza', 'Gray star', 'Estrella gris'),
+    describeSeq(eo, tr('Deixe as 5 arestas da última face com o cinza virado para cima, formando uma estrela.', 'Get the 5 last-face edges with gray facing up, forming a star.', 'Deja las 5 aristas de la última cara con el gris hacia arriba, formando una estrella.')),
     eo,
     llFocus(),
   );
@@ -581,8 +583,8 @@ function solveLastLayer(ctx: Ctx) {
   push(
     ctx,
     'uedges',
-    tr('Posicionar as arestas cinzas', 'Place the gray edges'),
-    describeSeq(ep, tr('Agora coloque cada aresta cinza ao lado do centro da sua outra cor.', 'Now put each gray edge next to the center of its other color.')),
+    tr('Posicionar as arestas cinzas', 'Place the gray edges', 'Coloca las aristas grises'),
+    describeSeq(ep, tr('Agora coloque cada aresta cinza ao lado do centro da sua outra cor.', 'Now put each gray edge next to the center of its other color.', 'Ahora pon cada arista gris junto al centro de su otro color.')),
     ep,
     llFocus(),
   );
@@ -597,8 +599,8 @@ function solveLastLayer(ctx: Ctx) {
   push(
     ctx,
     'ucorners',
-    tr('Posicionar os cantos cinzas', 'Place the gray corners'),
-    describeSeq(cp, tr('Leve cada canto cinza para o lugar dele (entre as cores certas), mesmo que ainda girado.', 'Bring each gray corner to its spot (between the right colors), even if it’s still twisted.')),
+    tr('Posicionar os cantos cinzas', 'Place the gray corners', 'Coloca las esquinas grises'),
+    describeSeq(cp, tr('Leve cada canto cinza para o lugar dele (entre as cores certas), mesmo que ainda girado.', 'Bring each gray corner to its spot (between the right colors), even if it’s still twisted.', 'Lleva cada esquina gris a su sitio (entre los colores correctos), aunque todavía esté girada.')),
     cp,
     llFocus(),
   );
@@ -607,22 +609,22 @@ function solveLastLayer(ctx: Ctx) {
   push(
     ctx,
     'ucorners',
-    tr('Girar os cantos cinzas', 'Twist the gray corners'),
-    describeSeq(co, tr('Por fim, gire os cantos para o cinza ficar para cima. Os giros sempre aparecem em pares.', 'Finally, twist the corners so gray faces up. The twists always come in pairs.')),
+    tr('Girar os cantos cinzas', 'Twist the gray corners', 'Gira las esquinas grises'),
+    describeSeq(co, tr('Por fim, gire os cantos para o cinza ficar para cima. Os giros sempre aparecem em pares.', 'Finally, twist the corners so gray faces up. The twists always come in pairs.', 'Por último, gira las esquinas para que el gris quede hacia arriba. Los giros siempre van de dos en dos.')),
     co,
     llFocus(),
   );
 }
 
 export const MEGA_STAGES = (): SolutionStage[] => [
-  { id: 'star', name: tr('Estrela branca', 'White star'), goal: tr('Montar uma estrela com as 5 arestas brancas na face de baixo.', 'Build a star with the 5 white edges on the bottom face.') },
-  { id: 'dcorners', name: tr('Face branca', 'White face'), goal: tr('Completar a face branca com os 5 cantos.', 'Finish the white face with the 5 corners.') },
-  { id: 'layer2', name: tr('2ª camada', '2nd layer'), goal: tr('Encaixar as 5 arestas entre as faces de baixo.', 'Insert the 5 edges between the lower faces.') },
-  { id: 'layer3', name: tr('3ª camada', '3rd layer'), goal: tr('Encaixar os 5 cantos e as 10 arestas entre o anel de baixo e o de cima.', 'Insert the 5 corners and the 10 edges between the lower ring and the upper one.') },
-  { id: 'layer4', name: tr('4ª camada', '4th layer'), goal: tr('Encaixar os 5 cantos e as 5 arestas entre as faces de cima.', 'Insert the 5 corners and the 5 edges between the upper faces.') },
-  { id: 'ustar', name: tr('Estrela cinza', 'Gray star'), goal: tr('Orientar as arestas da última face.', 'Orient the last face’s edges.') },
-  { id: 'uedges', name: tr('Arestas cinzas', 'Gray edges'), goal: tr('Colocar as arestas da última face no lugar.', 'Put the last face’s edges in place.') },
-  { id: 'ucorners', name: tr('Cantos cinzas', 'Gray corners'), goal: tr('Colocar e girar os cantos da última face.', 'Place and twist the last face’s corners.') },
+  { id: 'star', name: tr('Estrela branca', 'White star', 'Estrella blanca'), goal: tr('Montar uma estrela com as 5 arestas brancas na face de baixo.', 'Build a star with the 5 white edges on the bottom face.', 'Haz una estrella con las 5 aristas blancas en la cara de abajo.') },
+  { id: 'dcorners', name: tr('Face branca', 'White face', 'Cara blanca'), goal: tr('Completar a face branca com os 5 cantos.', 'Finish the white face with the 5 corners.', 'Termina la cara blanca con las 5 esquinas.') },
+  { id: 'layer2', name: tr('2ª camada', '2nd layer', '2.ª capa'), goal: tr('Encaixar as 5 arestas entre as faces de baixo.', 'Insert the 5 edges between the lower faces.', 'Coloca las 5 aristas entre las caras de abajo.') },
+  { id: 'layer3', name: tr('3ª camada', '3rd layer', '3.ª capa'), goal: tr('Encaixar os 5 cantos e as 10 arestas entre o anel de baixo e o de cima.', 'Insert the 5 corners and the 10 edges between the lower ring and the upper one.', 'Coloca las 5 esquinas y las 10 aristas entre el anillo de abajo y el de arriba.') },
+  { id: 'layer4', name: tr('4ª camada', '4th layer', '4.ª capa'), goal: tr('Encaixar os 5 cantos e as 5 arestas entre as faces de cima.', 'Insert the 5 corners and the 5 edges between the upper faces.', 'Coloca las 5 esquinas y las 5 aristas entre las caras de arriba.') },
+  { id: 'ustar', name: tr('Estrela cinza', 'Gray star', 'Estrella gris'), goal: tr('Orientar as arestas da última face.', 'Orient the last face’s edges.', 'Orienta las aristas de la última cara.') },
+  { id: 'uedges', name: tr('Arestas cinzas', 'Gray edges', 'Aristas grises'), goal: tr('Colocar as arestas da última face no lugar.', 'Put the last face’s edges in place.', 'Pon las aristas de la última cara en su lugar.') },
+  { id: 'ucorners', name: tr('Cantos cinzas', 'Gray corners', 'Esquinas grises'), goal: tr('Colocar e girar os cantos da última face.', 'Place and twist the last face’s corners.', 'Coloca y gira las esquinas de la última cara.') },
 ];
 
 export function solveMegaminx(state: PuzzleState): Solution {
@@ -630,7 +632,7 @@ export function solveMegaminx(state: PuzzleState): Solution {
   solveF2L(ctx);
   solveLastLayer(ctx);
   if (!allSolved(ctx.s, ALL)) throw new Error('O solucionador não terminou o megaminx.');
-  return { method: tr('Método de iniciante (camadas)', 'Beginner method (layers)'), stages: MEGA_STAGES(), steps: ctx.steps };
+  return { method: tr('Método de iniciante (camadas)', 'Beginner method (layers)', 'Método para principiantes (capas)'), stages: MEGA_STAGES(), steps: ctx.steps };
 }
 
 
@@ -729,11 +731,11 @@ const pairsOf = (rem: number[][], ok: (a: number[], b: number[]) => boolean) => 
 const groupName = (g: number[][]) =>
   g.length === 1
     ? g[0].length === 3
-      ? tr(`Canto ${pieceName(g[0])}`, `${pieceName(g[0])} corner`)
-      : tr(`Aresta ${pieceName(g[0])}`, `${pieceName(g[0])} edge`)
+      ? tr(`Canto ${pieceName(g[0])}`, `${pieceName(g[0])} corner`, `Esquina ${pieceName(g[0])}`)
+      : tr(`Aresta ${pieceName(g[0])}`, `${pieceName(g[0])} edge`, `Arista ${pieceName(g[0])}`)
     : tr(
         `Par ${pieceName(g.find((p) => p.length === 3) ?? g[0])} + ${pieceName(g.find((p) => p.length === 2 && p !== g[0]) ?? g[1])}`,
-        `${pieceName(g.find((p) => p.length === 3) ?? g[0])} + ${pieceName(g.find((p) => p.length === 2 && p !== g[0]) ?? g[1])} pair`,
+        `${pieceName(g.find((p) => p.length === 3) ?? g[0])} + ${pieceName(g.find((p) => p.length === 2 && p !== g[0]) ?? g[1])} pair`, `Par ${pieceName(g.find((p) => p.length === 3) ?? g[0])} + ${pieceName(g.find((p) => p.length === 2 && p !== g[0]) ?? g[1])}`,
       );
 
 function solveAdvancedF2L(ctx: Ctx) {
@@ -746,14 +748,14 @@ function solveAdvancedF2L(ctx: Ctx) {
     pool: () => [],
     tryPairs: 10,
     maxCost: 16,
-    title: (g) => (g.length === 2 ? tr(`Arestas ${pieceName(g[0])} e ${pieceName(g[1])}`, `${pieceName(g[0])} and ${pieceName(g[1])} edges`) : groupName(g)),
+    title: (g) => (g.length === 2 ? tr(`Arestas ${pieceName(g[0])} e ${pieceName(g[1])}`, `${pieceName(g[0])} and ${pieceName(g[1])} edges`, `Aristas ${pieceName(g[0])} y ${pieceName(g[1])}`) : groupName(g)),
     text: (g, path) =>
       (g.length === 2
         ? tr(
             `Planeje as duas arestas juntas: <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> descem para a face branca na mesma sequência.`,
-            `Plan both edges together: <b>${pieceName(g[0])}</b> and <b>${pieceName(g[1])}</b> go down to the white face in the same sequence.`,
+            `Plan both edges together: <b>${pieceName(g[0])}</b> and <b>${pieceName(g[1])}</b> go down to the white face in the same sequence.`, `Planea las dos aristas juntas: <b>${pieceName(g[0])}</b> y <b>${pieceName(g[1])}</b> bajan a la cara blanca en la misma secuencia.`,
           )
-        : tr(`Leve a aresta <b>${pieceName(g[0])}</b> para a face branca.`, `Bring the <b>${pieceName(g[0])}</b> edge to the white face.`)) + algHint(path),
+        : tr(`Leve a aresta <b>${pieceName(g[0])}</b> para a face branca.`, `Bring the <b>${pieceName(g[0])}</b> edge to the white face.`, `Lleva la arista <b>${pieceName(g[0])}</b> a la cara blanca.`)) + algHint(path),
   });
 
   // 2. F2L: canto branco + aresta da 2ª camada que fica em cima dele
@@ -769,9 +771,9 @@ function solveAdvancedF2L(ctx: Ctx) {
       (g.length === 2
         ? tr(
             `Junte o canto <b>${pieceName(g.find((p) => p.length === 3)!)}</b> com a aresta <b>${pieceName(g.find((p) => p.length === 2)!)}</b> e encaixe os dois de uma vez, como um par do F2L no 3x3.`,
-            `Pair up the <b>${pieceName(g.find((p) => p.length === 3)!)}</b> corner with the <b>${pieceName(g.find((p) => p.length === 2)!)}</b> edge and insert both at once, like an F2L pair on a 3x3.`,
+            `Pair up the <b>${pieceName(g.find((p) => p.length === 3)!)}</b> corner with the <b>${pieceName(g.find((p) => p.length === 2)!)}</b> edge and insert both at once, like an F2L pair on a 3x3.`, `Junta la esquina <b>${pieceName(g.find((p) => p.length === 3)!)}</b> con la arista <b>${pieceName(g.find((p) => p.length === 2)!)}</b> y coloca las dos de una vez, como un par de F2L en el 3x3.`,
           )
-        : tr(`Encaixe a peça <b>${pieceName(g[0])}</b> sozinha.`, `Insert the <b>${pieceName(g[0])}</b> piece on its own.`)) + algHint(path),
+        : tr(`Encaixe a peça <b>${pieceName(g[0])}</b> sozinha.`, `Insert the <b>${pieceName(g[0])}</b> piece on its own.`, `Coloca la pieza <b>${pieceName(g[0])}</b> sola.`)) + algHint(path),
   });
 
   const snapshot = { s: ctx.s, steps: ctx.steps.length, keep: ctx.keep.length };
@@ -800,8 +802,8 @@ function s2lSafe(ctx: Ctx, lowerCount: Counter, upperCount: Counter) {
     title: (g) => (g.length === 2 && g.every((p) => p.length === 2) ? `Arestas ${pieceName(g[0])} e ${pieceName(g[1])}` : groupName(g)),
     text: (g, path) =>
       (g.length === 2
-        ? tr(`Encaixe <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> na mesma sequência.`, `Insert <b>${pieceName(g[0])}</b> and <b>${pieceName(g[1])}</b> in the same sequence.`)
-        : tr(`Encaixe a peça <b>${pieceName(g[0])}</b> nas camadas do meio.`, `Insert the <b>${pieceName(g[0])}</b> piece into the middle layers.`)) + algHint(path),
+        ? tr(`Encaixe <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> na mesma sequência.`, `Insert <b>${pieceName(g[0])}</b> and <b>${pieceName(g[1])}</b> in the same sequence.`, `Coloca <b>${pieceName(g[0])}</b> y <b>${pieceName(g[1])}</b> en la misma secuencia.`)
+        : tr(`Encaixe a peça <b>${pieceName(g[0])}</b> nas camadas do meio.`, `Insert the <b>${pieceName(g[0])}</b> piece into the middle layers.`, `Coloca la pieza <b>${pieceName(g[0])}</b> en las capas del medio.`)) + algHint(path),
   });
   solveGroups(ctx, 's2l', e3, opts(edgePairs));
   solveGroups(ctx, 's2l', c3, opts(() => []));
@@ -827,14 +829,14 @@ function s2lBlocks(ctx: Ctx, lowerCount: Counter, upperCount: Counter) {
       pool: () => TRIGGERS(),
       tryPairs: 2,
       maxCost: 24,
-      title: (g) => (g.length === 2 && g.every((p) => p.length === 2) ? tr(`Arestas ${pieceName(g[0])} e ${pieceName(g[1])}`, `${pieceName(g[0])} and ${pieceName(g[1])} edges`) : groupName(g)),
+      title: (g) => (g.length === 2 && g.every((p) => p.length === 2) ? tr(`Arestas ${pieceName(g[0])} e ${pieceName(g[1])}`, `${pieceName(g[0])} and ${pieceName(g[1])} edges`, `Aristas ${pieceName(g[0])} y ${pieceName(g[1])}`) : groupName(g)),
       text: (g, path) =>
         (g.length === 2
           ? tr(
               `Encaixe <b>${pieceName(g[0])}</b> e <b>${pieceName(g[1])}</b> juntos no bloco abaixo da face <b>${cname(faceOf(g[0].find((i) => UPPER.includes(faceOf(i))) ?? g[0][0]))}</b>.`,
-              `Insert <b>${pieceName(g[0])}</b> and <b>${pieceName(g[1])}</b> together into the block below the <b>${cname(faceOf(g[0].find((i) => UPPER.includes(faceOf(i))) ?? g[0][0]))}</b> face.`,
+              `Insert <b>${pieceName(g[0])}</b> and <b>${pieceName(g[1])}</b> together into the block below the <b>${cname(faceOf(g[0].find((i) => UPPER.includes(faceOf(i))) ?? g[0][0]))}</b> face.`, `Coloca <b>${pieceName(g[0])}</b> y <b>${pieceName(g[1])}</b> juntas en el bloque bajo la cara <b>${cname(faceOf(g[0].find((i) => UPPER.includes(faceOf(i))) ?? g[0][0]))}</b>.`,
             )
-          : tr(`Complete o bloco com a peça <b>${pieceName(g[0])}</b>.`, `Finish the block with the <b>${pieceName(g[0])}</b> piece.`)) + algHint(path),
+          : tr(`Complete o bloco com a peça <b>${pieceName(g[0])}</b>.`, `Finish the block with the <b>${pieceName(g[0])}</b> piece.`, `Termina el bloque con la pieza <b>${pieceName(g[0])}</b>.`)) + algHint(path),
     });
   }
   s2lUpper(ctx, lowerCount, upperCount);
@@ -852,9 +854,9 @@ function s2lUpper(ctx: Ctx, lowerCount: Counter, upperCount: Counter) {
       (g.length === 2
         ? tr(
             `Junte o canto <b>${pieceName(g.find((p) => p.length === 3)!)}</b> com a aresta <b>${pieceName(g.find((p) => p.length === 2)!)}</b> e encaixe o par logo abaixo da face cinza.`,
-            `Pair up the <b>${pieceName(g.find((p) => p.length === 3)!)}</b> corner with the <b>${pieceName(g.find((p) => p.length === 2)!)}</b> edge and insert the pair right below the gray face.`,
+            `Pair up the <b>${pieceName(g.find((p) => p.length === 3)!)}</b> corner with the <b>${pieceName(g.find((p) => p.length === 2)!)}</b> edge and insert the pair right below the gray face.`, `Junta la esquina <b>${pieceName(g.find((p) => p.length === 3)!)}</b> con la arista <b>${pieceName(g.find((p) => p.length === 2)!)}</b> y coloca el par justo debajo de la cara gris.`,
           )
-        : tr(`Encaixe a peça <b>${pieceName(g[0])}</b> logo abaixo da face cinza.`, `Insert the <b>${pieceName(g[0])}</b> piece right below the gray face.`)) + algHint(path),
+        : tr(`Encaixe a peça <b>${pieceName(g[0])}</b> logo abaixo da face cinza.`, `Insert the <b>${pieceName(g[0])}</b> piece right below the gray face.`, `Coloca la pieza <b>${pieceName(g[0])}</b> justo debajo de la cara gris.`)) + algHint(path),
   });
 }
 
@@ -874,10 +876,10 @@ function solveAdvancedLastLayer(ctx: Ctx) {
   push(
     ctx,
     'lledges',
-    tr('Última face: arestas', 'Last face: edges'),
+    tr('Última face: arestas', 'Last face: edges', 'Última cara: aristas'),
     tr(
       'Num olhar só, as 5 arestas cinzas ficam com o cinza para cima e no lugar certo (orientação e posição juntas). Aplique os algoritmos com as faces de “frente/direita/cima” indicadas.',
-      'In a single look, the 5 gray edges end up with gray facing up and in the right place (orientation and position together). Apply the algorithms with the “front/right/top” faces shown.',
+      'In a single look, the 5 gray edges end up with gray facing up and in the right place (orientation and position together). Apply the algorithms with the “front/right/top” faces shown.', 'En un solo paso, las 5 aristas grises quedan con el gris hacia arriba y en su lugar (orientación y posición juntas). Aplica los algoritmos con las caras “frente/derecha/arriba” indicadas.',
     ),
     ed,
     focus,
@@ -889,10 +891,10 @@ function solveAdvancedLastLayer(ctx: Ctx) {
   push(
     ctx,
     'llcorners',
-    tr('Última face: cantos', 'Last face: corners'),
+    tr('Última face: cantos', 'Last face: corners', 'Última cara: esquinas'),
     tr(
       'No segundo olhar, os 5 cantos cinzas vão para o lugar e já ficam com o cinza para cima. Os algoritmos trocam e giram cantos sem mexer nas arestas.',
-      'In the second look, the 5 gray corners go to their places already with gray facing up. The algorithms swap and twist corners without touching the edges.',
+      'In the second look, the 5 gray corners go to their places already with gray facing up. The algorithms swap and twist corners without touching the edges.', 'En el segundo paso, las 5 esquinas grises van a su sitio ya con el gris hacia arriba. Los algoritmos intercambian y giran esquinas sin tocar las aristas.',
     ),
     co,
     focus,
@@ -900,11 +902,11 @@ function solveAdvancedLastLayer(ctx: Ctx) {
 }
 
 export const MEGA_ADV_STAGES = (): SolutionStage[] => [
-  { id: 'star', name: tr('Estrela', 'Star'), goal: tr('Montar a estrela branca planejando duas arestas de cada vez.', 'Build the white star planning two edges at a time.') },
-  { id: 'f2l', name: 'F2L', goal: tr('Completar a face branca e a 2ª camada encaixando canto + aresta juntos (5 pares).', 'Finish the white face and the 2nd layer by inserting corner + edge together (5 pairs).') },
-  { id: 's2l', name: 'S2L', goal: tr('Completar as camadas do meio (3ª e 4ª) também em pares canto + aresta.', 'Finish the middle layers (3rd and 4th) also as corner + edge pairs.') },
-  { id: 'lledges', name: tr('Arestas da última face', 'Last face edges'), goal: tr('Orientar e posicionar as 5 arestas cinzas de uma vez.', 'Orient and place the 5 gray edges at once.') },
-  { id: 'llcorners', name: tr('Cantos da última face', 'Last face corners'), goal: tr('Posicionar e girar os 5 cantos cinzas de uma vez.', 'Place and twist the 5 gray corners at once.') },
+  { id: 'star', name: tr('Estrela', 'Star', 'Estrella'), goal: tr('Montar a estrela branca planejando duas arestas de cada vez.', 'Build the white star planning two edges at a time.', 'Arma la estrella blanca planeando dos aristas a la vez.') },
+  { id: 'f2l', name: 'F2L', goal: tr('Completar a face branca e a 2ª camada encaixando canto + aresta juntos (5 pares).', 'Finish the white face and the 2nd layer by inserting corner + edge together (5 pairs).', 'Termina la cara blanca y la 2.ª capa colocando esquina + arista juntas (5 pares).') },
+  { id: 's2l', name: 'S2L', goal: tr('Completar as camadas do meio (3ª e 4ª) também em pares canto + aresta.', 'Finish the middle layers (3rd and 4th) also as corner + edge pairs.', 'Termina las capas del medio (3.ª y 4.ª) también en pares esquina + arista.') },
+  { id: 'lledges', name: tr('Arestas da última face', 'Last face edges', 'Aristas de la última cara'), goal: tr('Orientar e posicionar as 5 arestas cinzas de uma vez.', 'Orient and place the 5 gray edges at once.', 'Orienta y coloca las 5 aristas grises de una vez.') },
+  { id: 'llcorners', name: tr('Cantos da última face', 'Last face corners', 'Esquinas de la última cara'), goal: tr('Posicionar e girar os 5 cantos cinzas de uma vez.', 'Place and twist the 5 gray corners at once.', 'Coloca y gira las 5 esquinas grises de una vez.') },
 ];
 
 export function solveMegaminxAdvanced(state: PuzzleState): Solution {
@@ -913,7 +915,7 @@ export function solveMegaminxAdvanced(state: PuzzleState): Solution {
   solveAdvancedLastLayer(ctx);
   if (!allSolved(ctx.s, ALL)) throw new Error('O solucionador não terminou o megaminx.');
   return {
-    method: tr('Avançado (F2L e S2L em pares, última face em 2 olhares)', 'Advanced (F2L and S2L in pairs, 2-look last face)'),
+    method: tr('Avançado (F2L e S2L em pares, última face em 2 olhares)', 'Advanced (F2L and S2L in pairs, 2-look last face)', 'Avanzado (F2L y S2L en pares, última cara en 2 pasos)'),
     stages: MEGA_ADV_STAGES(),
     steps: ctx.steps,
   };

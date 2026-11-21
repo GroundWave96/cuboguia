@@ -159,7 +159,7 @@ describe('Pyraminx: última camada', () => {
         const area = (b[0] - a[0]) * (d[1] - a[1]) - (b[1] - a[1]) * (d[0] - a[0]);
         dir = area > 0 ? 'horário' : 'anti-horário';
       }
-      const name = (c.name as [string, string])[0];
+      const name = (c.name as [string, string, string])[0];
       expect(name.includes('Ciclo'), `${c.id}: ciclo`).toBe(cycle);
       expect(name.includes('virad') ? 2 : 0, `${c.id}: viradas`).toBe(flips);
       if (cycle) expect(name, `${c.id}: sentido ${dir}`).toContain(`(${dir})`);

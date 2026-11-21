@@ -472,13 +472,13 @@ interface Ctx {
   steps: SolutionStep[];
 }
 
-const SEG_LABELS: Record<string, [string, string]> = {
-  Posicionar: ['Posicionar', 'Setup'],
-  'Ciclo de 3 centros': ['Ciclo de 3 centros', '3-center cycle'],
-  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle'],
-  'Paridade das arestas': ['Paridade das arestas', 'Edge parity'],
-  'Paridade OLL': ['Paridade OLL', 'OLL parity'],
-  'Paridade PLL': ['Paridade PLL', 'PLL parity'],
+const SEG_LABELS: Record<string, [string, string, string]> = {
+  Posicionar: ['Posicionar', 'Setup', 'Preparar'],
+  'Ciclo de 3 centros': ['Ciclo de 3 centros', '3-center cycle', 'Ciclo de 3 centros'],
+  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle', 'Ciclo de 3 piezas'],
+  'Paridade das arestas': ['Paridade das arestas', 'Edge parity', 'Paridad de aristas'],
+  'Paridade OLL': ['Paridade OLL', 'OLL parity', 'Paridad de OLL'],
+  'Paridade PLL': ['Paridade PLL', 'PLL parity', 'Paridad de PLL'],
 };
 const segLabel = (l: string) => (SEG_LABELS[l] ? tr(...SEG_LABELS[l]) : l);
 
@@ -554,21 +554,21 @@ function solveCenters(ctx: Ctx) {
       push(
         ctx,
         stage,
-        tr(`Centro ${cname(f)}: ${ready} de ${total}`, `${cap(cname(f))} center: ${ready} of ${total}`),
+        tr(`Centro ${cname(f)}: ${ready} de ${total}`, `${cap(cname(f))} center: ${ready} of ${total}`, `Centro ${cname(f)}: ${ready} de ${total}`),
         order === 0
           ? cube.odd
-            ? tr(`Leve adesivos ${cname(f)} para o centro ${cname(f)}, em volta do adesivo fixo do meio.`, `Bring ${cname(f)} stickers to the ${cname(f)} center, around the fixed middle sticker.`)
+            ? tr(`Leve adesivos ${cname(f)} para o centro ${cname(f)}, em volta do adesivo fixo do meio.`, `Bring ${cname(f)} stickers to the ${cname(f)} center, around the fixed middle sticker.`, `Lleva pegatinas de color ${cname(f)} al centro ${cname(f)}, alrededor de la pegatina fija del medio.`)
             : tr(
                 `Junte os adesivos ${cname(f)} no centro da face de baixo. Neste cubo nenhum centro é fixo: a cor de cada face é decidida aqui.`,
-                `Gather the ${cname(f)} stickers in the center of the bottom face. On this cube no center is fixed: this is where each face’s color is decided.`,
+                `Gather the ${cname(f)} stickers in the center of the bottom face. On this cube no center is fixed: this is where each face’s color is decided.`, `Junta las pegatinas de color ${cname(f)} en el centro de la cara de abajo. En este cubo ningún centro es fijo: aquí se decide el color de cada cara.`,
               )
           : order === 1
-            ? tr(`Monte o centro ${cname(f)} sem desmanchar o centro branco.`, `Build the ${cname(f)} center without breaking the white center.`)
+            ? tr(`Monte o centro ${cname(f)} sem desmanchar o centro branco.`, `Build the ${cname(f)} center without breaking the white center.`, `Arma el centro ${cname(f)} sin romper el centro blanco.`)
             : order < 5
-              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`)
+              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`, `Arma el centro ${cname(f)} sin romper los centros que ya están hechos.`)
               : tr(
                   `Os dois últimos centros (${cname(5)} e ${cname(4)}) se montam juntos, trocando peças entre eles.`,
-                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`,
+                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`, `Los dos últimos centros (${cname(5)} y ${cname(4)}) se arman juntos, intercambiando piezas entre ellos.`,
                 ),
         path,
         [...cube.FACE_CENTERS[f], ...(cube.odd ? [cube.FIXED_CENTERS[f]] : [])],
@@ -588,7 +588,7 @@ const pairAt = (ctx: Ctx, pos: number) => {
 };
 const pairName = (cols: number[]) => [...cols].sort((x, y) => 'UDFBRL'.indexOf(FACES[x]) - 'UDFBRL'.indexOf(FACES[y])).map(cname).join('-');
 
-function cycleStep(ctx: Ctx, c: Cycle3, title: string, gainText: [string, string], beforeText: [string, string]) {
+function cycleStep(ctx: Ctx, c: Cycle3, title: string, gainText: [string, string, string], beforeText: [string, string, string]) {
   const { cube } = ctx;
   const m = cube.makeMacro(c.moves, 'alg', 'Ciclo de 3 pontas')!;
   push(
@@ -597,7 +597,7 @@ function cycleStep(ctx: Ctx, c: Cycle3, title: string, gainText: [string, string
     title,
     tr(
       `${gainText[0]} Só essas 3 pontas se mexem — os centros e o resto saem do lugar no meio do algoritmo e voltam no fim. ${beforeText[0]}`,
-      `${gainText[1]} Only these 3 wings move — the centers and everything else leave their spots during the algorithm and come back at the end. ${beforeText[1]}`,
+      `${gainText[1]} Only these 3 wings move — the centers and everything else leave their spots during the algorithm and come back at the end. ${beforeText[1]}`, `${gainText[2]} Solo se mueven estas 3 piezas; los centros y todo lo demás salen de su sitio durante el algoritmo y vuelven al final. ${beforeText[2]}`,
     ),
     [m],
     c.p.flatMap((x) => [x, cube.partner(x)]),
@@ -654,12 +654,12 @@ function pairInner(ctx: Ctx, orbit: number) {
     cycleStep(
       ctx,
       best,
-      bestGain > 1 ? tr(`Pontas de dentro ${names.join(' e ')}`, `${names.join(' and ')} inner wings`) : tr(`Pontas de dentro ${names[0]}`, `${names[0]} inner wings`),
+      bestGain > 1 ? tr(`Pontas de dentro ${names.join(' e ')}`, `${names.join(' and ')} inner wings`, `Piezas internas ${names.join(' y ')}`) : tr(`Pontas de dentro ${names[0]}`, `${names[0]} inner wings`, `Piezas internas ${names[0]}`),
       [
         `Um ciclo de 3 pontas junta ${bestGain > 1 ? 'as duas pontas de dentro de cada uma dessas arestas' : 'as duas pontas de dentro dessa aresta'} no mesmo lugar (como no 4x4).`,
-        `A 3-wing cycle brings ${bestGain > 1 ? 'the two inner wings of each of these edges' : 'the two inner wings of this edge'} together (like on a 4x4).`,
+        `A 3-wing cycle brings ${bestGain > 1 ? 'the two inner wings of each of these edges' : 'the two inner wings of this edge'} together (like on a 4x4).`, `Un ciclo de 3 piezas junta ${bestGain > 1 ? 'las dos piezas internas de cada una de estas aristas' : 'las dos piezas internas de esta arista'} en el mismo lugar (como en el 4x4).`,
       ],
-      [`(${pairedBefore} de 12 pares de dentro prontos antes deste passo.)`, `(${pairedBefore} of 12 inner pairs done before this step.)`],
+      [`(${pairedBefore} de 12 pares de dentro prontos antes deste passo.)`, `(${pairedBefore} of 12 inner pairs done before this step.)`, `(${pairedBefore} de 12 pares internos hechos antes de este paso.)`],
     );
   }
 }
@@ -710,10 +710,10 @@ function placeWings(ctx: Ctx, orbits: number[]) {
       push(
         ctx,
         'edges',
-        tr('Paridade das arestas', 'Edge parity'),
+        tr('Paridade das arestas', 'Edge parity', 'Paridad de aristas'),
         tr(
           `Sobraram duas pontas trocadas — isso acontece nos cubos grandes e não tem como resolver só com ciclos de 3 peças. Este algoritmo troca as duas pontas da ${cube.WING_LAYER[orbit]}ª camada de uma aresta; os centros se mexem no meio e voltam no fim.`,
-          `Two wings are left swapped — this happens on big cubes and can’t be fixed with 3-piece cycles alone. This algorithm swaps the two layer-${cube.WING_LAYER[orbit]} wings of one edge; the centers move along the way and come back at the end.`,
+          `Two wings are left swapped — this happens on big cubes and can’t be fixed with 3-piece cycles alone. This algorithm swaps the two layer-${cube.WING_LAYER[orbit]} wings of one edge; the centers move along the way and come back at the end.`, `Quedaron dos piezas de arista intercambiadas: pasa en los cubos grandes y no se arregla solo con ciclos de 3 piezas. Este algoritmo intercambia las dos piezas de la capa ${cube.WING_LAYER[orbit]} de una arista; los centros se mueven por el camino y vuelven al final.`,
         ),
         [m],
         [a, cube.partner(a), b, cube.partner(b), ...open[two].flatMap((x) => [x.at, cube.partner(x.at)])],
@@ -746,17 +746,17 @@ function placeWings(ctx: Ctx, orbits: number[]) {
     cycleStep(
       ctx,
       c,
-      bestGain > 1 ? tr(`Pontas ${names.join(' e ')}`, `${names.join(' and ')} wings`) : tr(`Ponta ${names[0]}`, `${names[0]} wing`),
+      bestGain > 1 ? tr(`Pontas ${names.join(' e ')}`, `${names.join(' and ')} wings`, `Mitades ${names.join(' y ')}`) : tr(`Ponta ${names[0]}`, `${names[0]} wing`, `Mitad ${names[0]}`),
       cube.odd
         ? [
             `Um ciclo de 3 pontas: ${bestGain > 1 ? 'duas pontas vão' : 'uma ponta vai'} para o lado do meio da ${bestGain > 1 ? 'aresta delas' : 'aresta dela'}.`,
-            `A 3-wing cycle: ${bestGain > 1 ? 'two wings go' : 'one wing goes'} next to the middle of ${bestGain > 1 ? 'their edge' : 'its edge'}.`,
+            `A 3-wing cycle: ${bestGain > 1 ? 'two wings go' : 'one wing goes'} next to the middle of ${bestGain > 1 ? 'their edge' : 'its edge'}.`, `Un ciclo de 3 piezas: ${bestGain > 1 ? 'dos piezas van' : 'una pieza va'} junto al medio de su arista.`,
           ]
         : [
             `Um ciclo de 3 pontas: ${bestGain > 1 ? 'duas pontas de fora vão' : 'uma ponta de fora vai'} para o lado do par de dentro da ${bestGain > 1 ? 'aresta delas' : 'aresta dela'}.`,
-            `A 3-wing cycle: ${bestGain > 1 ? 'two outer wings go' : 'one outer wing goes'} next to the inner pair of ${bestGain > 1 ? 'their edge' : 'its edge'}.`,
+            `A 3-wing cycle: ${bestGain > 1 ? 'two outer wings go' : 'one outer wing goes'} next to the inner pair of ${bestGain > 1 ? 'their edge' : 'its edge'}.`, `Un ciclo de 3 piezas: ${bestGain > 1 ? 'dos piezas externas van' : 'una pieza externa va'} junto al par interno de su arista.`,
           ],
-      [`(${before} de 12 arestas completas antes deste passo.)`, `(${before} of 12 edges complete before this step.)`],
+      [`(${before} de 12 arestas completas antes deste passo.)`, `(${before} of 12 edges complete before this step.)`, `(${before} de 12 aristas completas antes de este paso.)`],
     );
   }
 }
@@ -825,10 +825,10 @@ function fixParities(ctx: Ctx) {
     push(
       ctx,
       'parity',
-      tr('Paridade OLL: uma aresta virada', 'OLL parity: one flipped edge'),
+      tr('Paridade OLL: uma aresta virada', 'OLL parity: one flipped edge', 'Paridad de OLL: una arista volteada'),
       tr(
         'Sobrou uma aresta "virada sozinha" — isso nunca acontece num 3x3, só nos cubos pares. Este algoritmo vira a <b>aresta da frente de cima</b>; as fatias de dentro giram juntas (como se fossem uma só) e os centros voltam no fim. Depois o resto se resolve como um 3x3.',
-        'One edge is "flipped on its own" — that never happens on a 3x3, only on even cubes. This algorithm flips the <b>top front edge</b>; the inner slices turn together (as if they were one) and the centers come back at the end. After that, the rest is solved like a 3x3.',
+        'One edge is "flipped on its own" — that never happens on a 3x3, only on even cubes. This algorithm flips the <b>top front edge</b>; the inner slices turn together (as if they were one) and the centers come back at the end. After that, the rest is solved like a 3x3.', 'Una arista quedó "volteada sola": eso nunca pasa en un 3x3, solo en los cubos pares. Este algoritmo voltea la <b>arista de arriba al frente</b>; las capas internas giran juntas (como si fueran una) y los centros vuelven al final. Después, el resto se resuelve como un 3x3.',
       ),
       [cube.makeMacro(ollParityAlg(cube.n).split(' '), 'alg', 'Paridade OLL')!],
       [...uf],
@@ -839,10 +839,10 @@ function fixParities(ctx: Ctx) {
     push(
       ctx,
       'parity',
-      tr('Paridade PLL: duas arestas trocadas', 'PLL parity: two swapped edges'),
+      tr('Paridade PLL: duas arestas trocadas', 'PLL parity: two swapped edges', 'Paridad de PLL: dos aristas intercambiadas'),
       tr(
         'Duas arestas estão trocadas de um jeito que um 3x3 não consegue resolver — outra coisa que só acontece nos cubos pares. Este algoritmo troca a <b>aresta da frente de cima</b> com a <b>de trás de cima</b>; as fatias de dentro giram juntas e o resto volta ao lugar.',
-        'Two edges are swapped in a way a 3x3 can’t solve — another thing that only happens on even cubes. This algorithm swaps the <b>top front edge</b> with the <b>top back edge</b>; the inner slices turn together and everything else goes back in place.',
+        'Two edges are swapped in a way a 3x3 can’t solve — another thing that only happens on even cubes. This algorithm swaps the <b>top front edge</b> with the <b>top back edge</b>; the inner slices turn together and everything else goes back in place.', 'Dos aristas están intercambiadas de una forma que un 3x3 no resuelve; otra cosa que solo pasa en los cubos pares. Este algoritmo intercambia la <b>arista de arriba al frente</b> con la <b>arista de arriba atrás</b>; las capas internas giran juntas y todo lo demás vuelve a su lugar.',
       ),
       [cube.makeMacro(pllParityAlg(cube.n).split(' '), 'alg', 'Paridade PLL')!],
       [...uf, ...cube.SLOTS[3].cells],
@@ -855,21 +855,21 @@ export const bigStages = (n: number): SolutionStage[] => {
   const cube = getBigCube(n);
   const per = cube.FACE_CENTERS[0].length + (cube.odd ? 1 : 0);
   return [
-    { id: 'c-white', name: tr('Centro branco', 'White center'), goal: tr(`Montar os ${per} adesivos do centro da face branca.`, `Build the ${per} stickers of the white face’s center.`) },
-    { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center'), goal: tr('Montar o centro amarelo, do lado oposto ao branco.', 'Build the yellow center, opposite the white one.') },
-    { id: 'c-sides', name: tr('Centros laterais', 'Side centers'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.') },
+    { id: 'c-white', name: tr('Centro branco', 'White center', 'Centro blanco'), goal: tr(`Montar os ${per} adesivos do centro da face branca.`, `Build the ${per} stickers of the white face’s center.`, `Arma las ${per} pegatinas del centro de la cara blanca.`) },
+    { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center', 'Centro amarillo'), goal: tr('Montar o centro amarelo, do lado oposto ao branco.', 'Build the yellow center, opposite the white one.', 'Arma el centro amarillo, opuesto al blanco.') },
+    { id: 'c-sides', name: tr('Centros laterais', 'Side centers', 'Centros de los lados'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.', 'Arma los 4 centros de los lados sin romper los que ya están hechos.') },
     {
       id: 'edges',
-      name: tr('Arestas', 'Edges'),
-      goal: tr(`Juntar as ${n - 2} peças de cada aresta, formando 12 arestas inteiras.`, `Bring the ${n - 2} pieces of each edge together, forming 12 complete edges.`),
+      name: tr('Arestas', 'Edges', 'Aristas'),
+      goal: tr(`Juntar as ${n - 2} peças de cada aresta, formando 12 arestas inteiras.`, `Bring the ${n - 2} pieces of each edge together, forming 12 complete edges.`, `Junta las ${n - 2} piezas de cada arista, formando 12 aristas completas.`),
     },
     ...(cube.odd
       ? []
       : [
           {
             id: 'parity',
-            name: tr('Paridades', 'Parities'),
-            goal: tr('Corrigir as situações que só existem nos cubos pares: uma aresta virada sozinha ou duas arestas trocadas.', 'Fix the cases that only exist on even cubes: one edge flipped on its own or two swapped edges.'),
+            name: tr('Paridades', 'Parities', 'Paridades'),
+            goal: tr('Corrigir as situações que só existem nos cubos pares: uma aresta virada sozinha ou duas arestas trocadas.', 'Fix the cases that only exist on even cubes: one edge flipped on its own or two swapped edges.', 'Corrige los casos que solo existen en los cubos pares: una arista volteada sola o dos aristas intercambiadas.'),
           },
         ]),
   ];
@@ -887,8 +887,8 @@ export function solveBig(n: number, state: PuzzleState, method: 'beginner' | 'cf
   const sol3 = method === 'cfop' ? solveCFOP(s3) : solveBeginner(s3);
   const toBig = (m: string) => (/^[rludfb]/.test(m) ? `${n - 1}${m[0].toUpperCase()}w${m.slice(1)}` : m);
   return {
-    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)'),
-    stages: [...bigStages(n), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`) }))],
+    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP', 'Reducción + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)', 'Reducción (principiante)'),
+    stages: [...bigStages(n), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`, `Como un 3x3: ${sg.name}`) }))],
     steps: [
       ...ctx.steps,
       ...sol3.steps.map((st) => ({
@@ -933,7 +933,7 @@ export function validateBig(n: number, state: PuzzleState): ValidationResult {
         errors.push(
           tr(
             `Nos centros, a cor ${name(f)} aparece ${k} ${k === 1 ? 'vez' : 'vezes'} entre as peças de um mesmo tipo (mesma distância das bordas) — cada cor tem 4 peças de cada tipo. Confira os adesivos do miolo das faces.`,
-            `In the centers, the color ${name(f)} appears ${k} ${k === 1 ? 'time' : 'times'} among pieces of the same kind (same distance from the edges) — each color has 4 pieces of each kind. Check the stickers in the middle of the faces.`,
+            `In the centers, the color ${name(f)} appears ${k} ${k === 1 ? 'time' : 'times'} among pieces of the same kind (same distance from the edges) — each color has 4 pieces of each kind. Check the stickers in the middle of the faces.`, `En los centros, el color ${name(f)} aparece ${k} ${k === 1 ? 'vez' : 'veces'} entre las piezas del mismo tipo (a la misma distancia de los bordes); cada color tiene 4 piezas de cada tipo. Revisa las pegatinas del medio de las caras.`,
           ),
         );
     }
@@ -951,7 +951,7 @@ export function validateBig(n: number, state: PuzzleState): ValidationResult {
           home.has(state[cube.partner(p)] + state[p])
             ? tr(
                 `Existe uma ponta de aresta ${text} virada ao contrário — essas peças não viram no lugar; confira as cores dela.`,
-                `There’s a ${text} edge wing flipped the wrong way — these pieces can’t flip in place; check its colors.`,
+                `There’s a ${text} edge wing flipped the wrong way — these pieces can’t flip in place; check its colors.`, `Hay una pieza de arista ${text} volteada al revés; estas piezas no se voltean en su sitio: revisa sus colores.`,
               )
             : msg.noEdge(text),
         );
@@ -964,7 +964,7 @@ export function validateBig(n: number, state: PuzzleState): ValidationResult {
         errors.push(
           tr(
             `A ponta de aresta ${name(w[0])}-${name(w[1])} aparece ${k} vezes — provavelmente duas cores estão trocadas.`,
-            `The ${name(w[0])}-${name(w[1])} edge wing appears ${k} times — two colors are probably swapped.`,
+            `The ${name(w[0])}-${name(w[1])} edge wing appears ${k} times — two colors are probably swapped.`, `La pieza de arista ${name(w[0])}-${name(w[1])} aparece ${k} veces; probablemente hay dos colores intercambiados.`,
           ),
         );
   });
@@ -976,7 +976,7 @@ export function validateBig(n: number, state: PuzzleState): ValidationResult {
     const flipped = msg.flippedEdge();
     const flippedBig = tr(
       'Uma aresta (adesivo do meio) está invertida — confira as cores das arestas (peças de 2 cores).',
-      'An edge (middle sticker) is flipped — check the edge colors (the 2-color pieces).',
+      'An edge (middle sticker) is flipped — check the edge colors (the 2-color pieces).', 'Una arista (pegatina del medio) está volteada: revisa los colores de las aristas (las piezas de 2 colores).',
     );
     return { ok: r3.ok, errors: r3.errors.map((e) => (e === flipped ? flippedBig : e)) };
   }

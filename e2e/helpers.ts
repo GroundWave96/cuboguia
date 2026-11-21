@@ -48,21 +48,22 @@ export const PT =
   /[ãõçáéíóúâêôàÃÕÇÁÉÍÓÚÂÊÔ]|\b(não|com|para|uma|dos|das|nas|nos|pelo|pela|cima|baixo|frente|trás|direita|esquerda|canto|cantos|aresta|arestas|centro|centros|passo|passos|giro|cor|cores|embaixo|horário|camada|ponta|pontas|faça|segure|gire|até|então|também|só|mesmo|vez|vezes|já|ainda|peça|peças|movimento|movimentos|lado|outra|outro|deixe|leve|monte|resolver|início|cronômetro|embaralho|tempos|melhor|média|apagar|desafiar|câmera|pintar|limpar|resolvido|continuar|recorde)\b/i;
 
 /** todo texto visível (e title/aria-label/placeholder) da página que ainda está em português */
-export async function portugueseLeft(page: Page, where: string): Promise<string[]> {
+export async function portugueseLeft(page: Page, where: string, re: RegExp = PT): Promise<string[]> {
   const texts: string[] = await page.evaluate(() => {
     const out = [document.title, (document.querySelector('meta[name=description]') as HTMLMetaElement).content];
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
       const el = walker.currentNode.parentElement;
-      if (!el || el.closest('script,style,[lang="pt-BR"],[hidden],.footer-credit a')) continue;
+      // o seletor de idioma e o convite de idioma mostram os outros idiomas de propósito
+      if (!el || el.closest('script,style,[lang="pt-BR"],[lang="en"]:not(html),[lang="es"]:not(html),[hidden],.footer-credit a')) continue;
       const t = walker.currentNode.textContent!.trim();
       if (t) out.push(t);
     }
     document.querySelectorAll('[title],[aria-label],[placeholder]').forEach((el) => {
-      if (el.closest('[lang="pt-BR"]')) return;
+      if (el.closest('[lang="pt-BR"],[lang="en"]:not(html),[lang="es"]:not(html)')) return;
       for (const a of ['title', 'aria-label', 'placeholder']) if (el.getAttribute(a)) out.push(el.getAttribute(a)!);
     });
     return out;
   });
-  return texts.filter((t) => PT.test(t)).map((t) => `${where}: «${t.match(PT)![0]}» em "${t.slice(0, 100)}"`);
+  return texts.filter((t) => re.test(t)).map((t) => `${where}: «${t.match(re)![0]}» em "${t.slice(0, 100)}"`);
 }

@@ -142,19 +142,19 @@ export function buildMegaScan(colors: ColorInfo[]): ScanFace[] {
     const prev = order[order.indexOf(fk) - 1];
     const hint = () =>
       fk === 'F'
-        ? tr(`Cinza em cima, <b>${name('F')}</b> de frente`, `Gray on top, <b>${name('F')}</b> in front`)
+        ? tr(`Cinza em cima, <b>${name('F')}</b> de frente`, `Gray on top, <b>${name('F')}</b> in front`, `Gris arriba, <b>${name('F')}</b> al frente`)
         : isUpper || (isLower && prev && !['L'].includes(prev))
-          ? tr('Gire o megaminx um passo para a esquerda', 'Turn the Megaminx one step to the left')
+          ? tr('Gire o megaminx um passo para a esquerda', 'Turn the Megaminx one step to the left', 'Gira el Megaminx un paso hacia la izquierda')
           : fk === 'DR'
-            ? tr(`Volte o ${name('F')} para a frente e incline para baixo: face <b>${name('DR')}</b>`, `Bring ${name('F')} back to the front and tilt it down: <b>${name('DR')}</b> face`)
+            ? tr(`Volte o ${name('F')} para a frente e incline para baixo: face <b>${name('DR')}</b>`, `Bring ${name('F')} back to the front and tilt it down: <b>${name('DR')}</b> face`, `Vuelve a poner el ${name('F')} al frente e inclínalo hacia abajo: cara <b>${name('DR')}</b>`)
             : fk === 'U'
-              ? tr(`Cinza para a câmera, ${name('F')} embaixo`, `Gray toward the camera, ${name('F')} at the bottom`)
-              : tr(`Branco para a câmera, ${name('F')} em cima`, `White toward the camera, ${name('F')} on top`);
+              ? tr(`Cinza para a câmera, ${name('F')} embaixo`, `Gray toward the camera, ${name('F')} at the bottom`, `Gris hacia la cámara, ${name('F')} abajo`)
+              : tr(`Branco para a câmera, ${name('F')} em cima`, `White toward the camera, ${name('F')} on top`, `Blanco hacia la cámara, ${name('F')} arriba`);
     return {
       face: fk,
       grid: [Array.from({ length: 11 }, (_, s) => f * 11 + s)],
       get title() {
-        return tr(`Face ${name(fk)}`, `${name(fk)[0].toUpperCase()}${name(fk).slice(1)} face`);
+        return tr(`Face ${name(fk)}`, `${name(fk)[0].toUpperCase()}${name(fk).slice(1)} face`, `Cara ${name(fk)}`);
       },
       faceColor: fk,
       get hint() {
@@ -163,12 +163,12 @@ export function buildMegaScan(colors: ColorInfo[]): ScanFace[] {
       get upLabel() {
         const up = (k: string) => name(k).toUpperCase();
         return fk === 'U'
-          ? tr(`${up('F')} EMBAIXO`, `${up('F')} AT THE BOTTOM`)
+          ? tr(`${up('F')} EMBAIXO`, `${up('F')} AT THE BOTTOM`, `${up('F')} ABAJO`)
           : fk === 'D'
-            ? tr(`${up('F')} PARA CIMA`, `${up('F')} UP`)
+            ? tr(`${up('F')} PARA CIMA`, `${up('F')} UP`, `${up('F')} ARRIBA`)
             : isUpper
-              ? tr(`${up('U')} EM CIMA`, `${up('U')} ON TOP`)
-              : tr(`${up('D')} EMBAIXO`, `${up('D')} AT THE BOTTOM`);
+              ? tr(`${up('U')} EM CIMA`, `${up('U')} ON TOP`, `${up('U')} ARRIBA`)
+              : tr(`${up('D')} EMBAIXO`, `${up('D')} AT THE BOTTOM`, `${up('D')} ABAJO`);
       },
       upColor: fk === 'U' || fk === 'D' ? 'F' : isUpper ? 'U' : 'D',
       arrow: fk === 'U' || isLower ? '▼' : '▲',

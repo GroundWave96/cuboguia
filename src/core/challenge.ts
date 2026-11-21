@@ -77,7 +77,7 @@ function previewTime(ms: number): string {
  * Título e descrição da prévia do link de desafio (WhatsApp, Telegram, redes sociais).
  * Esses aplicativos não rodam o JavaScript da página: o servidor coloca o texto no HTML.
  */
-export function challengePreview(c: Challenge, lang: 'pt' | 'en'): { title: string; description: string } {
+export function challengePreview(c: Challenge, lang: 'pt' | 'en' | 'es'): { title: string; description: string } {
   const pz = PREVIEW_NAMES[c.puzzle] ?? c.puzzle;
   const t = c.ms === null ? null : previewTime(c.ms);
   let scr = c.scramble.join(' ');
@@ -91,6 +91,16 @@ export function challengePreview(c: Challenge, lang: 'pt' | 'en'): { title: stri
         ? `${pz} challenge: ${t} — can you beat it?`
         : `${pz} challenge — can you finish it?`;
     return { title, description: `Same scramble: ${scr}. Open the link, scramble yours the same way and race the clock on CuboGuia.` };
+  }
+  if (lang === 'es') {
+    const title = c.name
+      ? t
+        ? `${c.name} te retó: ${t} en el ${pz}`
+        : `${c.name} te retó en el ${pz}`
+      : t
+        ? `Reto en el ${pz}: ${t}, ¿puedes superarlo?`
+        : `Reto en el ${pz}, ¿puedes terminarlo?`;
+    return { title, description: `Misma mezcla: ${scr}. Abre el enlace, mezcla el tuyo igual e intenta superar el tiempo en CuboGuia.` };
   }
   const title = c.name
     ? t

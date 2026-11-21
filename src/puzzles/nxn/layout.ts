@@ -3,12 +3,12 @@ import type { ColorInfo, NetFace, ScanFace } from '../../core/types';
 import { FACE_FRAME, FACE_ORDER, type FaceId, type NxNGeometry, type Vec3 } from './geometry';
 
 const FACE_LABEL = i18nMap({
-  U: ['Cima', 'Up'],
-  D: ['Baixo', 'Down'],
-  F: ['Frente', 'Front'],
-  B: ['Trás', 'Back'],
-  R: ['Direita', 'Right'],
-  L: ['Esquerda', 'Left'],
+  U: ['Cima', 'Up', 'Arriba'],
+  D: ['Baixo', 'Down', 'Abajo'],
+  F: ['Frente', 'Front', 'Frente'],
+  B: ['Trás', 'Back', 'Atrás'],
+  R: ['Direita', 'Right', 'Derecha'],
+  L: ['Esquerda', 'Left', 'Izquierda'],
 }) as Record<FaceId, string>;
 
 function faceGrid(n: number, face: FaceId): number[][] {
@@ -42,15 +42,15 @@ export function faceNeighbors(face: FaceId) {
   return { up: faceByNormal(neg(d)), down: faceByNormal(d), left: faceByNormal(neg(r)), right: faceByNormal(r) };
 }
 
-const POSITION_NAME = i18nMap({ F: ['Frente', 'Front'], R: ['Direita', 'Right'], B: ['Trás', 'Back'], L: ['Esquerda', 'Left'], U: ['Topo', 'Top'], D: ['Base', 'Bottom'] }) as Record<FaceId, string>;
-const POSITION_SHORT = i18nMap({ F: ['Fr', 'Fr'], R: ['Dir', 'R'], B: ['Trás', 'Back'], L: ['Esq', 'L'], U: ['Topo', 'Top'], D: ['Base', 'Bot'] }) as Record<FaceId, string>;
+const POSITION_NAME = i18nMap({ F: ['Frente', 'Front', 'Frente'], R: ['Direita', 'Right', 'Derecha'], B: ['Trás', 'Back', 'Atrás'], L: ['Esquerda', 'Left', 'Izquierda'], U: ['Topo', 'Top', 'Arriba'], D: ['Base', 'Bottom', 'Abajo'] }) as Record<FaceId, string>;
+const POSITION_SHORT = i18nMap({ F: ['Fr', 'Fr', 'Fr'], R: ['Dir', 'R', 'Der'], B: ['Trás', 'Back', 'Atrás'], L: ['Esq', 'L', 'Izq'], U: ['Topo', 'Top', 'Arriba'], D: ['Base', 'Bot', 'Ab'] }) as Record<FaceId, string>;
 const EVEN_UP_LABEL = i18nMap({
-  F: ['TOPO DO CUBO', 'TOP OF THE CUBE'],
-  R: ['TOPO DO CUBO', 'TOP OF THE CUBE'],
-  B: ['TOPO DO CUBO', 'TOP OF THE CUBE'],
-  L: ['TOPO DO CUBO', 'TOP OF THE CUBE'],
-  U: ['LADO DE TRÁS', 'BACK SIDE'],
-  D: ['LADO DA FRENTE', 'FRONT SIDE'],
+  F: ['TOPO DO CUBO', 'TOP OF THE CUBE', 'ARRIBA DEL CUBO'],
+  R: ['TOPO DO CUBO', 'TOP OF THE CUBE', 'ARRIBA DEL CUBO'],
+  B: ['TOPO DO CUBO', 'TOP OF THE CUBE', 'ARRIBA DEL CUBO'],
+  L: ['TOPO DO CUBO', 'TOP OF THE CUBE', 'ARRIBA DEL CUBO'],
+  U: ['LADO DE TRÁS', 'BACK SIDE', 'LADO DE ATRÁS'],
+  D: ['LADO DA FRENTE', 'FRONT SIDE', 'LADO DEL FRENTE'],
 }) as Record<FaceId, string>;
 
 export interface ScanOptions {
@@ -92,14 +92,14 @@ export function buildScan(geo: NxNGeometry, colors: ColorInfo[], opts: ScanOptio
         face,
         grid,
         get title() {
-          return tr(`Face ${color(face).name}`, `${cap(color(face).name)} face`);
+          return tr(`Face ${color(face).name}`, `${cap(color(face).name)} face`, `Cara ${color(face).name}`);
         },
         faceColor: face,
         get hint() {
-          return `<i class="dot" style="background:${up.hex}"></i>${tr(`${up.name} em cima`, `${up.name} on top`)}`;
+          return `<i class="dot" style="background:${up.hex}"></i>${tr(`${up.name} em cima`, `${up.name} on top`, `${up.name} arriba`)}`;
         },
         get upLabel() {
-          return tr(`${up.name.toUpperCase()} EM CIMA`, `${up.name.toUpperCase()} ON TOP`);
+          return tr(`${up.name.toUpperCase()} EM CIMA`, `${up.name.toUpperCase()} ON TOP`, `${up.name.toUpperCase()} ARRIBA`);
         },
         upColor: nb.up,
         neighbors: nb,
@@ -132,10 +132,10 @@ const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 /** dicas da câmera para cubos sem centro fixo (2x2, 4x4): começa por qualquer face */
 export const ANY_FACE_HINTS = i18nMap({
-  F: ['Comece por <b>qualquer face</b>', 'Start with <b>any face</b>'],
-  R: ['Gire o cubo ¼ de volta para a esquerda', 'Turn the cube ¼ to the left'],
-  B: ['Mais ¼ para a esquerda', 'Another ¼ to the left'],
-  L: ['Mais ¼ para a esquerda', 'Another ¼ to the left'],
-  U: ['Volte à primeira face e incline: topo para a câmera', 'Back to the first face, then tilt: top toward the camera'],
-  D: ['Agora a base para a câmera', 'Now the bottom toward the camera'],
+  F: ['Comece por <b>qualquer face</b>', 'Start with <b>any face</b>', 'Empieza por <b>cualquier cara</b>'],
+  R: ['Gire o cubo ¼ de volta para a esquerda', 'Turn the cube ¼ to the left', 'Gira el cubo ¼ hacia la izquierda'],
+  B: ['Mais ¼ para a esquerda', 'Another ¼ to the left', 'Otro ¼ hacia la izquierda'],
+  L: ['Mais ¼ para a esquerda', 'Another ¼ to the left', 'Otro ¼ hacia la izquierda'],
+  U: ['Volte à primeira face e incline: topo para a câmera', 'Back to the first face, then tilt: top toward the camera', 'Vuelve a la primera cara e inclínalo: la parte de arriba hacia la cámara'],
+  D: ['Agora a base para a câmera', 'Now the bottom toward the camera', 'Ahora la parte de abajo hacia la cámara'],
 }) as Partial<Record<FaceId, string>>;

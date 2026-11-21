@@ -10,14 +10,14 @@ import { icon } from './icons';
 
 /** luz do ambiente nas amostras de treino (mesmos nomes das fotos marcadas à mão) */
 const LIGHTS = () => [
-  ['claro', tr('Clara', 'Bright')],
-  ['medio', tr('Média', 'Medium')],
-  ['escuro', tr('Escura', 'Dark')],
+  ['claro', tr('Clara', 'Bright', 'Clara')],
+  ['medio', tr('Média', 'Medium', 'Media')],
+  ['escuro', tr('Escura', 'Dark', 'Oscura')],
 ];
 
 export async function renderInput(app: HTMLElement, puzzleId: string, params = new URLSearchParams()) {
   const def = getPuzzle(puzzleId);
-  if (!def?.available) throw new Error(tr('Este puzzle ainda não está disponível.', 'This puzzle isn’t available yet.'));
+  if (!def?.available) throw new Error(tr('Este puzzle ainda não está disponível.', 'This puzzle isn’t available yet.', 'Este puzzle todavía no está disponible.'));
   const impl: PuzzleImpl = await loadPuzzle(puzzleId);
 
   const blank = (): PuzzleState => {
@@ -44,20 +44,20 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
   app.innerHTML = `
   <section class="page workspace">
     <div class="ws-header">
-      <a class="back" href="${homePath()}">← ${tr('Início', 'Home')}</a>
-      <h1>${tr(`Como está o seu ${def.name}?`, `What does your ${def.name} look like?`)}</h1>
-      <p>${impl.holdHint}${impl.fixedStickers.length ? tr(' As peças de referência já vêm pintadas — elas nunca mudam de lugar.', ' The reference pieces come already painted — they never move.') : ''}</p>
+      <a class="back" href="${homePath()}">← ${tr('Início', 'Home', 'Inicio')}</a>
+      <h1>${tr(`Como está o seu ${def.name}?`, `What does your ${def.name} look like?`, `¿Cómo está tu ${def.name}?`)}</h1>
+      <p>${impl.holdHint}${impl.fixedStickers.length ? tr(' As peças de referência já vêm pintadas — elas nunca mudam de lugar.', ' The reference pieces come already painted — they never move.', ' Las piezas de referencia ya vienen pintadas: nunca cambian de lugar.') : ''}</p>
     </div>
     <div class="ws-grid">
       <div class="ws-view card">
         <div class="view-host" id="view-host"></div>
-        <div class="view-hint">${matchMedia('(pointer: coarse)').matches ? tr('Arraste para girar · toque num adesivo para pintar', 'Drag to rotate · tap a sticker to paint') : tr('Arraste para girar · clique num adesivo para pintar', 'Drag to rotate · click a sticker to paint')}</div>
-        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view')}">${icon('resetView')}</button>
+        <div class="view-hint">${matchMedia('(pointer: coarse)').matches ? tr('Arraste para girar · toque num adesivo para pintar', 'Drag to rotate · tap a sticker to paint', 'Arrastra para girar · toca una pegatina para pintar') : tr('Arraste para girar · clique num adesivo para pintar', 'Drag to rotate · click a sticker to paint', 'Arrastra para girar · haz clic en una pegatina para pintar')}</div>
+        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view', 'Volver a la vista inicial')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view', 'Volver a la vista inicial')}">${icon('resetView')}</button>
       </div>
       <div class="ws-panel card">
         <div class="tabs" role="tablist">
-          <button role="tab" data-tab="paint">${icon('palette')}${tr('Pintar', 'Paint')}</button>
-          <button role="tab" data-tab="camera">${icon('camera')}${tr('Câmera', 'Camera')}</button>
+          <button role="tab" data-tab="paint">${icon('palette')}${tr('Pintar', 'Paint', 'Pintar')}</button>
+          <button role="tab" data-tab="camera">${icon('camera')}${tr('Câmera', 'Camera', 'Cámara')}</button>
         </div>
         <div class="tab-body"></div>
       </div>
@@ -73,7 +73,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
 
   const paint = (i: number) => {
     if (impl.fixedStickers.includes(i)) {
-      toast(tr('Esta peça é a referência: ela define a cor de cada face e já vem pintada.', 'This piece is the reference: it defines the color of each face and comes already painted.'));
+      toast(tr('Esta peça é a referência: ela define a cor de cada face e já vem pintada.', 'This piece is the reference: it defines the color of each face and comes already painted.', 'Esta pieza es la referencia: define el color de cada cara y ya viene pintada.'));
       return;
     }
     const scan = peekSession(puzzleId);
@@ -103,7 +103,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
   function renderPaint() {
     const net = impl.net;
     const netHtml = impl.netSvg
-      ? `<svg class="net-svg" viewBox="${impl.netSvg.viewBox}" role="group" aria-label="${tr('Planificação', 'Flat layout')}">
+      ? `<svg class="net-svg" viewBox="${impl.netSvg.viewBox}" role="group" aria-label="${tr('Planificação', 'Flat layout', 'Plano')}">
           ${impl.netSvg.stickers
             .map((s) => `<polygon class="st ${impl.fixedStickers.includes(s.index) ? 'fixed' : ''}" data-i="${s.index}" points="${s.points}"/>`)
             .join('')}
@@ -124,23 +124,23 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
         })();
     body.innerHTML = `
       <div class="scan-card-host"></div>
-      <div class="palette" role="radiogroup" aria-label="${tr('Cor do pincel', 'Brush color')}">
+      <div class="palette" role="radiogroup" aria-label="${tr('Cor do pincel', 'Brush color', 'Color del pincel')}">
         ${impl.colors
           .map(
-            (c, i) => `<button class="swatch" role="radio" data-color="${c.key}" title="${c.name} (${tr('tecla', 'key')} ${i + 1})">
+            (c, i) => `<button class="swatch" role="radio" data-color="${c.key}" title="${c.name} (${tr('tecla', 'key', 'tecla')} ${i + 1})">
               <i style="background:${c.hex}"></i><span>${c.name}</span><small data-count="${c.key}"></small></button>`,
           )
           .join('')}
       </div>
       ${netHtml}
       <div class="row-actions">
-        <button class="btn ghost sm" data-act="clear">${tr('Limpar', 'Clear')}</button>
-        <button class="btn ghost sm" data-act="solved">${tr('Resolvido', 'Solved')}</button>
-        <button class="btn ghost sm" data-act="random">${tr('Exemplo embaralhado', 'Scrambled example')}</button>
+        <button class="btn ghost sm" data-act="clear">${tr('Limpar', 'Clear', 'Borrar')}</button>
+        <button class="btn ghost sm" data-act="solved">${tr('Resolvido', 'Solved', 'Resuelto')}</button>
+        <button class="btn ghost sm" data-act="random">${tr('Exemplo embaralhado', 'Scrambled example', 'Ejemplo mezclado')}</button>
       </div>
       <div class="errors" aria-live="polite"></div>
       <fieldset class="methods" ${impl.methods.length < 2 ? 'hidden' : ''}>
-        <legend>${tr('Como você quer aprender?', 'How do you want to learn?')}</legend>
+        <legend>${tr('Como você quer aprender?', 'How do you want to learn?', '¿Cómo quieres aprender?')}</legend>
         ${impl.methods
           .map(
             (m) => `<label class="method ${m.id === method ? 'sel' : ''}">
@@ -152,7 +152,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
           )
           .join('')}
       </fieldset>
-      <button class="btn primary big full" data-act="solve">${tr('Ver a solução', 'See the solution')} →</button>`;
+      <button class="btn primary big full" data-act="solve">${tr('Ver a solução', 'See the solution', 'Ver la solución')} →</button>`;
 
     body.querySelectorAll<HTMLButtonElement>('.swatch').forEach((b) =>
       b.addEventListener('click', () => {
@@ -223,20 +223,20 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
     if (!host.firstElementChild) {
       host.innerHTML = `
         <div class="scan-card">
-          <div class="scan-card-head">${icon('camera')}<div><b>${tr('Leitura da câmera', 'Camera reading')}</b><small>${tr('Alguma face errada? Toque nela para escanear só ela de novo.', 'A face came out wrong? Tap it to scan just that face again.')}</small></div></div>
+          <div class="scan-card-head">${icon('camera')}<div><b>${tr('Leitura da câmera', 'Camera reading', 'Lectura de la cámara')}</b><small>${tr('Alguma face errada? Toque nela para escanear só ela de novo.', 'A face came out wrong? Tap it to scan just that face again.', '¿Alguna cara salió mal? Tócala para escanear solo esa cara otra vez.')}</small></div></div>
           <div class="scan-thumbs ${impl.scan.length > 6 ? 'many' : ''}"></div>
           ${
             debug
               ? `<details class="debug-sample">
-                  <summary>${tr('Amostra para treino', 'Training sample')} <small>debug</small></summary>
-                  <p>${tr('Corrija antes as cores erradas pintando: o código usa as cores de agora como as certas.', 'First fix the wrong colors by painting: the code takes the current colors as the right ones.')}</p>
-                  <label class="dbg-light">${tr('Luz do ambiente', 'Room lighting')}
+                  <summary>${tr('Amostra para treino', 'Training sample', 'Muestra para entrenamiento')} <small>debug</small></summary>
+                  <p>${tr('Corrija antes as cores erradas pintando: o código usa as cores de agora como as certas.', 'First fix the wrong colors by painting: the code takes the current colors as the right ones.', 'Primero corrige los colores equivocados pintando: el código toma los colores actuales como los correctos.')}</p>
+                  <label class="dbg-light">${tr('Luz do ambiente', 'Room lighting', 'Luz del ambiente')}
                     <select>${LIGHTS().map(([v, t]) => `<option value="${v}" ${v === light ? 'selected' : ''}>${t}</option>`).join('')}</select>
                   </label>
-                  <textarea readonly rows="4" spellcheck="false" aria-label="${tr('Código da amostra', 'Sample code')}"></textarea>
+                  <textarea readonly rows="4" spellcheck="false" aria-label="${tr('Código da amostra', 'Sample code', 'Código de la muestra')}"></textarea>
                   <div class="row-actions">
-                    <button class="btn primary sm" data-dbg="copy">${tr('Copiar código', 'Copy code')}</button>
-                    <button class="btn ghost sm" data-dbg="download">${tr('Baixar .txt', 'Download .txt')}</button>
+                    <button class="btn primary sm" data-dbg="copy">${tr('Copiar código', 'Copy code', 'Copiar código')}</button>
+                    <button class="btn ghost sm" data-dbg="download">${tr('Baixar .txt', 'Download .txt', 'Descargar .txt')}</button>
                   </div>
                 </details>`
               : ''
@@ -252,7 +252,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
     const read = toReadPositions(state, scan.order!);
     host.querySelector('.scan-thumbs')!.innerHTML = impl.scan
       .map(
-        (f, i) => `<button class="thumb" data-rescan="${i}" title="${tr('Escanear de novo', 'Scan again')}: ${f.title}" aria-label="${tr('Escanear de novo', 'Scan again')}: ${f.title}">
+        (f, i) => `<button class="thumb" data-rescan="${i}" title="${tr('Escanear de novo', 'Scan again', 'Escanear otra vez')}: ${f.title}" aria-label="${tr('Escanear de novo', 'Scan again', 'Escanear otra vez')}: ${f.title}">
           ${faceThumb(impl, i, f.grid.flat().map((idx) => read[idx]))}<span>${faceLabel(impl, i)}</span></button>`,
       )
       .join('');
@@ -288,7 +288,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
         box.select();
         ok = document.execCommand('copy');
       }
-      toast(ok ? tr('Código copiado! Cole no chat para usar no treino da câmera.', 'Code copied! Paste it in the chat to use it for camera training.') : tr('Não deu para copiar sozinho — o código está selecionado, copie na mão.', 'Couldn’t copy automatically — the code is selected, copy it by hand.'));
+      toast(ok ? tr('Código copiado! Cole no chat para usar no treino da câmera.', 'Code copied! Paste it in the chat to use it for camera training.', '¡Código copiado! Pégalo en el chat para usarlo en el entrenamiento de la cámara.') : tr('Não deu para copiar sozinho — o código está selecionado, copie na mão.', 'Couldn’t copy automatically — the code is selected, copy it by hand.', 'No se pudo copiar automáticamente: el código está seleccionado, cópialo a mano.'));
     } else if (act === 'download') {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([code + '\n'], { type: 'text/plain' }));
@@ -304,7 +304,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
     if (turned && turned.join() !== state.join()) {
       state = turned;
       commit();
-      toast(tr('Seu puzzle estava em outra posição — giramos o desenho para a posição de referência. No tutorial, segure igual ao desenho 3D.', 'Your puzzle was held in another position — we rotated the drawing to the reference position. In the tutorial, hold it like the 3D drawing.'), 7000);
+      toast(tr('Seu puzzle estava em outra posição — giramos o desenho para a posição de referência. No tutorial, segure igual ao desenho 3D.', 'Your puzzle was held in another position — we rotated the drawing to the reference position. In the tutorial, hold it like the 3D drawing.', 'Tu puzzle estaba sujeto en otra posición: giramos el dibujo a la posición de referencia. En el tutorial, sujétalo como en el dibujo 3D.'), 7000);
     }
     const res = impl.validate(state);
     const errBox = body.querySelector('.errors');
@@ -325,7 +325,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
         scanner = null;
         setTab('paint');
         commit();
-        toast(tr('Cores lidas! Se algo estiver errado, pinte por cima ou refaça só a face.', 'Colors read! If something is wrong, paint over it or redo just that face.'), 5000);
+        toast(tr('Cores lidas! Se algo estiver errado, pinte por cima ou refaça só a face.', 'Colors read! If something is wrong, paint over it or redo just that face.', '¡Colores leídos! Si algo está mal, píntalo encima o vuelve a hacer solo esa cara.'), 5000);
       },
       onFace: (stickers) => {
         view.setHighlight(stickers);

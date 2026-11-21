@@ -32,6 +32,7 @@ function setMeta(page: MetaPage) {
   for (const [l, hl] of [
     ['pt', 'pt-BR'],
     ['en', 'en'],
+    ['es', 'es'],
     ['pt', 'x-default'],
   ] as const) {
     let link = document.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${hl}"]`);
@@ -45,10 +46,14 @@ function setMeta(page: MetaPage) {
   }
 }
 
-/** navegador em inglês, na versão em português, sem ter escolhido idioma: oferece o inglês */
+/**
+ * Navegador em outro idioma, na versão em português, sem ter escolhido idioma: oferece o
+ * espanhol (navegador em espanhol) ou o inglês (os outros).
+ */
 function offerEnglish() {
   document.querySelector('.lang-offer')?.remove();
   if (getLang() !== 'pt' || /^pt\b/i.test(navigator.language || 'pt')) return;
+  const es = /^es\b/i.test(navigator.language);
   try {
     if (localStorage.getItem('cubo:lang')) return;
   } catch {
@@ -56,8 +61,10 @@ function offerEnglish() {
   }
   const bar = document.createElement('div');
   bar.className = 'lang-offer';
-  bar.lang = 'en';
-  bar.innerHTML = `<span>Prefer English?</span><a class="btn primary sm" data-lang="en" href="${pathInLang(location.pathname, location.search, 'en')}">Switch to English</a><button class="btn ghost sm" data-close aria-label="Close">✕</button>`;
+  bar.lang = es ? 'es' : 'en';
+  bar.innerHTML = es
+    ? `<span>¿Prefieres español?</span><a class="btn primary sm" data-lang="es" href="${pathInLang(location.pathname, location.search, 'es')}">Ver en español</a><button class="btn ghost sm" data-close aria-label="Cerrar">✕</button>`
+    : `<span>Prefer English?</span><a class="btn primary sm" data-lang="en" href="${pathInLang(location.pathname, location.search, 'en')}">Switch to English</a><button class="btn ghost sm" data-close aria-label="Close">✕</button>`;
   bar.querySelector('[data-close]')!.addEventListener('click', () => {
     bar.remove();
     try {
@@ -109,7 +116,7 @@ async function route() {
     } else if (r.page === 'notfound') {
       setActiveNav('');
       setMeta({ page: 'notfound' });
-      app.innerHTML = `<section class="page narrow"><div class="card"><h2>${tr('Página não encontrada', 'Page not found')}</h2><p>${tr('Esse endereço não existe no CuboGuia.', 'This address doesn’t exist on CuboGuia.')}</p><a class="btn primary" href="${homePath()}">${tr('Voltar ao início', 'Back to home')}</a></div></section>`;
+      app.innerHTML = `<section class="page narrow"><div class="card"><h2>${tr('Página não encontrada', 'Page not found', 'Página no encontrada')}</h2><p>${tr('Esse endereço não existe no CuboGuia.', 'This address doesn’t exist on CuboGuia.', 'Esta dirección no existe en CuboGuia.')}</p><a class="btn primary" href="${homePath()}">${tr('Voltar ao início', 'Back to home', 'Volver al inicio')}</a></div></section>`;
     } else {
       setActiveNav('home');
       setMeta({ page: 'home' });
@@ -123,7 +130,7 @@ async function route() {
     offerEnglish();
   } catch (e) {
     console.error(e);
-    app.innerHTML = `<section class="page narrow"><div class="card"><h2>${tr('Ops!', 'Oops!')}</h2><p></p><a class="btn primary" href="${homePath()}">${tr('Voltar ao início', 'Back to home')}</a></div></section>`;
+    app.innerHTML = `<section class="page narrow"><div class="card"><h2>${tr('Ops!', 'Oops!', '¡Ups!')}</h2><p></p><a class="btn primary" href="${homePath()}">${tr('Voltar ao início', 'Back to home', 'Volver al inicio')}</a></div></section>`;
     app.querySelector('p')!.textContent = (e as Error).message;
   }
 }

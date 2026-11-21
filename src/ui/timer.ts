@@ -74,10 +74,10 @@ function saveSolves(puzzle: string, solves: Solve[], session = MAIN) {
 /** como segurar o puzzle resolvido antes de embaralhar (a posição do desenho) */
 const scrambleHold = (puzzle: string) =>
   puzzle === 'pyraminx'
-    ? tr('com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo', 'with the <b>green</b> face toward you and the <b>yellow</b> one on the bottom')
+    ? tr('com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo', 'with the <b>green</b> face toward you and the <b>yellow</b> one on the bottom', 'con la cara <b>verde</b> hacia ti y la <b>amarilla</b> abajo')
     : puzzle === 'megaminx'
-      ? tr('com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você', 'with <b>gray</b> on top and <b>light green</b> facing you')
-      : tr('com o <b>amarelo</b> em cima e o <b>verde</b> de frente para você', 'with <b>yellow</b> on top and <b>green</b> facing you');
+      ? tr('com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você', 'with <b>gray</b> on top and <b>light green</b> facing you', 'con el <b>gris</b> arriba y el <b>verde claro</b> hacia ti')
+      : tr('com o <b>amarelo</b> em cima e o <b>verde</b> de frente para você', 'with <b>yellow</b> on top and <b>green</b> facing you', 'con el <b>amarillo</b> arriba y el <b>verde</b> hacia ti');
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 function loadName(): string {
   try {
@@ -105,46 +105,46 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   app.innerHTML = `
   <section class="page timer-page">
     <div class="tm-top">
-      <a class="back tm-back" href="${homePath()}">← ${tr('Início', 'Home')}</a>
+      <a class="back tm-back" href="${homePath()}">← ${tr('Início', 'Home', 'Inicio')}</a>
       <div class="tm-puzzles" role="tablist" aria-label="Puzzle">
         ${available.map((p) => `<button role="tab" class="tm-pz" data-pz="${p.id}">${p.icon}<span>${p.short}</span></button>`).join('')}
       </div>
       <div class="tm-opts">
-        <button class="tm-opt" data-opt="inspection" aria-pressed="false" title="${tr('15 s para olhar o cubo antes de começar, como nas competições', '15 s to look at the puzzle before starting, like in competitions')}"><span class="sw" aria-hidden="true"></span>${tr('Inspeção 15 s', '15 s inspection')}</button>
-        ${touchDevice ? `<button class="tm-opt" data-opt="fingers" aria-pressed="false" title="${tr('Quantos dedos para começar e parar', 'How many fingers to start and stop')}"><span class="sw" aria-hidden="true"></span>${tr('Dois dedos', 'Two fingers')}</button>` : ''}
-        <button class="tm-opt" data-opt="preview" aria-pressed="false" title="${tr('Mostrar como o puzzle fica depois de embaralhar', 'Show how the puzzle looks after scrambling')}"><span class="sw" aria-hidden="true"></span>${tr('Desenho', 'Preview')}</button>
-        <label class="tm-sess" title="${tr('Sessões separam os tempos dentro do mesmo puzzle (ex.: uma mão, treino)', 'Sessions keep times apart within the same puzzle (e.g. one-handed, practice)')}"><span>${tr('Sessão', 'Session')}</span><select class="tm-sess-sel" aria-label="${tr('Sessão', 'Session')}"></select></label>
+        <button class="tm-opt" data-opt="inspection" aria-pressed="false" title="${tr('15 s para olhar o cubo antes de começar, como nas competições', '15 s to look at the puzzle before starting, like in competitions', '15 s para mirar el puzzle antes de empezar, como en las competiciones')}"><span class="sw" aria-hidden="true"></span>${tr('Inspeção 15 s', '15 s inspection', 'Inspección de 15 s')}</button>
+        ${touchDevice ? `<button class="tm-opt" data-opt="fingers" aria-pressed="false" title="${tr('Quantos dedos para começar e parar', 'How many fingers to start and stop', 'Cuántos dedos para empezar y parar')}"><span class="sw" aria-hidden="true"></span>${tr('Dois dedos', 'Two fingers', 'Dos dedos')}</button>` : ''}
+        <button class="tm-opt" data-opt="preview" aria-pressed="false" title="${tr('Mostrar como o puzzle fica depois de embaralhar', 'Show how the puzzle looks after scrambling', 'Mostrar cómo queda el puzzle después de mezclar')}"><span class="sw" aria-hidden="true"></span>${tr('Desenho', 'Preview', 'Vista previa')}</button>
+        <label class="tm-sess" title="${tr('Sessões separam os tempos dentro do mesmo puzzle (ex.: uma mão, treino)', 'Sessions keep times apart within the same puzzle (e.g. one-handed, practice)', 'Las sesiones separan los tiempos dentro del mismo puzzle (p. ej., una mano, práctica)')}"><span>${tr('Sessão', 'Session', 'Sesión')}</span><select class="tm-sess-sel" aria-label="${tr('Sessão', 'Session', 'Sesión')}"></select></label>
       </div>
     </div>
     <div class="tm-challenge card" hidden></div>
     <div class="tm-scramble card">
       <div class="tm-scr-head">
-        <span class="tm-label">${tr('Embaralho', 'Scramble')}<button class="tm-info-btn" aria-expanded="false" aria-controls="tm-info" title="${tr('O que é o embaralho e como fazer', 'What a scramble is and how to do it')}">${icon('info')}<span class="sr-only">${tr('O que é o embaralho e como fazer', 'What a scramble is and how to do it')}</span></button></span>
-        <button class="btn ghost sm" data-act="new">${icon('shuffle')}${tr('Outro', 'New')}</button>
+        <span class="tm-label">${tr('Embaralho', 'Scramble', 'Mezcla')}<button class="tm-info-btn" aria-expanded="false" aria-controls="tm-info" title="${tr('O que é o embaralho e como fazer', 'What a scramble is and how to do it', 'Qué es una mezcla y cómo hacerla')}">${icon('info')}<span class="sr-only">${tr('O que é o embaralho e como fazer', 'What a scramble is and how to do it', 'Qué es una mezcla y cómo hacerla')}</span></button></span>
+        <button class="btn ghost sm" data-act="new">${icon('shuffle')}${tr('Outro', 'New', 'Otra')}</button>
       </div>
       <p class="tm-scr-text" aria-live="polite"></p>
       <div class="tm-preview"></div>
       <div class="tm-info" id="tm-info"><div class="tm-info-in"></div></div>
     </div>
-    <div class="tm-pad" tabindex="0" aria-label="${tr('Cronômetro', 'Timer')}">
+    <div class="tm-pad" tabindex="0" aria-label="${tr('Cronômetro', 'Timer', 'Cronómetro')}">
       <div class="tm-time">0.00</div>
       <div class="tm-hint"></div>
       <div class="tm-pb" hidden role="status"></div>
       <div class="tm-last" hidden>
         <button class="btn ghost sm" data-last="2">+2</button>
         <button class="btn ghost sm" data-last="dnf">DNF</button>
-        <button class="btn ghost sm" data-last="del">${tr('Apagar', 'Delete')}</button>
-        <button class="btn primary sm" data-last="share">${icon('share')}${tr('Desafiar', 'Challenge')}</button>
+        <button class="btn ghost sm" data-last="del">${tr('Apagar', 'Delete', 'Borrar')}</button>
+        <button class="btn primary sm" data-last="share">${icon('share')}${tr('Desafiar', 'Challenge', 'Reto')}</button>
       </div>
     </div>
     <div class="tm-stats card"></div>
     <div class="tm-chart card" hidden></div>
     <div class="tm-list card">
-      <div class="tm-list-head"><span class="tm-label">${tr('Tempos', 'Times')}</span>
+      <div class="tm-list-head"><span class="tm-label">${tr('Tempos', 'Times', 'Tiempos')}</span>
         <span class="tm-list-acts">
-          <button class="btn ghost sm" data-act="export" title="${tr('Baixar um arquivo com os tempos de todos os puzzles', 'Download a file with the times of every puzzle')}">${icon('download')}${tr('Exportar', 'Export')}</button>
-          <button class="btn ghost sm" data-act="import" title="${tr('Abrir um arquivo exportado do CuboGuia ou do csTimer', 'Open a file exported from CuboGuia or csTimer')}">${icon('upload')}${tr('Importar', 'Import')}</button>
-          <button class="btn ghost sm" data-act="clear" title="${tr('Apagar todos os tempos desta sessão', 'Delete every time in this session')}">${tr('Limpar<span class="long"> sessão</span>', 'Clear<span class="long"> session</span>')}</button>
+          <button class="btn ghost sm" data-act="export" title="${tr('Baixar um arquivo com os tempos de todos os puzzles', 'Download a file with the times of every puzzle', 'Descargar un archivo con los tiempos de todos los puzzles')}">${icon('download')}${tr('Exportar', 'Export', 'Exportar')}</button>
+          <button class="btn ghost sm" data-act="import" title="${tr('Abrir um arquivo exportado do CuboGuia ou do csTimer', 'Open a file exported from CuboGuia or csTimer', 'Abrir un archivo exportado de CuboGuia o de csTimer')}">${icon('upload')}${tr('Importar', 'Import', 'Importar')}</button>
+          <button class="btn ghost sm" data-act="clear" title="${tr('Apagar todos os tempos desta sessão', 'Delete every time in this session', 'Borrar todos los tiempos de esta sesión')}">${tr('Limpar<span class="long"> sessão</span>', 'Clear<span class="long"> session</span>', 'Borrar<span class="long"> sesión</span>')}</button>
         </span>
         <input type="file" class="tm-file" accept=".json,.txt,application/json,text/plain" hidden>
       </div>
@@ -152,15 +152,15 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     </div>
     <div class="tm-share" hidden>
       <div class="tm-share-box card" role="dialog" aria-modal="true" aria-labelledby="tm-share-title">
-        <h3 id="tm-share-title">${icon('share')}${tr('Desafiar um amigo', 'Challenge a friend')}</h3>
-        <p class="tm-share-sub">${tr('Quem abrir o link recebe <b>o mesmo embaralho</b> e vê o seu tempo para tentar bater.', 'Whoever opens the link gets <b>the same scramble</b> and sees your time to try to beat it.')}</p>
-        <label class="tm-name">${tr('Seu nome (opcional)', 'Your name (optional)')}<input type="text" maxlength="${MAX_NAME}" autocomplete="nickname" placeholder="${tr('Ex.: Gabriel', 'E.g. Alex')}"></label>
+        <h3 id="tm-share-title">${icon('share')}${tr('Desafiar um amigo', 'Challenge a friend', 'Reta a un amigo')}</h3>
+        <p class="tm-share-sub">${tr('Quem abrir o link recebe <b>o mesmo embaralho</b> e vê o seu tempo para tentar bater.', 'Whoever opens the link gets <b>the same scramble</b> and sees your time to try to beat it.', 'Quien abra el enlace recibe <b>la misma mezcla</b> y ve tu tiempo para intentar superarlo.')}</p>
+        <label class="tm-name">${tr('Seu nome (opcional)', 'Your name (optional)', 'Tu nombre (opcional)')}<input type="text" maxlength="${MAX_NAME}" autocomplete="nickname" placeholder="${tr('Ex.: Gabriel', 'E.g. Alex', 'P. ej., Alex')}"></label>
         <p class="tm-share-msg"></p>
-        <input class="tm-share-link" type="text" readonly aria-label="${tr('Link do desafio', 'Challenge link')}">
+        <input class="tm-share-link" type="text" readonly aria-label="${tr('Link do desafio', 'Challenge link', 'Enlace del reto')}">
         <div class="row-actions">
-          ${'share' in navigator ? `<button class="btn primary" data-share="native">${icon('share')}${tr('Compartilhar', 'Share')}</button>` : ''}
-          <button class="btn ${'share' in navigator ? 'ghost' : 'primary'}" data-share="copy">${tr('Copiar link', 'Copy link')}</button>
-          <button class="btn ghost" data-share="close">${tr('Fechar', 'Close')}</button>
+          ${'share' in navigator ? `<button class="btn primary" data-share="native">${icon('share')}${tr('Compartilhar', 'Share', 'Compartir')}</button>` : ''}
+          <button class="btn ${'share' in navigator ? 'ghost' : 'primary'}" data-share="copy">${tr('Copiar link', 'Copy link', 'Copiar enlace')}</button>
+          <button class="btn ghost" data-share="close">${tr('Fechar', 'Close', 'Cerrar')}</button>
         </div>
       </div>
     </div>
@@ -212,17 +212,17 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   function hint() {
     const how = touchDevice
       ? cfg.fingers === 2
-        ? tr('Encoste <b>dois dedos</b> aqui e solte para começar · bata os dois para parar', 'Put <b>two fingers</b> here and lift them to start · tap both to stop')
-        : tr('Encoste o dedo aqui e solte para começar · toque para parar', 'Put your finger here and lift it to start · tap to stop')
-      : tr('Segure <b>espaço</b> até ficar verde e solte para começar · qualquer tecla para', 'Hold <b>space</b> until it turns green, then release to start · any key stops');
+        ? tr('Encoste <b>dois dedos</b> aqui e solte para começar · bata os dois para parar', 'Put <b>two fingers</b> here and lift them to start · tap both to stop', 'Pon <b>dos dedos</b> aquí y levántalos para empezar · toca con los dos para parar')
+        : tr('Encoste o dedo aqui e solte para começar · toque para parar', 'Put your finger here and lift it to start · tap to stop', 'Pon el dedo aquí y levántalo para empezar · toca para parar')
+      : tr('Segure <b>espaço</b> até ficar verde e solte para começar · qualquer tecla para', 'Hold <b>space</b> until it turns green, then release to start · any key stops', 'Mantén pulsado el <b>espacio</b> hasta que se ponga verde y suéltalo para empezar · cualquier tecla para');
     if (phase === 'inspect')
       return touchDevice
-        ? tr('Inspeção — quando estiver pronto, segure e solte para começar', 'Inspection — when you’re ready, hold and release to start')
-        : tr('Inspeção — segure espaço e solte para começar', 'Inspection — hold space and release to start');
+        ? tr('Inspeção — quando estiver pronto, segure e solte para começar', 'Inspection — when you’re ready, hold and release to start', 'Inspección: cuando estés listo, mantén pulsado y suelta para empezar')
+        : tr('Inspeção — segure espaço e solte para começar', 'Inspection — hold space and release to start', 'Inspección: mantén pulsado el espacio y suelta para empezar');
     if (phase === 'idle' && cfg.inspection)
       return touchDevice
-        ? tr('Toque para começar a <b>inspeção</b> (15 s)', 'Tap to start the <b>inspection</b> (15 s)')
-        : tr('Aperte <b>espaço</b> para começar a inspeção (15 s)', 'Press <b>space</b> to start the inspection (15 s)');
+        ? tr('Toque para começar a <b>inspeção</b> (15 s)', 'Tap to start the <b>inspection</b> (15 s)', 'Toca para empezar la <b>inspección</b> (15 s)')
+        : tr('Aperte <b>espaço</b> para começar a inspeção (15 s)', 'Press <b>space</b> to start the inspection (15 s)', 'Pulsa el <b>espacio</b> para empezar la inspección (15 s)');
     return how;
   }
 
@@ -240,14 +240,14 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   // ---- recorde: comemora quando a última resolução bate o melhor tempo ou a melhor média
   function showPb(kinds: RecordKind[]) {
     const label: Record<RecordKind, string> = {
-      single: tr('melhor tempo', 'best single'),
-      ao5: tr('melhor média de 5', 'best ao5'),
-      ao12: tr('melhor média de 12', 'best ao12'),
+      single: tr('melhor tempo', 'best single', 'mejor tiempo'),
+      ao5: tr('melhor média de 5', 'best ao5', 'mejor ao5'),
+      ao12: tr('melhor média de 12', 'best ao12', 'mejor ao12'),
     };
     // "melhor tempo e melhor média de 5" / "best single and best ao5"
-    const what = new Intl.ListFormat(tr('pt-BR', 'en'), { type: 'conjunction' }).format(kinds.map((k) => label[k]));
+    const what = new Intl.ListFormat(tr('pt-BR', 'en', 'es'), { type: 'conjunction' }).format(kinds.map((k) => label[k]));
 
-    pbEl.innerHTML = `<div class="confetti" aria-hidden="true">${'<i></i>'.repeat(16)}</div>${icon('trophy')}<span><b>${tr('Novo recorde!', 'New record!')}</b> ${what[0].toUpperCase() + what.slice(1)}</span>`;
+    pbEl.innerHTML = `<div class="confetti" aria-hidden="true">${'<i></i>'.repeat(16)}</div>${icon('trophy')}<span><b>${tr('Novo recorde!', 'New record!', '¡Nuevo récord!')}</b> ${what[0].toUpperCase() + what.slice(1)}</span>`;
     pbEl.hidden = false;
     pad.classList.add('pb');
     navigator.vibrate?.([40, 60, 40, 60, 120]);
@@ -418,7 +418,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
         scramble = [...challenge.scramble];
       } catch {
         challenge = null;
-        toast(tr('O link do desafio tem um embaralho inválido — usando um novo.', 'The challenge link has an invalid scramble — using a new one.'));
+        toast(tr('O link do desafio tem um embaralho inválido — usando um novo.', 'The challenge link has an invalid scramble — using a new one.', 'El enlace del reto tiene una mezcla no válida: usando una nueva.'));
       }
     }
     scrText.textContent = scramble.join(' ');
@@ -436,12 +436,12 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   function renderStats() {
     const stat = (label: string, v: string, title = '') => `<div class="tm-stat" title="${title}"><span>${label}</span><b>${v}</b></div>`;
     $<HTMLElement>('.tm-stats').innerHTML = [
-      stat(tr('Melhor', 'Best'), fmt(best(solves))),
-      stat(tr('Média de 5', 'Ao5'), fmt(averageOf(solves, 5)), tr('Últimos 5, sem o melhor e o pior (como nas competições)', 'Last 5, without the best and the worst (like in competitions)')),
-      stat(tr('Média de 12', 'Ao12'), fmt(averageOf(solves, 12)), tr('Últimos 12, sem o melhor e o pior', 'Last 12, without the best and the worst')),
-      stat(tr('Melhor média de 5', 'Best ao5'), fmt(bestAverage(solves, 5))),
-      stat(tr('Média geral', 'Mean'), fmt(mean(solves))),
-      stat(tr('Resoluções', 'Solves'), String(solves.length)),
+      stat(tr('Melhor', 'Best', 'Mejor'), fmt(best(solves))),
+      stat(tr('Média de 5', 'Ao5', 'Ao5'), fmt(averageOf(solves, 5)), tr('Últimos 5, sem o melhor e o pior (como nas competições)', 'Last 5, without the best and the worst (like in competitions)', 'Últimos 5, sin el mejor ni el peor (como en las competiciones)')),
+      stat(tr('Média de 12', 'Ao12', 'Ao12'), fmt(averageOf(solves, 12)), tr('Últimos 12, sem o melhor e o pior', 'Last 12, without the best and the worst', 'Últimos 12, sin el mejor ni el peor')),
+      stat(tr('Melhor média de 5', 'Best ao5', 'Mejor ao5'), fmt(bestAverage(solves, 5))),
+      stat(tr('Média geral', 'Mean', 'Media'), fmt(mean(solves))),
+      stat(tr('Resoluções', 'Solves', 'Resoluciones'), String(solves.length)),
     ].join('');
     chart.update(solves);
     const bestMs = best(solves);
@@ -454,17 +454,17 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
           .map(
             ({ s, i }) => `<li data-i="${i}">
               <span class="tm-n">${i + 1}</span>
-              <b class="tm-t ${s.pen === 'dnf' ? 'dnf' : ''}" title="${s.scramble}">${fmtSolve(s)}${value(s) === bestMs ? `<span class="tm-best" title="${tr('Seu melhor tempo', 'Your best single')}">${icon('trophy')}</span>` : ''}</b>
+              <b class="tm-t ${s.pen === 'dnf' ? 'dnf' : ''}" title="${s.scramble}">${fmtSolve(s)}${value(s) === bestMs ? `<span class="tm-best" title="${tr('Seu melhor tempo', 'Your best single', 'Tu mejor tiempo')}">${icon('trophy')}</span>` : ''}</b>
               <span class="tm-acts">
                 <button class="${s.pen === 2 ? 'on' : ''}" data-pen="2" aria-pressed="${s.pen === 2}">+2</button>
                 <button class="${s.pen === 'dnf' ? 'on' : ''}" data-pen="dnf" aria-pressed="${s.pen === 'dnf'}">DNF</button>
-                <button data-del aria-label="${tr('Apagar este tempo', 'Delete this time')}">${icon('trash')}</button>
-                <button data-share-i aria-label="${tr('Desafiar um amigo com este tempo', 'Challenge a friend with this time')}" title="${tr('Desafiar um amigo', 'Challenge a friend')}">${icon('share')}</button>
+                <button data-del aria-label="${tr('Apagar este tempo', 'Delete this time', 'Borrar este tiempo')}">${icon('trash')}</button>
+                <button data-share-i aria-label="${tr('Desafiar um amigo com este tempo', 'Challenge a friend with this time', 'Retar a un amigo con este tiempo')}" title="${tr('Desafiar um amigo', 'Challenge a friend', 'Reta a un amigo')}">${icon('share')}</button>
               </span>
             </li>`,
           )
           .join('')
-      : `<li class="tm-empty">${tr('Nenhum tempo ainda — faça a primeira resolução!', 'No times yet — do your first solve!')}</li>`;
+      : `<li class="tm-empty">${tr('Nenhum tempo ainda — faça a primeira resolução!', 'No times yet — do your first solve!', 'Todavía no hay tiempos: ¡haz tu primera resolución!')}</li>`;
   }
 
   function setPenalty(i: number, pen: Penalty) {
@@ -494,7 +494,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     if (!challenge || banner.hidden) return;
     const c = challenge;
     const key = c.scramble.join(' ');
-    const who = c.name ? `<b>${esc(c.name)}</b>` : tr('Um amigo', 'A friend');
+    const who = c.name ? `<b>${esc(c.name)}</b>` : tr('Um amigo', 'A friend', 'Un amigo');
     const theirs = c.ms;
     const attempt = [...solves].reverse().find((s) => s.scramble === key && s.at >= c.since);
     const onIt = scramble.join(' ') === key;
@@ -502,29 +502,29 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     if (!attempt)
       html = `${icon('target')}<div class="tm-ch-text">${
         theirs === null
-          ? tr(`${who} tentou este embaralho do ${puzzleName()} e <b>não terminou</b>. Termine e ganhe!`, `${who} tried this ${puzzleName()} scramble and <b>didn’t finish</b>. Finish it and you win!`)
+          ? tr(`${who} tentou este embaralho do ${puzzleName()} e <b>não terminou</b>. Termine e ganhe!`, `${who} tried this ${puzzleName()} scramble and <b>didn’t finish</b>. Finish it and you win!`, `${who} intentó esta mezcla del ${puzzleName()} y <b>no terminó</b>. ¡Termínala y ganas!`)
           : tr(
               `${who} fez <b>${fmt(theirs)}</b> neste embaralho do ${puzzleName()}. Embaralhe seu cubo igual e tente bater!`,
-              `${who} did <b>${fmt(theirs)}</b> on this ${puzzleName()} scramble. Scramble yours the same way and try to beat it!`,
+              `${who} did <b>${fmt(theirs)}</b> on this ${puzzleName()} scramble. Scramble yours the same way and try to beat it!`, `${who} hizo <b>${fmt(theirs)}</b> en esta mezcla del ${puzzleName()}. ¡Mezcla el tuyo igual e intenta superarlo!`,
             )
-      }</div><div class="tm-ch-acts">${onIt ? '' : `<button class="btn primary sm" data-ch="retry">${tr('Usar o embaralho do desafio', 'Use the challenge scramble')}</button>`}<button class="btn ghost sm" data-ch="close">${tr('Fechar', 'Close')}</button></div>`;
+      }</div><div class="tm-ch-acts">${onIt ? '' : `<button class="btn primary sm" data-ch="retry">${tr('Usar o embaralho do desafio', 'Use the challenge scramble', 'Usar la mezcla del reto')}</button>`}<button class="btn ghost sm" data-ch="close">${tr('Fechar', 'Close', 'Cerrar')}</button></div>`;
     else {
       const mine = value(attempt);
       const diff = (a: number, b: number) => `${(Math.abs(a - b) / 1000).toFixed(2)} s`;
       const result = !Number.isFinite(mine)
         ? theirs === null
-          ? tr('Os dois não terminaram — empate!', 'Neither of you finished — it’s a tie!')
-          : tr(`Você não terminou (DNF). ${c.name ? esc(c.name) : 'Seu amigo'} ganhou desta vez.`, `You didn’t finish (DNF). ${c.name ? esc(c.name) : 'Your friend'} wins this time.`)
+          ? tr('Os dois não terminaram — empate!', 'Neither of you finished — it’s a tie!', 'Ninguno de los dos terminó: ¡empate!')
+          : tr(`Você não terminou (DNF). ${c.name ? esc(c.name) : 'Seu amigo'} ganhou desta vez.`, `You didn’t finish (DNF). ${c.name ? esc(c.name) : 'Your friend'} wins this time.`, `No terminaste (DNF). ${c.name ? esc(c.name) : 'Tu amigo'} gana esta vez.`)
         : theirs === null || mine < theirs
           ? tr(
               `Você fez <b>${fmt(mine)}</b> — <b class="win">ganhou${theirs === null ? '' : ` por ${diff(mine, theirs)}`}!</b>`,
-              `You did <b>${fmt(mine)}</b> — <b class="win">you won${theirs === null ? '' : ` by ${diff(mine, theirs)}`}!</b>`,
+              `You did <b>${fmt(mine)}</b> — <b class="win">you won${theirs === null ? '' : ` by ${diff(mine, theirs)}`}!</b>`, `Hiciste <b>${fmt(mine)}</b>: <b class="win">¡ganaste${theirs === null ? '' : ` por ${diff(mine, theirs)}`}!</b>`,
             )
           : mine === theirs
-            ? tr(`Você fez <b>${fmt(mine)}</b> — empate!`, `You did <b>${fmt(mine)}</b> — it’s a tie!`)
-            : tr(`Você fez <b>${fmt(mine)}</b> — faltou ${diff(mine, theirs)}.`, `You did <b>${fmt(mine)}</b> — ${diff(mine, theirs)} short.`);
+            ? tr(`Você fez <b>${fmt(mine)}</b> — empate!`, `You did <b>${fmt(mine)}</b> — it’s a tie!`, `Hiciste <b>${fmt(mine)}</b>: ¡empate!`)
+            : tr(`Você fez <b>${fmt(mine)}</b> — faltou ${diff(mine, theirs)}.`, `You did <b>${fmt(mine)}</b> — ${diff(mine, theirs)} short.`, `Hiciste <b>${fmt(mine)}</b>: te faltaron ${diff(mine, theirs)}.`);
       html = `${icon('trophy')}<div class="tm-ch-text">${result} <span class="tm-ch-vs">(${who}: ${theirs === null ? 'DNF' : fmt(theirs)})</span></div>
-        <div class="tm-ch-acts"><button class="btn ghost sm" data-ch="retry">${tr('Tentar de novo', 'Try again')}</button><button class="btn primary sm" data-ch="reply">${icon('share')}${tr('Responder', 'Reply')}</button><button class="btn ghost sm" data-ch="close">${tr('Fechar', 'Close')}</button></div>`;
+        <div class="tm-ch-acts"><button class="btn ghost sm" data-ch="retry">${tr('Tentar de novo', 'Try again', 'Intentar de nuevo')}</button><button class="btn primary sm" data-ch="reply">${icon('share')}${tr('Responder', 'Reply', 'Responder')}</button><button class="btn ghost sm" data-ch="close">${tr('Fechar', 'Close', 'Cerrar')}</button></div>`;
     }
     banner.innerHTML = html;
   }
@@ -556,11 +556,11 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       ms === null
         ? tr(
             `${name ? `${name} tentou` : 'Tentei'} este embaralho do ${puzzleName()} no CuboGuia e não terminou. Consegue?`,
-            `${name ? `${name} tried` : 'I tried'} this ${puzzleName()} scramble on CuboGuia and didn’t finish. Can you?`,
+            `${name ? `${name} tried` : 'I tried'} this ${puzzleName()} scramble on CuboGuia and didn’t finish. Can you?`, `${name ? `${name} intentó` : 'Intenté'} esta mezcla del ${puzzleName()} en CuboGuia y no terminó. ¿Puedes tú?`,
           )
         : tr(
             `${name ? `${name} fez` : 'Fiz'} ${fmt(ms)} neste embaralho do ${puzzleName()} no CuboGuia. Consegue bater? É o mesmo embaralho:`,
-            `${name ? `${name} did` : 'I did'} ${fmt(ms)} on this ${puzzleName()} scramble on CuboGuia. Can you beat it? Same scramble:`,
+            `${name ? `${name} did` : 'I did'} ${fmt(ms)} on this ${puzzleName()} scramble on CuboGuia. Can you beat it? Same scramble:`, `${name ? `${name} hizo` : 'Hice'} ${fmt(ms)} en esta mezcla del ${puzzleName()} en CuboGuia. ¿Puedes superarlo? Misma mezcla:`,
           );
     return { url, text };
   }
@@ -592,7 +592,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     const { url, text } = shareData();
     if (act === 'native') {
       try {
-        await navigator.share({ title: tr('Desafio no CuboGuia', 'CuboGuia challenge'), text, url });
+        await navigator.share({ title: tr('Desafio no CuboGuia', 'CuboGuia challenge', 'Reto de CuboGuia'), text, url });
         closeShare();
       } catch {
         /* a pessoa cancelou */
@@ -607,7 +607,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       linkInput.select();
       ok = document.execCommand('copy');
     }
-    toast(ok ? tr('Link copiado! Mande para o seu amigo.', 'Link copied! Send it to your friend.') : tr('Não deu para copiar sozinho — o link está selecionado, copie na mão.', 'Couldn’t copy automatically — the link is selected, copy it by hand.'));
+    toast(ok ? tr('Link copiado! Mande para o seu amigo.', 'Link copied! Send it to your friend.', '¡Enlace copiado! Envíaselo a tu amigo.') : tr('Não deu para copiar sozinho — o link está selecionado, copie na mão.', 'Couldn’t copy automatically — the link is selected, copy it by hand.', 'No se pudo copiar automáticamente: el enlace está seleccionado, cópialo a mano.'));
   });
 
   app.querySelector('.tm-times')!.addEventListener('click', (e) => {
@@ -641,7 +641,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       for (const s of (p.id === cfg.puzzle ? sess : loadSessions(p.id)).list)
         if (s.id !== MAIN) (extra[p.id] ??= {})[s.name] = solvesOf(p.id, s.id);
     const total = [...Object.values(all), ...Object.values(extra).flatMap((byName) => Object.values(byName))].reduce((a, l) => a + l.length, 0);
-    if (!total) return toast(tr('Ainda não há tempos para exportar.', 'There are no times to export yet.'));
+    if (!total) return toast(tr('Ainda não há tempos para exportar.', 'There are no times to export yet.', 'Todavía no hay tiempos para exportar.'));
     const blob = new Blob([exportJson(all, Date.now(), extra)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -650,7 +650,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    toast(tr(`${total} tempos exportados. Guarde o arquivo: ele traz os tempos de volta neste ou em outro aparelho.`, `${total} times exported. Keep the file: it brings your times back on this or another device.`));
+    toast(tr(`${total} tempos exportados. Guarde o arquivo: ele traz os tempos de volta neste ou em outro aparelho.`, `${total} times exported. Keep the file: it brings your times back on this or another device.`, `${total} tiempos exportados. Guarda el archivo: recupera tus tiempos en este o en otro dispositivo.`));
   });
   const fileInput = $<HTMLInputElement>('.tm-file');
   $<HTMLElement>('[data-act="import"]').addEventListener('click', () => fileInput.click());
@@ -658,7 +658,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     const f = fileInput.files?.[0];
     fileInput.value = '';
     if (!f) return;
-    if (f.size > 20 * 1024 * 1024) return toast(tr('Arquivo grande demais.', 'File too large.'));
+    if (f.size > 20 * 1024 * 1024) return toast(tr('Arquivo grande demais.', 'File too large.', 'Archivo demasiado grande.'));
     try {
       const res = parseImport(await f.text(), available.map((p) => p.id));
       let added = 0;
@@ -690,20 +690,20 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
       const from = res.source === 'cstimer' ? ' (csTimer)' : '';
       toast(
         added
-          ? tr(`${added} tempos importados${from}: ${[...where].join(', ')}.`, `${added} times imported${from}: ${[...where].join(', ')}.`)
-          : tr('Esses tempos já estavam aqui — nada novo para importar.', 'Those times were already here — nothing new to import.'),
+          ? tr(`${added} tempos importados${from}: ${[...where].join(', ')}.`, `${added} times imported${from}: ${[...where].join(', ')}.`, `${added} tiempos importados${from}: ${[...where].join(', ')}.`)
+          : tr('Esses tempos já estavam aqui — nada novo para importar.', 'Those times were already here — nothing new to import.', 'Esos tiempos ya estaban aquí: nada nuevo para importar.'),
       );
     } catch (e) {
       const r = e instanceof ImportError ? e.reason : 'format';
       toast(
         r === 'empty'
-          ? tr('O arquivo não tem tempos de puzzles do CuboGuia.', 'The file has no times for CuboGuia puzzles.')
-          : tr('Não reconheci esse arquivo. Use um arquivo exportado pelo CuboGuia ou pelo csTimer.', 'I didn’t recognize that file. Use a file exported from CuboGuia or csTimer.'),
+          ? tr('O arquivo não tem tempos de puzzles do CuboGuia.', 'The file has no times for CuboGuia puzzles.', 'El archivo no tiene tiempos de puzzles de CuboGuia.')
+          : tr('Não reconheci esse arquivo. Use um arquivo exportado pelo CuboGuia ou pelo csTimer.', 'I didn’t recognize that file. Use a file exported from CuboGuia or csTimer.', 'No reconocí ese archivo. Usa un archivo exportado de CuboGuia o de csTimer.'),
       );
     }
   });
   $<HTMLElement>('[data-act="clear"]').addEventListener('click', () => {
-    if (!solves.length || !confirm(tr(`Apagar os ${solves.length} tempos desta sessão?`, `Delete all ${solves.length} times in this session?`))) return;
+    if (!solves.length || !confirm(tr(`Apagar os ${solves.length} tempos desta sessão?`, `Delete all ${solves.length} times in this session?`, `¿Borrar los ${solves.length} tiempos de esta sesión?`))) return;
     solves = [];
     saveSolves(cfg.puzzle, solves, sess.cur);
     hidePb();
@@ -741,13 +741,13 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
 
   // ---- sessões: tempos separados dentro do mesmo puzzle
   const sessSel = $<HTMLSelectElement>('.tm-sess-sel');
-  const sessName = (id = sess.cur) => sess.list.find((s) => s.id === id)?.name || tr('Principal', 'Main');
+  const sessName = (id = sess.cur) => sess.list.find((s) => s.id === id)?.name || tr('Principal', 'Main', 'Principal');
   function renderSessions() {
     const cur = sess.cur !== MAIN;
     sessSel.innerHTML =
-      sess.list.map((s) => `<option value="${s.id}">${esc(s.name || tr('Principal', 'Main'))}</option>`).join('') +
-      `<option value="+new">${tr('+ Nova sessão…', '+ New session…')}</option>` +
-      (cur ? `<option value="+rename">${tr(`Renomear “${esc(sessName())}”…`, `Rename “${esc(sessName())}”…`)}</option><option value="+delete">${tr(`Apagar “${esc(sessName())}”…`, `Delete “${esc(sessName())}”…`)}</option>` : '');
+      sess.list.map((s) => `<option value="${s.id}">${esc(s.name || tr('Principal', 'Main', 'Principal'))}</option>`).join('') +
+      `<option value="+new">${tr('+ Nova sessão…', '+ New session…', '+ Nueva sesión…')}</option>` +
+      (cur ? `<option value="+rename">${tr(`Renomear “${esc(sessName())}”…`, `Rename “${esc(sessName())}”…`, `Renombrar “${esc(sessName())}”…`)}</option><option value="+delete">${tr(`Apagar “${esc(sessName())}”…`, `Delete “${esc(sessName())}”…`, `Borrar “${esc(sessName())}”…`)}</option>` : '');
     sessSel.value = sess.cur;
   }
   function switchSession(id: string) {
@@ -766,23 +766,23 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     if (!v.startsWith('+')) return switchSession(v);
     sessSel.value = sess.cur;
     if (v === '+new') {
-      const name = prompt(tr('Nome da nova sessão (ex.: Uma mão, Treino):', 'Name for the new session (e.g. One-handed, Practice):'), '');
+      const name = prompt(tr('Nome da nova sessão (ex.: Uma mão, Treino):', 'Name for the new session (e.g. One-handed, Practice):', 'Nombre de la nueva sesión (p. ej., Una mano, Práctica):'), '');
       if (name === null) return;
       const before = sess.list.length;
       const s = addSession(sess, name);
-      if (!s) return toast(cleanSessionName(name) ? tr('Chegou ao limite de sessões deste puzzle.', 'You’ve reached the session limit for this puzzle.') : tr('Dê um nome para a sessão.', 'Give the session a name.'));
-      if (sess.list.length === before) toast(tr(`Já existe a sessão “${s.name}” — abrindo ela.`, `There’s already a “${s.name}” session — opening it.`));
+      if (!s) return toast(cleanSessionName(name) ? tr('Chegou ao limite de sessões deste puzzle.', 'You’ve reached the session limit for this puzzle.', 'Llegaste al límite de sesiones de este puzzle.') : tr('Dê um nome para a sessão.', 'Give the session a name.', 'Ponle un nombre a la sesión.'));
+      if (sess.list.length === before) toast(tr(`Já existe a sessão “${s.name}” — abrindo ela.`, `There’s already a “${s.name}” session — opening it.`, `Ya hay una sesión “${s.name}”: abriéndola.`));
       switchSession(s.id);
     } else if (v === '+rename') {
-      const name = prompt(tr('Novo nome da sessão:', 'New session name:'), sessName());
+      const name = prompt(tr('Novo nome da sessão:', 'New session name:', 'Nuevo nombre de la sesión:'), sessName());
       const clean = cleanSessionName(name ?? '');
       if (!clean) return;
-      if (sess.list.some((s) => s.id !== sess.cur && s.id !== MAIN && s.name.toLowerCase() === clean.toLowerCase())) return toast(tr('Já existe uma sessão com esse nome.', 'There’s already a session with that name.'));
+      if (sess.list.some((s) => s.id !== sess.cur && s.id !== MAIN && s.name.toLowerCase() === clean.toLowerCase())) return toast(tr('Já existe uma sessão com esse nome.', 'There’s already a session with that name.', 'Ya hay una sesión con ese nombre.'));
       sess.list.find((s) => s.id === sess.cur)!.name = clean;
       saveSessions(cfg.puzzle, sess);
       renderSessions();
     } else if (v === '+delete') {
-      if (!confirm(tr(`Apagar a sessão “${sessName()}” e os ${solves.length} tempos dela?`, `Delete the “${sessName()}” session and its ${solves.length} times?`))) return;
+      if (!confirm(tr(`Apagar a sessão “${sessName()}” e os ${solves.length} tempos dela?`, `Delete the “${sessName()}” session and its ${solves.length} times?`, `¿Borrar la sesión “${sessName()}” y sus ${solves.length} tiempos?`))) return;
       try {
         localStorage.removeItem(solvesKey(cfg.puzzle, sess.cur));
       } catch {
@@ -805,7 +805,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     renderOpts();
     renderStats();
     paint();
-    scrText.textContent = tr('Carregando…', 'Loading…');
+    scrText.textContent = tr('Carregando…', 'Loading…', 'Cargando…');
     const im = await loadPuzzle(id);
     if (!alive || cfg.puzzle !== id) return;
     impl = im;
@@ -820,23 +820,23 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     info.querySelector('.tm-info-in')!.innerHTML = `
       <div class="tm-info-cols">
         <div>
-          <h4>${tr('O que é o embaralho?', 'What is a scramble?')}</h4>
+          <h4>${tr('O que é o embaralho?', 'What is a scramble?', '¿Qué es una mezcla?')}</h4>
           <p>${tr(
             `É uma sequência de giros sorteada que deixa o ${puzzleName()} bagunçado de um jeito "justo" — o mesmo para todo mundo que fizer a mesma sequência. É assim nas competições, e é o que vai junto quando você desafia um amigo.`,
-            `It’s a random sequence of turns that mixes up the ${puzzleName()} in a "fair" way — the same for everyone who does the same sequence. That’s how competitions work, and it’s what gets sent when you challenge a friend.`,
+            `It’s a random sequence of turns that mixes up the ${puzzleName()} in a "fair" way — the same for everyone who does the same sequence. That’s how competitions work, and it’s what gets sent when you challenge a friend.`, `Es una secuencia de giros al azar que mezcla el ${puzzleName()} de forma "justa": igual para todos los que hagan la misma secuencia. Así funcionan las competiciones, y es lo que se envía cuando retas a un amigo.`,
           )}</p>
-          <h4>${tr('Como fazer', 'How to do it')}</h4>
+          <h4>${tr('Como fazer', 'How to do it', 'Cómo hacerla')}</h4>
           <ol>
-            <li>${tr(`Comece com o ${puzzleName()} <b>resolvido</b>, ${scrambleHold(cfg.puzzle)}.`, `Start with the ${puzzleName()} <b>solved</b>, ${scrambleHold(cfg.puzzle)}.`)}</li>
-            <li>${tr('Faça os giros na ordem, da esquerda para a direita, <b>sem virar o puzzle na mão</b> no meio do caminho.', 'Do the turns in order, left to right, <b>without rotating the whole puzzle</b> along the way.')}</li>
+            <li>${tr(`Comece com o ${puzzleName()} <b>resolvido</b>, ${scrambleHold(cfg.puzzle)}.`, `Start with the ${puzzleName()} <b>solved</b>, ${scrambleHold(cfg.puzzle)}.`, `Empieza con el ${puzzleName()} <b>resuelto</b>, ${scrambleHold(cfg.puzzle)}.`)}</li>
+            <li>${tr('Faça os giros na ordem, da esquerda para a direita, <b>sem virar o puzzle na mão</b> no meio do caminho.', 'Do the turns in order, left to right, <b>without rotating the whole puzzle</b> along the way.', 'Haz los giros en orden, de izquierda a derecha, <b>sin girar el puzzle entero</b> por el camino.')}</li>
             <li>${tr(
               `Confira com o desenho${cfg.preview ? '' : ' (ligue a opção "Desenho")'}: ele mostra como o puzzle deve ter ficado, visto ${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? 'aberto' : 'aberto em cruz (a face de cima no alto, a da frente no meio)'}.`,
-              `Check it against the preview${cfg.preview ? '' : ' (turn on the "Preview" option)'}: it shows how the puzzle should look, unfolded${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? '' : ' as a cross (top face at the top, front face in the middle)'}.`,
+              `Check it against the preview${cfg.preview ? '' : ' (turn on the "Preview" option)'}: it shows how the puzzle should look, unfolded${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? '' : ' as a cross (top face at the top, front face in the middle)'}.`, `Compáralo con la vista previa${cfg.preview ? '' : ' (activa la opción "Vista previa")'}: muestra cómo debería quedar el puzzle, desplegado${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? '' : ' en forma de cruz (la cara de arriba arriba y la del frente en el medio)'}.`,
             )}</li>
           </ol>
         </div>
         <div>
-          <h4>${tr('O que cada movimento quer dizer', 'What each move means')}</h4>
+          <h4>${tr('O que cada movimento quer dizer', 'What each move means', 'Qué significa cada movimiento')}</h4>
           ${notationHtml(impl)}
         </div>
       </div>`;

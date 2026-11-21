@@ -12,18 +12,20 @@ import type { PuzzleImpl } from '../src/core/types';
 const PT = /[ãõçáéíóúâêôàÃÕÇÁÉÍÓÚÂÊÔ]|\b(não|nao|com|para|uma|dos|das|nas|nos|pelo|pela|cima|baixo|frente|trás|tras|direita|esquerda|canto|cantos|aresta|arestas|centro|centros|passo|passos|giro|giros|cor|cores|embaixo|horário|camada|camadas|ponta|pontas|faça|segure|gire|até|então|também|só|mesmo|vez|vezes|já|ainda|peça|peças|movimento|movimentos|lado|outra|outro|deixe|leve|monte)\b/i;
 const strip = (s: string) => s.replace(/<[^>]+>/g, ' ');
 
+/** português que sobrou no espanhol: só o que não existe em espanhol */
+const PT_IN_ES = /[ãõçÃÕÇ]|(não|você|uma|com|faça|então|também|peça|peças|canto|cantos|camada|camadas|embaixo|vezes|aresta|arestas|segure|gire)/i;
+/** inglês que sobrou no espanhol */
+const EN_IN_ES = /(the|and|with|turn|turns|step|steps|edge|edges|corner|corners|layer|layers|face|faces|move|moves|white|yellow|green|top|bottom|left|right|front|back)/i;
+
+let BAD: RegExp[] = [PT];
 function check(where: string, text: string | undefined, bad: string[]) {
   if (!text) return;
-  const m = strip(text).match(PT);
+  const m = BAD.map((re) => strip(text).match(re)).find(Boolean);
   if (m) bad.push(`${where}: «${m[0]}» em "${strip(text).slice(0, 140)}"`);
 }
 
-describe('versão em inglês', () => {
-  afterAll(() => setLang('pt'));
-
-  for (const def of PUZZLES.filter((p) => p.available))
-    it(`${def.id}: tudo em inglês`, async () => {
-      setLang('en');
+async function leftovers(def: (typeof PUZZLES)[number], lang: 'en' | 'es') {
+      setLang(lang);
       const impl: PuzzleImpl = await def.load!();
       const bad: string[] = [];
       check('nome', def.name, bad);
@@ -74,7 +76,16 @@ describe('versão em inglês', () => {
           }
         }
       }
-      expect([...new Set(bad)].slice(0, 40)).toEqual([]);
+      return [...new Set(bad)].slice(0, 40);
+}
+
+describe('versão em inglês', () => {
+  afterAll(() => setLang('pt'));
+
+  for (const def of PUZZLES.filter((p) => p.available))
+    it(`${def.id}: tudo em inglês`, async () => {
+      BAD = [PT];
+      expect(await leftovers(def, 'en')).toEqual([]);
     }, 120000);
 
   it('em português continua em português', async () => {
@@ -85,4 +96,16 @@ describe('versão em inglês', () => {
     expect(sol.steps.some((st) => PT.test(strip(st.description)))).toBe(true);
     expect(impl.colors.map((c) => c.name)).toContain('amarelo');
   });
+});
+
+describe('versão em espanhol', () => {
+  afterAll(() => {
+    setLang('pt');
+    BAD = [PT];
+  });
+  for (const def of PUZZLES.filter((p) => p.available))
+    it(`${def.id}: tudo em espanhol`, async () => {
+      BAD = [PT_IN_ES, EN_IN_ES];
+      expect(await leftovers(def, 'es')).toEqual([]);
+    }, 120000);
 });

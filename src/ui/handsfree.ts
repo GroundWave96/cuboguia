@@ -28,7 +28,7 @@ export function speak(text: string) {
   if (!canSpeak()) return;
   const synth = window.speechSynthesis;
   synth.cancel(); // a fala anterior perde a vez: o movimento novo é o que importa
-  const lang = getLang() === 'en' ? 'en-US' : 'pt-BR';
+  const lang = { pt: 'pt-BR', en: 'en-US', es: 'es-ES' }[getLang()];
   const u = new SpeechSynthesisUtterance(speechText(text));
   u.lang = lang;
   const voices = synth.getVoices();

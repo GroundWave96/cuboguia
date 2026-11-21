@@ -64,10 +64,10 @@ function solveFirstLayer(ctx: Ctx) {
       (m, setup, _b, after) => {
         const sl = SLOTS[m.meta!.slot as number];
         const n = m.meta!.n as number;
-        const reps = n === 1 ? tr('uma vez', 'once') : tr(`${n} vezes`, `${n} times`);
+        const reps = n === 1 ? tr('uma vez', 'once', 'una vez') : tr(`${n} vezes`, `${n} times`, `${n} veces`);
         if (allSolved(after, target))
           return {
-            title: tr(`Canto ${name}`, `${name} corner`),
+            title: tr(`Canto ${name}`, `${name} corner`, `Esquina ${name}`),
             text:
               setupText(setup) +
               tr(
@@ -75,14 +75,16 @@ function solveFirstLayer(ctx: Ctx) {
                   'A cada repetição o canto gira; ele encaixa quando o branco fica para baixo e as cores combinam com os vizinhos.',
                 `Put the <b>${name}</b> corner right above its slot and, with the green face toward you, repeat <b>${sl.alg}</b> ${reps}. ` +
                   'Each repetition twists the corner; it’s in when white faces down and the colors match its neighbors.',
+                `Deja la esquina <b>${name}</b> justo encima de su lugar y, con la cara verde hacia ti, repite <b>${sl.alg}</b> ${reps}. ` +
+                  'Cada repetición gira la esquina; entra cuando el blanco queda hacia abajo y los colores coinciden con los vecinos.',
               ),
             algLabel: n === 1 ? sl.alg : `(${sl.alg}) × ${n}`,
           };
         return {
-          title: tr(`Retirar o canto ${name}`, `Take out the ${name} corner`),
+          title: tr(`Retirar o canto ${name}`, `Take out the ${name} corner`, `Saca la esquina ${name}`),
           text:
             setupText(setup) +
-            tr(`O canto <b>${name}</b> está embaixo, no lugar errado. Faça <b>${sl.alg}</b> ${reps} para levá-lo para cima.`, `The <b>${name}</b> corner is at the bottom, in the wrong spot. Do <b>${sl.alg}</b> ${reps} to bring it up.`),
+            tr(`O canto <b>${name}</b> está embaixo, no lugar errado. Faça <b>${sl.alg}</b> ${reps} para levá-lo para cima.`, `The <b>${name}</b> corner is at the bottom, in the wrong spot. Do <b>${sl.alg}</b> ${reps} to bring it up.`, `La esquina <b>${name}</b> está abajo, en el lugar equivocado. Haz <b>${sl.alg}</b> ${reps} para subirla.`),
           algLabel: sl.alg,
         };
       },
@@ -106,13 +108,13 @@ function solveLastLayer(ctx: Ctx) {
       const n = yellowUp(before);
       const hint =
         n === 1
-          ? tr('Há <b>um</b> canto com amarelo para cima (o “peixinho”): ele deve ficar na <b>frente-esquerda</b>.', 'There’s <b>one</b> corner with yellow facing up (the “fish”): it must be at the <b>front-left</b>.')
+          ? tr('Há <b>um</b> canto com amarelo para cima (o “peixinho”): ele deve ficar na <b>frente-esquerda</b>.', 'There’s <b>one</b> corner with yellow facing up (the “fish”): it must be at the <b>front-left</b>.', 'Hay <b>una</b> esquina con el amarillo hacia arriba (el “pez”): debe quedar <b>delante a la izquierda</b>.')
           : n === 0
-            ? tr('Nenhum canto tem amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>esquerda</b>.', 'No corner has yellow facing up: put a corner with yellow facing <b>left</b> at the <b>front-left</b>.')
-            : tr(`Há ${n} cantos com amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>frente</b>.`, `${n} corners have yellow facing up: put a corner with yellow facing the <b>front</b> at the <b>front-left</b>.`);
+            ? tr('Nenhum canto tem amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>esquerda</b>.', 'No corner has yellow facing up: put a corner with yellow facing <b>left</b> at the <b>front-left</b>.', 'Ninguna esquina tiene el amarillo hacia arriba: pon una esquina con el amarillo hacia la <b>izquierda</b> <b>delante a la izquierda</b>.')
+            : tr(`Há ${n} cantos com amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>frente</b>.`, `${n} corners have yellow facing up: put a corner with yellow facing the <b>front</b> at the <b>front-left</b>.`, `${n} esquinas tienen el amarillo hacia arriba: pon una esquina con el amarillo hacia el <b>frente</b> <b>delante a la izquierda</b>.`);
       return {
-        title: tr('Completar a face amarela', 'Finish the yellow face'),
-        text: setupText(setup) + hint + tr(` Com a face verde de frente, aplique o <b>Sune</b>: <code>${SUNE}</code>.`, ` With the green face toward you, apply the <b>Sune</b>: <code>${SUNE}</code>.`),
+        title: tr('Completar a face amarela', 'Finish the yellow face', 'Termina la cara amarilla'),
+        text: setupText(setup) + hint + tr(` Com a face verde de frente, aplique o <b>Sune</b>: <code>${SUNE}</code>.`, ` With the green face toward you, apply the <b>Sune</b>: <code>${SUNE}</code>.`, ` Con la cara verde hacia ti, aplica el <b>Sune</b>: <code>${SUNE}</code>.`),
         algLabel: 'Sune',
       };
     },
@@ -133,17 +135,17 @@ function solveLastLayer(ctx: Ctx) {
     (m, setup) => {
       const t = m.meta!.name === 'T-perm';
       return {
-        title: tr(`Trocar cantos com ${m.meta!.name}`, `Swap corners with ${m.meta!.name}`),
+        title: tr(`Trocar cantos com ${m.meta!.name}`, `Swap corners with ${m.meta!.name}`, `Intercambia esquinas con ${m.meta!.name}`),
         text:
           setupText(setup) +
           (t
             ? tr(
                 'Procure os “faróis”: dois cantos de cima com a mesma cor do mesmo lado. Deixe os faróis <b>na esquerda</b> e, com a face verde de frente, aplique o <b>T-perm</b> — ele troca os dois cantos da direita.',
-                'Look for “headlights”: two top corners with the same color on the same side. Put the headlights <b>on the left</b> and, with the green face toward you, apply the <b>T-perm</b> — it swaps the two right corners.',
+                'Look for “headlights”: two top corners with the same color on the same side. Put the headlights <b>on the left</b> and, with the green face toward you, apply the <b>T-perm</b> — it swaps the two right corners.', 'Busca “faros”: dos esquinas de arriba con el mismo color en el mismo lado. Pon los faros <b>a la izquierda</b> y, con la cara verde hacia ti, aplica la <b>T-perm</b>: intercambia las dos esquinas de la derecha.',
               )
             : tr(
                 'Não há faróis em nenhum lado: dois cantos em diagonal precisam trocar. Com a face verde de frente, aplique o <b>Y-perm</b>.',
-                'There are no headlights on any side: two diagonal corners need to swap. With the green face toward you, apply the <b>Y-perm</b>.',
+                'There are no headlights on any side: two diagonal corners need to swap. With the green face toward you, apply the <b>Y-perm</b>.', 'No hay faros en ningún lado: hay que intercambiar dos esquinas en diagonal. Con la cara verde hacia ti, aplica la <b>Y-perm</b>.',
               )) +
           ` <code>${t ? T_PERM : Y_PERM}</code>`,
         algLabel: String(m.meta!.name),
@@ -154,9 +156,9 @@ function solveLastLayer(ctx: Ctx) {
 }
 
 export const BEGINNER2_STAGES = (): SolutionStage[] => [
-  { id: 'first', name: tr('Face branca', 'White face'), goal: tr('Completar a camada de baixo: face branca com as laterais combinando.', 'Finish the bottom layer: white face with matching sides.') },
-  { id: 'yellow', name: tr('Face amarela', 'Yellow face'), goal: tr('Deixar toda a face de cima amarela.', 'Make the whole top face yellow.') },
-  { id: 'perm', name: tr('Cantos do topo', 'Top corners'), goal: tr('Colocar os cantos de cima nos lugares certos e terminar o cubo.', 'Put the top corners in their right places and finish the cube.') },
+  { id: 'first', name: tr('Face branca', 'White face', 'Cara blanca'), goal: tr('Completar a camada de baixo: face branca com as laterais combinando.', 'Finish the bottom layer: white face with matching sides.', 'Termina la capa de abajo: cara blanca con los lados que coinciden.') },
+  { id: 'yellow', name: tr('Face amarela', 'Yellow face', 'Cara amarilla'), goal: tr('Deixar toda a face de cima amarela.', 'Make the whole top face yellow.', 'Haz toda la cara de arriba amarilla.') },
+  { id: 'perm', name: tr('Cantos do topo', 'Top corners', 'Esquinas de arriba'), goal: tr('Colocar os cantos de cima nos lugares certos e terminar o cubo.', 'Put the top corners in their right places and finish the cube.', 'Pon las esquinas de arriba en su lugar y termina el cubo.') },
 ];
 
 export function solveBeginner2(state: PuzzleState): Solution {
@@ -165,6 +167,6 @@ export function solveBeginner2(state: PuzzleState): Solution {
   solveFirstLayer(ctx);
   solveLastLayer(ctx);
   if (!allSolved(ctx.s, ALL)) throw new Error('O solucionador não terminou o cubo.');
-  return { method: tr('Método de iniciante (camadas)', 'Beginner method (layers)'), stages: BEGINNER2_STAGES(), steps: ctx.steps };
+  return { method: tr('Método de iniciante (camadas)', 'Beginner method (layers)', 'Método para principiantes (capas)'), stages: BEGINNER2_STAGES(), steps: ctx.steps };
 }
 

@@ -12,48 +12,48 @@ export type { AlgCase, AlgGroup } from '../algkit';
 export { invertAlg, splitAlg } from '../algkit';
 
 export const CUBE3_SETS: AlgSetDef[] = [
-  { id: 'oll2', name: () => tr('OLL em 2 etapas', '2-look OLL'), style: 'oll' },
-  { id: 'oll', name: () => tr('OLL completa', 'Full OLL'), style: 'oll' },
+  { id: 'oll2', name: () => tr('OLL em 2 etapas', '2-look OLL', 'OLL en 2 pasos'), style: 'oll' },
+  { id: 'oll', name: () => tr('OLL completa', 'Full OLL', 'OLL completa'), style: 'oll' },
   { id: 'pll', name: () => 'PLL', style: 'pll' },
 ];
 
-const g = (id: string, set: string, name: [string, string], about: [string, string]): AlgGroup => ({ id, set, name: () => tr(...name), about: () => tr(...about) });
+const g = (id: string, set: string, name: [string, string, string], about: [string, string, string]): AlgGroup => ({ id, set, name: () => tr(...name), about: () => tr(...about) });
 
 export const ALG_GROUPS: AlgGroup[] = [
-  g('oll-edges', 'oll2', ['1ª etapa · cruz amarela', 'Step 1 · yellow cross'], [
+  g('oll-edges', 'oll2', ['1ª etapa · cruz amarela', 'Step 1 · yellow cross', '1.er paso · cruz amarilla'], [
     'Olhe só as <b>arestas</b> amarelas do topo (ignore os cantos): um ponto, um L ou uma linha. Segure o L no canto de trás à esquerda e a linha deitada.',
-    'Look only at the yellow <b>edges</b> on top (ignore the corners): a dot, an L or a line. Hold the L at the back-left and the line horizontal.',
+    'Look only at the yellow <b>edges</b> on top (ignore the corners): a dot, an L or a line. Hold the L at the back-left and the line horizontal.', 'Mira solo las <b>aristas</b> amarillas de arriba (ignora las esquinas): un punto, una L o una línea. Sujeta la L atrás a la izquierda y la línea horizontal.',
   ]),
-  g('oll-corners', 'oll2', ['2ª etapa · cantos', 'Step 2 · corners'], [
+  g('oll-corners', 'oll2', ['2ª etapa · cantos', 'Step 2 · corners', '2.º paso · esquinas'], [
     'Com a cruz pronta, conte os cantos já amarelos no topo e olhe para onde apontam os outros adesivos amarelos (nas laterais).',
-    'With the cross done, count the corners already yellow on top and see where the other yellow stickers point (on the sides).',
+    'With the cross done, count the corners already yellow on top and see where the other yellow stickers point (on the sides).', 'Con la cruz hecha, cuenta las esquinas que ya están amarillas arriba y mira hacia dónde apuntan las otras pegatinas amarillas (en los lados).',
   ]),
   // ---- OLL completa (ordem sugerida para aprender)
-  g('ollf-ocll', 'oll', ['Cruz já pronta (OCLL)', 'Cross already done (OCLL)'], ['Os mesmos 7 casos da 2ª etapa: as arestas já estão amarelas.', 'The same 7 cases as step 2: the edges are already yellow.']),
-  g('ollf-t', 'oll', ['Formato T', 'T shapes'], ['O amarelo forma um T no topo.', 'The yellow forms a T on top.']),
-  g('ollf-square', 'oll', ['Quadrados', 'Squares'], ['Um quadrado 2×2 amarelo num canto.', 'A yellow 2×2 square in one corner.']),
-  g('ollf-c', 'oll', ['Formato C', 'C shapes'], ['O amarelo forma um C (ou U).', 'The yellow forms a C (or U).']),
-  g('ollf-w', 'oll', ['Formato W', 'W shapes'], ['O amarelo forma uma escadinha (W).', 'The yellow forms a little staircase (W).']),
-  g('ollf-edges', 'oll', ['Cantos prontos, arestas viradas', 'Corners done, edges flipped'], ['Os 4 cantos já estão amarelos; faltam arestas.', 'All 4 corners are already yellow; some edges are not.']),
-  g('ollf-p', 'oll', ['Formato P', 'P shapes'], ['O amarelo forma um P (um quadrado com uma perninha).', 'The yellow forms a P (a square with a little leg).']),
-  g('ollf-i', 'oll', ['Formato I (linha)', 'I shapes (line)'], ['Uma linha amarela atravessa o topo.', 'A yellow line crosses the top.']),
-  g('ollf-fish', 'oll', ['Peixes', 'Fish'], ['O amarelo forma um peixinho na diagonal.', 'The yellow forms a little fish along the diagonal.']),
-  g('ollf-knight', 'oll', ['Movimento do cavalo', 'Knight move'], ['O amarelo lembra o L do cavalo no xadrez.', 'The yellow looks like a chess knight’s L move.']),
-  g('ollf-awkward', 'oll', ['Desajeitados', 'Awkward'], ['Formatos sem nome fácil: duas arestas em linha e cantos espalhados.', 'Shapes without an easy name: two edges in a line and scattered corners.']),
-  g('ollf-l', 'oll', ['Formato L', 'L shapes'], ['Só um L de arestas no topo (canto do meio e duas arestas).', 'Just an L of edges on top (the center and two edges).']),
-  g('ollf-lightning', 'oll', ['Raios', 'Lightning bolts'], ['O amarelo forma um raio (zigue-zague).', 'The yellow forms a lightning bolt (zigzag).']),
-  g('ollf-dot', 'oll', ['Pontos (nenhuma aresta)', 'Dots (no edges)'], ['Nenhuma aresta amarela no topo: só o centro (e às vezes cantos).', 'No yellow edges on top: just the center (and sometimes corners).']),
+  g('ollf-ocll', 'oll', ['Cruz já pronta (OCLL)', 'Cross already done (OCLL)', 'Cruz ya hecha (OCLL)'], ['Os mesmos 7 casos da 2ª etapa: as arestas já estão amarelas.', 'The same 7 cases as step 2: the edges are already yellow.', 'Los mismos 7 casos del 2.º paso: las aristas ya están amarillas.']),
+  g('ollf-t', 'oll', ['Formato T', 'T shapes', 'Forma de T'], ['O amarelo forma um T no topo.', 'The yellow forms a T on top.', 'El amarillo forma una T arriba.']),
+  g('ollf-square', 'oll', ['Quadrados', 'Squares', 'Cuadrados'], ['Um quadrado 2×2 amarelo num canto.', 'A yellow 2×2 square in one corner.', 'Un cuadrado amarillo de 2×2 en una esquina.']),
+  g('ollf-c', 'oll', ['Formato C', 'C shapes', 'Forma de C'], ['O amarelo forma um C (ou U).', 'The yellow forms a C (or U).', 'El amarillo forma una C (o U).']),
+  g('ollf-w', 'oll', ['Formato W', 'W shapes', 'Forma de W'], ['O amarelo forma uma escadinha (W).', 'The yellow forms a little staircase (W).', 'El amarillo forma una escalerita (W).']),
+  g('ollf-edges', 'oll', ['Cantos prontos, arestas viradas', 'Corners done, edges flipped', 'Esquinas hechas, aristas volteadas'], ['Os 4 cantos já estão amarelos; faltam arestas.', 'All 4 corners are already yellow; some edges are not.', 'Las 4 esquinas ya están amarillas; faltan aristas.']),
+  g('ollf-p', 'oll', ['Formato P', 'P shapes', 'Forma de P'], ['O amarelo forma um P (um quadrado com uma perninha).', 'The yellow forms a P (a square with a little leg).', 'El amarillo forma una P (un cuadrado con una patita).']),
+  g('ollf-i', 'oll', ['Formato I (linha)', 'I shapes (line)', 'Forma de I (línea)'], ['Uma linha amarela atravessa o topo.', 'A yellow line crosses the top.', 'Una línea amarilla cruza la cara de arriba.']),
+  g('ollf-fish', 'oll', ['Peixes', 'Fish', 'Peces'], ['O amarelo forma um peixinho na diagonal.', 'The yellow forms a little fish along the diagonal.', 'El amarillo forma un pececito en diagonal.']),
+  g('ollf-knight', 'oll', ['Movimento do cavalo', 'Knight move', 'Movimiento de caballo'], ['O amarelo lembra o L do cavalo no xadrez.', 'The yellow looks like a chess knight’s L move.', 'El amarillo recuerda la L del caballo de ajedrez.']),
+  g('ollf-awkward', 'oll', ['Desajeitados', 'Awkward', 'Raros'], ['Formatos sem nome fácil: duas arestas em linha e cantos espalhados.', 'Shapes without an easy name: two edges in a line and scattered corners.', 'Formas sin nombre fácil: dos aristas en línea y esquinas sueltas.']),
+  g('ollf-l', 'oll', ['Formato L', 'L shapes', 'Forma de L'], ['Só um L de arestas no topo (canto do meio e duas arestas).', 'Just an L of edges on top (the center and two edges).', 'Solo una L de aristas arriba (el centro y dos aristas).']),
+  g('ollf-lightning', 'oll', ['Raios', 'Lightning bolts', 'Rayos'], ['O amarelo forma um raio (zigue-zague).', 'The yellow forms a lightning bolt (zigzag).', 'El amarillo forma un rayo (zigzag).']),
+  g('ollf-dot', 'oll', ['Pontos (nenhuma aresta)', 'Dots (no edges)', 'Puntos (ninguna arista)'], ['Nenhuma aresta amarela no topo: só o centro (e às vezes cantos).', 'No yellow edges on top: just the center (and sometimes corners).', 'Ninguna arista amarilla arriba: solo el centro (y a veces esquinas).']),
   // ---- PLL
-  g('pll-edges', 'pll', ['Só arestas', 'Edges only'], ['Os cantos já estão no lugar: só as arestas trocam.', 'The corners are already solved: only the edges move.']),
-  g('pll-corners', 'pll', ['Só cantos', 'Corners only'], ['As arestas já estão no lugar: só os cantos trocam.', 'The edges are already solved: only the corners move.']),
-  g('pll-adjacent', 'pll', ['Troca de cantos vizinhos', 'Adjacent corner swap'], [
+  g('pll-edges', 'pll', ['Só arestas', 'Edges only', 'Solo aristas'], ['Os cantos já estão no lugar: só as arestas trocam.', 'The corners are already solved: only the edges move.', 'Las esquinas ya están en su lugar: solo se mueven las aristas.']),
+  g('pll-corners', 'pll', ['Só cantos', 'Corners only', 'Solo esquinas'], ['As arestas já estão no lugar: só os cantos trocam.', 'The edges are already solved: only the corners move.', 'Las aristas ya están en su lugar: solo se mueven las esquinas.']),
+  g('pll-adjacent', 'pll', ['Troca de cantos vizinhos', 'Adjacent corner swap', 'Intercambio de esquinas vecinas'], [
     'Há um par de “faróis” (dois cantos iguais num lado): os cantos que trocam ficam lado a lado.',
-    'There is one pair of “headlights” (two matching corners on one side): the swapped corners are next to each other.',
+    'There is one pair of “headlights” (two matching corners on one side): the swapped corners are next to each other.', 'Hay un par de “faros” (dos esquinas iguales en un lado): las esquinas que se intercambian están una al lado de la otra.',
   ]),
-  g('pll-diagonal', 'pll', ['Troca de cantos na diagonal', 'Diagonal corner swap'], ['Nenhum lado tem faróis: os cantos trocam na diagonal.', 'No side has headlights: the corners swap diagonally.']),
-  g('pll-g', 'pll', ['G-perms', 'G-perms'], [
+  g('pll-diagonal', 'pll', ['Troca de cantos na diagonal', 'Diagonal corner swap', 'Intercambio de esquinas en diagonal'], ['Nenhum lado tem faróis: os cantos trocam na diagonal.', 'No side has headlights: the corners swap diagonally.', 'Ningún lado tiene faros: las esquinas se intercambian en diagonal.']),
+  g('pll-g', 'pll', ['G-perms', 'G-perms', 'G-perms'], [
     'Três cantos e três arestas giram juntos. Procure o bloco 1×2 e os faróis para saber qual dos quatro é.',
-    'Three corners and three edges cycle together. Look for the 1×2 block and the headlights to tell the four apart.',
+    'Three corners and three edges cycle together. Look for the 1×2 block and the headlights to tell the four apart.', 'Tres esquinas y tres aristas giran juntas. Busca el bloque de 1×2 y los faros para saber cuál de los cuatro es.',
   ]),
 ];
 
@@ -118,14 +118,14 @@ const OLL_FULL: [number, string, string, string?][] = [
   [20, 'dot', "M U (R U R' U') M2' (U R U' r')", "(r U R' U') M2' (U R U' R') U' M'"],
 ];
 /** apelidos famosos da OLL completa */
-const OLL_NICK: Record<number, [string, string]> = {
-  21: ['H', 'H'],
-  22: ['Pi', 'Pi'],
-  23: ['faróis', 'headlights'],
-  24: ['T', 'T'],
-  25: ['gravata', 'bowtie'],
-  26: ['Antisune', 'Antisune'],
-  27: ['Sune', 'Sune'],
+const OLL_NICK: Record<number, [string, string, string]> = {
+  21: ['H', 'H', 'H'],
+  22: ['Pi', 'Pi', 'Pi'],
+  23: ['faróis', 'headlights', 'faros'],
+  24: ['T', 'T', 'T'],
+  25: ['gravata', 'bowtie', 'pajarita'],
+  26: ['Antisune', 'Antisune', 'Antisune'],
+  27: ['Sune', 'Sune', 'Sune'],
 };
 
 /** algoritmo legível: sem parênteses e com "2'" virando "2" */
@@ -133,21 +133,21 @@ const clean = (alg: string) => splitAlg(alg).join(' ');
 
 export const ALG_CASES: AlgCase[] = [
   // ---- OLL em 2 etapas: arestas
-  { id: 'oll-dot', set: 'oll2', group: 'oll-edges', name: ['Ponto', 'Dot'], alg: "F R U R' U' F' f R U R' U' f'" },
+  { id: 'oll-dot', set: 'oll2', group: 'oll-edges', name: ['Ponto', 'Dot', 'Punto'], alg: "F R U R' U' F' f R U R' U' f'" },
   { id: 'oll-l', set: 'oll2', group: 'oll-edges', name: 'L', alg: "f R U R' U' f'" },
-  { id: 'oll-line', set: 'oll2', group: 'oll-edges', name: ['Linha', 'Line'], alg: "F R U R' U' F'" },
+  { id: 'oll-line', set: 'oll2', group: 'oll-edges', name: ['Linha', 'Line', 'Línea'], alg: "F R U R' U' F'" },
   // ---- OLL em 2 etapas: cantos
   { id: 'oll-sune', set: 'oll2', group: 'oll-corners', name: 'Sune', alg: "R U R' U R U2 R'" },
   { id: 'oll-antisune', set: 'oll2', group: 'oll-corners', name: 'Antisune', alg: "R U2 R' U' R U' R'" },
   { id: 'oll-h', set: 'oll2', group: 'oll-corners', name: 'H', alg: "R U R' U R U' R' U R U2 R'" },
   { id: 'oll-pi', set: 'oll2', group: 'oll-corners', name: 'Pi', alg: "R U2 R2 U' R2 U' R2 U2 R" },
-  { id: 'oll-u', set: 'oll2', group: 'oll-corners', name: ['U (faróis)', 'U (headlights)'], alg: "R2 D R' U2 R D' R' U2 R'" },
+  { id: 'oll-u', set: 'oll2', group: 'oll-corners', name: ['U (faróis)', 'U (headlights)', 'U (faros)'], alg: "R2 D R' U2 R D' R' U2 R'" },
   { id: 'oll-t', set: 'oll2', group: 'oll-corners', name: 'T', alg: "r U R' U' r' F R F'" },
-  { id: 'oll-bowtie', set: 'oll2', group: 'oll-corners', name: ['L (gravata)', 'L (bowtie)'], alg: "F' r U R' U' r' F R" },
+  { id: 'oll-bowtie', set: 'oll2', group: 'oll-corners', name: ['L (gravata)', 'L (bowtie)', 'L (pajarita)'], alg: "F' r U R' U' r' F R" },
   // ---- OLL completa
   ...OLL_FULL.map(([n, group, alg, alt]): AlgCase => {
     const nick = OLL_NICK[n];
-    return { id: `ollf-${n}`, set: 'oll', group: `ollf-${group}`, name: nick ? [`OLL ${n} · ${nick[0]}`, `OLL ${n} · ${nick[1]}`] : `OLL ${n}`, alg: clean(alg), alt: alt && clean(alt) };
+    return { id: `ollf-${n}`, set: 'oll', group: `ollf-${group}`, name: nick ? [`OLL ${n} · ${nick[0]}`, `OLL ${n} · ${nick[1]}`, `OLL ${n} · ${nick[2]}`] : `OLL ${n}`, alg: clean(alg), alt: alt && clean(alt) };
   }),
   // ---- PLL: só arestas
   { id: 'pll-ua', set: 'pll', group: 'pll-edges', name: 'Ua', alg: "M2 U M U2 M' U M2", alt: "R U' R U R U R U' R' U' R2" },
