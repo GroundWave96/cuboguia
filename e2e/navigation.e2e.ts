@@ -9,6 +9,8 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
     ['/3x3', /3x3/],
     ['/pyraminx', /Pyraminx/],
     ['/megaminx', /Megaminx/],
+    ['/6x6', /6x6/],
+    ['/en/7x7', /7x7/],
     ['/en/skewb', /Skewb/],
     ['/algoritmos', /OLL e PLL/],
     ['/en/algorithms', /OLL and PLL/],
@@ -24,6 +26,33 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
   await page.goto('/9x9');
   await expect(page.locator('h2').first()).toHaveText('Página não encontrada');
   for (const f of ['/sitemap.xml', '/robots.txt', '/site.webmanifest']) expect((await page.request.get(f)).status(), f).toBe(200);
+  check();
+});
+
+test('link de sugestão: abre o e-mail com o endereço da página', async ({ page }, info) => {
+  const check = trackErrors(page);
+  // não deixa o navegador abrir o programa de e-mail de verdade
+  const block = () =>
+    page.evaluate(() =>
+      document.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a[data-feedback]')) e.preventDefault();
+      }),
+    );
+  await page.goto('/3x3');
+  await block();
+  const link = info.project.name === 'celular' ? page.locator('.drawer-feedback') : page.locator('.footer-feedback');
+  if (info.project.name === 'celular') await page.click('.menu-btn');
+  await expect(link).toHaveText('Mandar sugestão ou avisar erro');
+  await link.click();
+  const href = (await link.getAttribute('href'))!;
+  expect(href).toMatch(/^mailto:gabrielhfp96@gmail\.com\?subject=/);
+  expect(decodeURIComponent(href)).toContain(`Página: ${page.url()}`);
+  // em inglês
+  await page.goto('/en');
+  await expect(page.locator('.footer-feedback')).toHaveText('Send a suggestion or report a bug');
+  await block();
+  await page.locator('.footer-feedback').click();
+  expect(decodeURIComponent((await page.locator('.footer-feedback').getAttribute('href'))!)).toContain('Page: ');
   check();
 });
 

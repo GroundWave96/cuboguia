@@ -2,9 +2,9 @@
 import { expect, test } from '@playwright/test';
 import { openRandomTutorial, trackErrors } from './helpers';
 
-const SLUGS = ['2x2', '3x3', '4x4', '5x5', 'pyraminx', 'skewb', 'megaminx'];
+const SLUGS = ['2x2', '3x3', '4x4', '5x5', '6x6', '7x7', 'pyraminx', 'skewb', 'megaminx'];
 /** tutoriais longos (40 a 60 passos): no GitHub o 3D é desenhado sem placa de vídeo e demora */
-const LONG = ['4x4', '5x5', 'megaminx'];
+const LONG = ['4x4', '5x5', '6x6', '7x7', 'megaminx'];
 
 for (const slug of SLUGS)
   test(`${slug}: do início até resolvido`, async ({ page }, info) => {
@@ -25,6 +25,79 @@ for (const slug of SLUGS)
     await expect(page.locator('.done-panel h2')).toContainText(/resolvido/i);
     check();
   });
+
+/** troca a voz do navegador por uma que só anota o que seria falado */
+async function fakeVoice(page: import('@playwright/test').Page) {
+  await page.addInitScript(() => {
+    const said: { text: string; lang: string }[] = [];
+    (window as unknown as { __said: typeof said }).__said = said;
+    const synth = {
+      speak: (u: SpeechSynthesisUtterance) => said.push({ text: u.text, lang: u.lang }),
+      cancel: () => {},
+      getVoices: () => [],
+    };
+    Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
+  });
+  return () => page.evaluate(() => (window as unknown as { __said: { text: string; lang: string }[] }).__said);
+}
+
+test('mãos livres: fala o próximo movimento e um toque no cubo avança', async ({ page }) => {
+  const check = trackErrors(page);
+  const said = await fakeVoice(page);
+  await openRandomTutorial(page, '3x3');
+  const toggle = page.locator('[data-act="handsfree"]');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.hf-hint')).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.hf-hint')).toBeVisible();
+  await expect(page.locator('.hf-note')).toBeVisible();
+  await expect.poll(async () => (await said()).at(-1)?.text).toMatch(/^Passo 1 de \d+: .+\. Primeiro movimento: .+(horário|meia volta)/);
+  expect((await said()).at(-1)!.lang).toBe('pt-BR');
+  expect((await said()).at(-1)!.text, 'sem setas nem "·"').not.toMatch(/[↻↺·]/);
+
+  // um toque no cubo faz o movimento e fala o seguinte
+  const box = (await page.locator('#view-host').boundingBox())!;
+  const [x, y] = [box.x + box.width / 2, box.y + box.height * 0.55];
+  const before = (await said()).length;
+  await page.mouse.click(x, y);
+  await expect(page.locator('.chip.done')).toHaveCount(1);
+  await expect.poll(async () => (await said()).length).toBeGreaterThan(before);
+  // o movimento seguinte (ou "Passo concluído", se o passo tinha um movimento só) — nunca o passo de novo
+  expect((await said()).at(-1)!.text).not.toMatch(/^Passo \d+ de/);
+  if ((await page.locator('.chip').count()) === 1) expect((await said()).at(-1)!.text).toMatch(/^Passo concluído/);
+
+  // arrastar gira a vista, não avança
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 80, y + 20, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForTimeout(900);
+  await expect(page.locator('.chip.done')).toHaveCount(1);
+
+  // a escolha fica lembrada; desligar para de falar e esconde a dica
+  await page.reload();
+  await page.waitForSelector('.step-panel .chip');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.hf-hint')).toBeHidden();
+  const count = (await said()).length;
+  await page.click('[data-act="nextMove"]');
+  await page.waitForTimeout(900);
+  expect((await said()).length, 'desligado não fala').toBe(count);
+  check();
+});
+
+test('mãos livres em inglês fala em inglês', async ({ page }) => {
+  const said = await fakeVoice(page);
+  await openRandomTutorial(page, '2x2', '/en');
+  await page.click('[data-act="handsfree"]');
+  await expect.poll(async () => (await said()).at(-1)?.text).toMatch(/^Step 1 of \d+: .+\. First move: /);
+  const last = (await said()).at(-1)!;
+  expect(last.lang).toBe('en-US');
+  expect(last.text).not.toMatch(/Passo|horário|movimento/);
+});
 
 test('passo novo não executa o primeiro movimento sozinho', async ({ page }) => {
   await openRandomTutorial(page, '3x3');

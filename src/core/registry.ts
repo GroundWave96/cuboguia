@@ -60,6 +60,34 @@ export const PUZZLES: PuzzleDefinition[] = [
     load: () => import('../puzzles/cube5').then((m) => m.default as PuzzleImpl),
   },
   {
+    id: 'cube6',
+    slug: '6x6',
+    get name() {
+      return tr('Cubo 6x6', '6x6 Cube');
+    },
+    short: '6x6',
+    get subtitle() {
+      return tr('Centros grandes, arestas de 4 peças, paridades e fim como 3x3.', 'Big centers, 4-piece edges, parities, then like a 3x3.');
+    },
+    available: true,
+    icon: cubeIcon(6),
+    load: () => import('../puzzles/cube6').then((m) => m.default as PuzzleImpl),
+  },
+  {
+    id: 'cube7',
+    slug: '7x7',
+    get name() {
+      return tr('Cubo 7x7', '7x7 Cube');
+    },
+    short: '7x7',
+    get subtitle() {
+      return tr('O maior de todos aqui. Centros, arestas e fim como 3x3.', 'The biggest one here. Centers, edges, then like a 3x3.');
+    },
+    available: true,
+    icon: cubeIcon(7),
+    load: () => import('../puzzles/cube7').then((m) => m.default as PuzzleImpl),
+  },
+  {
     id: 'pyraminx',
     slug: 'pyraminx',
     get name() {

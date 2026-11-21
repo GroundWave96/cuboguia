@@ -9,6 +9,9 @@ animado, passo a passo.
 | 3x3 | Iniciante (camadas) · CFOP (Cross, F2L, OLL/PLL em 2 etapas) |
 | 2x2 | Iniciante (camadas) · Solução ótima (≤ 11 movimentos) |
 | 4x4 | Redução (centros, arestas, paridades OLL/PLL) + iniciante ou CFOP |
+| 5x5 | Redução (centros, arestas com paridade das pontas) + iniciante ou CFOP |
+| 6x6 | Redução (centros, pontas de dentro e de fora, paridades OLL/PLL) + iniciante ou CFOP · ~700 mov. |
+| 7x7 | Redução (centros, pontas em volta do meio da aresta) + iniciante ou CFOP · ~1000 mov. |
 | Pyraminx | Iniciante (pontas, centros, base, topo) · Solução ótima (≤ 11 + pontas) |
 | Skewb | Iniciante (face branca, cantos de cima, centros) · Solução ótima (≤ 11 movimentos) |
 | Megaminx | Iniciante (camadas, ~300 mov.) · Avançado (F2L/S2L em pares, última face em 2 olhares, ~250 mov.) |
@@ -23,6 +26,13 @@ No 4x4 nenhum centro é fixo: o solucionador monta o branco embaixo e o amarelo 
 cima na posição em que o cubo está (a câmera, como no 2x2, começa por qualquer face).
 Depois de juntar as arestas, as paridades do 4x4 (aresta virada sozinha e duas arestas
 trocadas) são corrigidas com um algoritmo cada, e o resto é a solução do 3x3.
+
+O 6x6 e o 7x7 usam um solucionador só, para qualquer tamanho (`src/puzzles/nxn/big.ts`):
+os tipos de peça (centros e pontas com a mesma distância das bordas) saem dos próprios giros,
+todos os ciclos de 3 peças de cada tipo saem de alguns comutadores conjugados por giros, e cada
+peça é colocada pelo caminho mais curto que não estraga o que já está pronto. Nos pares, as
+pontas de dentro se juntam primeiro (como no 4x4) e servem de referência para as de fora; as
+paridades OLL e PLL giram as fatias de dentro juntas. O primeiro cálculo leva ~1 s (monta os ciclos).
 
 No Skewb a referência é o canto amarelo-verde-laranja, sempre em cima-frente-direita:
 os giros R, U, L e B (notação WCA) nunca mexem nele. Cada peça é única, então os
@@ -67,6 +77,8 @@ src/
     cube3/         3x3: peças, validação e solucionadores (iniciante e CFOP)
     cube2/         2x2: validação e solucionadores (iniciante e ótimo)
     cube4/         4x4: redução (centros, arestas, paridades) e fim como 3x3
+    cube5/         5x5: redução (centros, arestas com paridade das pontas) e fim como 3x3
+    cube6/ cube7/  6x6 e 7x7: só a configuração; o solucionador é o genérico de nxn/big.ts
     pyraminx/      Pyraminx: tetraedro, peças 3D, rede triangular e solucionadores
     skewb/         Skewb: cubo cortado pelos cantos, rede em cruz e solucionadores
     megaminx/      Megaminx: geometria do dodecaedro, rede em duas flores, câmera e solucionador
@@ -112,7 +124,7 @@ Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.t
 | Endereço | Página |
 |---|---|
 | `/` | início |
-| `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/pyraminx`, `/skewb`, `/megaminx` | informar as cores |
+| `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/6x6`, `/7x7`, `/pyraminx`, `/skewb`, `/megaminx` | informar as cores |
 | `/3x3/tutorial?m=método&s=estado` | tutorial |
 | `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
 | `/en`, `/en/3x3`, `/en/3x3/tutorial`, `/en/timer` | as mesmas páginas em inglês |
@@ -140,6 +152,19 @@ O passo e o movimento de cada tutorial ficam guardados no navegador (`src/core/p
 chave `cubo:progress`, os 4 últimos tutoriais por 60 dias). O mesmo cubo e método sempre geram a mesma
 solução; uma assinatura dos movimentos garante isso (se a solução mudar numa versão nova, o
 progresso antigo é ignorado). A tela inicial mostra o mais recente e, numa setinha "+ N outros", os outros 3; o X ao lado de cada um faz o site esquecer aquele tutorial.
+
+## Tutorial: modo mãos livres
+
+O botão "Mãos livres" (ao lado da velocidade) faz o navegador falar o título do passo e cada
+próximo movimento (Web Speech API, `src/ui/handsfree.ts`: nada sai do aparelho) e um toque no
+cubo 3D avança um movimento (arrastar continua girando a vista). A escolha fica lembrada
+(`cubo:handsfree`). Os navegadores só falam depois do primeiro toque na página.
+
+## Sugestões e erros
+
+O rodapé (e o menu do celular) tem "Mandar sugestão ou avisar erro": abre o e-mail da pessoa
+com o assunto e o endereço da página (que guarda o cubo dela) já preenchidos
+(`src/ui/feedback.ts`). Nada é enviado sozinho.
 
 ## Algoritmos (`/algoritmos`, `/algoritmos/2x2`, `/algoritmos/pyraminx`)
 

@@ -7,6 +7,7 @@ import { icon } from './icons';
 import { notationHtml } from './notation';
 import { keepScreenOn } from './wakelock';
 import { loadProgress, movesSignature, saveProgress } from '../core/progress';
+import { canSpeak, loadHandsFree, saveHandsFree, speak, stopSpeaking } from './handsfree';
 
 interface FlatMove {
   move: string;
@@ -77,6 +78,11 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   let busy = false;
   let playing = false;
   let speed = loadSpeed();
+  // mãos livres: o site fala o próximo movimento e um toque no cubo avança
+  let handsFree = canSpeak() && loadHandsFree();
+  /** os navegadores só deixam falar depois de um toque/clique na página */
+  let interacted = false;
+  let lastSpoken = '';
   // 1× = 700 ms por quarto de volta (meia volta leva 1,5×)
   const moveMs = () => 700 / speed;
 
@@ -104,6 +110,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <div class="ws-view card">
         <div class="view-host" id="view-host"></div>
         <div class="move-badge" aria-live="polite"><strong></strong><span></span></div>
+        <div class="hf-hint" ${handsFree ? '' : 'hidden'}>${icon('voice')}<span>${tr('Toque no cubo para o próximo movimento', 'Tap the cube for the next move')}</span></div>
         <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view')}">${icon('resetView')}</button>
       </div>
       <div class="ws-panel card step-panel">
@@ -121,7 +128,18 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
           </div>
         </div>
         <div class="step-foot">
-          <label class="speed">${tr('Velocidade', 'Speed')} <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
+          <div class="foot-row">
+            <label class="speed">${tr('Velocidade', 'Speed')} <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
+            ${
+              canSpeak()
+                ? `<button type="button" class="btn ghost sm hf-toggle" data-act="handsfree" aria-pressed="${handsFree}" title="${tr('O site fala cada movimento e um toque no cubo avança', 'The site reads each move aloud and a tap on the cube moves on')}">${icon('voice')}<span>${tr('Mãos livres', 'Hands-free')}</span></button>`
+                : ''
+            }
+          </div>
+          <p class="hf-note" ${handsFree ? '' : 'hidden'}>${tr(
+            'Mãos livres ligado: o site fala cada movimento em voz alta. Faça o movimento no seu cubo e <b>toque no cubo da tela</b> para ir ao próximo (arrastar continua girando a vista). Aumente o volume do aparelho.',
+            'Hands-free is on: the site reads each move aloud. Do the move on your cube and <b>tap the cube on the screen</b> for the next one (dragging still turns the view). Turn up your device’s volume.',
+          )}</p>
           <details class="notation">
             <summary>${tr('Como ler os movimentos?', 'How to read the moves?')}</summary>
             ${notationHtml(impl)}
@@ -359,9 +377,11 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
     if (finished()) {
       if (built !== -1) buildDone();
+      announce();
       return;
     }
     if (built !== cur) buildStep();
+    announce();
 
     body.querySelector<HTMLElement>('.progress span')!.style.width = `${(pos / flat.length) * 100}%`;
     body.querySelectorAll<HTMLButtonElement>('.chip').forEach((b) => {
@@ -378,6 +398,53 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     else setMain('play', `${tr('Animar o passo', 'Play the step')} (${space})`, icon('play'));
   }
 
+  /** o que falar agora (mãos livres) */
+  function announcement(): string {
+    if (finished()) return steps.length ? tr('Cubo resolvido! Parabéns!', 'Solved! Well done!') : '';
+    if (stepDone()) return tr('Passo concluído. Toque no cubo para abrir o próximo passo.', 'Step done. Tap the cube to open the next step.');
+    const mv = describeMove(flat[pos].move);
+    if (pos === stepStart[cur])
+      return tr(`Passo ${cur + 1} de ${steps.length}: ${steps[cur].title}. Primeiro movimento: ${mv}`, `Step ${cur + 1} of ${steps.length}: ${steps[cur].title}. First move: ${mv}`);
+    return mv;
+  }
+
+  /** fala uma vez cada situação nova (não durante a animação nem no "play", que vai rápido demais) */
+  function announce(force = false) {
+    if (!handsFree || !interacted || busy || playing) return;
+    const key = finished() ? 'end' : `${cur}:${pos}`;
+    if (key === lastSpoken && !force) return;
+    lastSpoken = key;
+    const text = announcement();
+    if (text) speak(text);
+  }
+
+  function setHandsFree(on: boolean) {
+    handsFree = on;
+    saveHandsFree(on);
+    panel.querySelector('.hf-toggle')?.setAttribute('aria-pressed', String(on));
+    panel.querySelector<HTMLElement>('.hf-note')!.hidden = !on;
+    viewCard.querySelector<HTMLElement>('.hf-hint')!.hidden = !on;
+    if (on) announce(true);
+    else stopSpeaking();
+  }
+
+  // mãos livres: um toque (sem arrastar) no cubo avança; arrastar continua girando a vista
+  let down: { x: number; y: number; t: number } | null = null;
+  viewCard.addEventListener('pointerdown', (e) => {
+    down = { x: e.clientX, y: e.clientY, t: performance.now() };
+  });
+  viewCard.addEventListener('pointerup', (e) => {
+    const d = down;
+    down = null;
+    if (!handsFree || !d || (e.target as HTMLElement).closest('button')) return;
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10 || performance.now() - d.t > 600) return;
+    interacted = true;
+    resumeNote.hidden = true;
+    if (playing) pause();
+    else nextMove();
+  });
+  app.addEventListener('pointerdown', () => (interacted = true), { capture: true, once: true });
+
   // um só ouvinte para os botões do painel (os botões do passo são recriados a cada passo)
   panel.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement;
@@ -392,7 +459,9 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     }
     const act = t.closest<HTMLElement>('[data-act]')?.dataset.act;
     if (act) resumeNote.hidden = true;
-    if (act === 'prevStep') prevStep();
+    interacted = true;
+    if (act === 'handsfree') setHandsFree(!handsFree);
+    else if (act === 'prevStep') prevStep();
     else if (act === 'prevMove') prevMove();
     else if (act === 'nextMove') nextMove();
     else if (act === 'nextStep') nextStep();
@@ -420,6 +489,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const onKey = (e: KeyboardEvent) => {
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    interacted = true;
     if (e.key === 'ArrowRight') nextMove();
     else if (e.key === 'ArrowLeft') prevMove();
     else if (e.key === 'PageDown') nextStep();
@@ -463,6 +533,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
 
   return () => {
     playing = false;
+    stopSpeaking();
     releaseScreen();
     window.removeEventListener('keydown', onKey);
     view.dispose();

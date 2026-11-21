@@ -15,6 +15,8 @@ export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string
   cube3: { slug: '3x3', pt: 'Cubo 3x3', en: '3x3 Cube', short: '3x3' },
   cube4: { slug: '4x4', pt: 'Cubo 4x4', en: '4x4 Cube', short: '4x4' },
   cube5: { slug: '5x5', pt: 'Cubo 5x5', en: '5x5 Cube', short: '5x5' },
+  cube6: { slug: '6x6', pt: 'Cubo 6x6', en: '6x6 Cube', short: '6x6' },
+  cube7: { slug: '7x7', pt: 'Cubo 7x7', en: '7x7 Cube', short: '7x7' },
   pyraminx: { slug: 'pyraminx', pt: 'Pyraminx', en: 'Pyraminx', short: 'Pyraminx' },
   skewb: { slug: 'skewb', pt: 'Skewb', en: 'Skewb', short: 'Skewb' },
   megaminx: { slug: 'megaminx', pt: 'Megaminx', en: 'Megaminx', short: 'Megaminx' },

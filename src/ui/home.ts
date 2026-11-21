@@ -11,6 +11,8 @@ const SHOW: Record<string, { scramble: number; ms: number }> = {
   cube3: { scramble: 16, ms: 170 },
   cube4: { scramble: 18, ms: 160 },
   cube5: { scramble: 18, ms: 150 },
+  cube6: { scramble: 20, ms: 140 },
+  cube7: { scramble: 22, ms: 130 },
   pyraminx: { scramble: 9, ms: 220 },
   skewb: { scramble: 9, ms: 230 },
   megaminx: { scramble: 14, ms: 200 },
