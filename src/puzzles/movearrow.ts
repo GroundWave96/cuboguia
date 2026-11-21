@@ -106,6 +106,11 @@ export class MoveArrow {
     this.disposables.push(mats.edge, mats.core, mats.ghost);
   }
 
+  /** a seta está na tela (e mexendo) */
+  get active() {
+    return this.group.children.length > 0;
+  }
+
   /** um empurrãozinho no sentido do giro (chamado a cada quadro) */
   tick(timeMs: number) {
     if (!this.group.children.length) return;

@@ -6,6 +6,14 @@
     <title>CuboGuia — resolva seu cubo mágico passo a passo</title>
     <meta name="description" content="Informe as cores do seu cubo mágico (pintando em 3D ou pela câmera) e siga um tutorial animado, passo a passo, para resolvê-lo." />
     <meta name="theme-color" content="#0b0e17" />
+    <script>
+      // tema antes de desenhar (sem piscar): a escolha guardada ou o do aparelho
+      try {
+        var t = localStorage.getItem('cubo:theme');
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
     <meta name="google-site-verification" content="I0KpUkbQZ1ltBc3rVDJRD59i4VDYAl2zvMG3X3-W4DE" />
     <link rel="canonical" href="https://cuboguia.pages.dev/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -26,6 +34,8 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="CuboGuia — resolva seu cubo mágico passo a passo" />
     <meta name="twitter:description" content="Pinte ou escaneie seu cubo e siga um tutorial animado em 3D." />
+    <link rel="preconnect" href="https://static.cloudflareinsights.com" />
+    <link rel="preconnect" href="https://cloudflareinsights.com" crossorigin />
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
@@ -51,6 +61,7 @@
           <span class="brand-name">Cubo<b>Guia</b></span>
           <span class="footer-sub">Aprenda a resolver o cubo mágico, passo a passo.</span>
         </div>
+        <a class="footer-faq" href="/perguntas" data-nav="faq">Perguntas frequentes</a>
         <a class="footer-feedback" data-feedback href="mailto:gabrielhfp96@gmail.com">Mandar sugestão ou avisar erro</a>
         <p class="footer-credit">
           Desenvolvido por

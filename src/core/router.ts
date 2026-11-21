@@ -32,6 +32,7 @@ export const algsPath = (lang: Lang = getLang(), id = 'cube3') => `${lang === 'e
 export const NOTATION_PUZZLES = ['cube3', 'cube5', 'pyraminx', 'skewb', 'megaminx'];
 /** a página de notação que serve para um puzzle (2x2 → 3x3, 4x4 a 7x7 → 5x5) */
 export const notationIdFor = (id: string) => (NOTATION_PUZZLES.includes(id) ? id : /^cube[4-9]$/.test(id) ? 'cube5' : 'cube3');
+export const faqPath = (lang: Lang = getLang()) => (lang === 'en' ? '/en/faq' : '/perguntas');
 export const notationPath = (lang: Lang = getLang(), id = 'cube3') => `${lang === 'en' ? '/en/notation' : '/notacao'}${id === 'cube3' ? '' : `/${slugOf(id)}`}`;
 
 let onChange: (() => void) | null = null;
@@ -63,6 +64,7 @@ export type Route = { lang: Lang } & (
   | { page: 'timer'; params: URLSearchParams }
   | { page: 'algs'; id: string; params: URLSearchParams }
   | { page: 'notation'; id: string; params: URLSearchParams }
+  | { page: 'faq' }
   | { page: 'input'; id: string; params: URLSearchParams }
   | { page: 'solve'; id: string; params: URLSearchParams }
   | { page: 'notfound' }
@@ -75,6 +77,7 @@ export function parseRoute(pathname: string, search: string): Route {
   const params = new URLSearchParams(search);
   if (!parts.length) return { lang, page: 'home' };
   if ((parts[0] === 'cronometro' || parts[0] === 'timer') && parts.length === 1) return { lang, page: 'timer', params };
+  if ((parts[0] === 'perguntas' || parts[0] === 'faq') && parts.length === 1) return { lang, page: 'faq' };
   if (parts[0] === 'algoritmos' || parts[0] === 'algorithms') {
     if (parts.length === 1) return { lang, page: 'algs', id: 'cube3', params };
     const alg = idOfSlug(parts[1]);
@@ -98,6 +101,7 @@ export function pathInLang(pathname: string, search: string, lang: Lang): string
   const r = parseRoute(pathname, search);
   const q = search && search !== '?' ? (search.startsWith('?') ? search : `?${search}`) : '';
   if (r.page === 'timer') return timerPath(lang) + q;
+  if (r.page === 'faq') return faqPath(lang);
   if (r.page === 'algs') return algsPath(lang, r.id) + q;
   if (r.page === 'notation') return notationPath(lang, r.id) + q;
   if (r.page === 'input') return puzzlePath(r.id, lang) + q;

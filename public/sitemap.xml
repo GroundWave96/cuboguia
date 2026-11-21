@@ -190,4 +190,14 @@
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/megaminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/megaminx"/>
   </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/perguntas</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/perguntas"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/faq"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/faq</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/perguntas"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/faq"/>
+  </url>
 </urlset>

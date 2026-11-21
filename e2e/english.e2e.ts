@@ -30,6 +30,9 @@ test('telas em inglês, do início ao fim do tutorial', async ({ page }, info) =
     for (let i = 0; i < 400 && !(await page.locator('.done-panel').count()); i++) await page.keyboard.press('PageDown');
     bad.push(...(await portugueseLeft(page, `/en/${id} done`)));
   }
+  await page.goto('/en/faq');
+  for (const d of await page.locator('.faq-item').all()) if ((await d.getAttribute('open')) === null) await d.locator('summary').click();
+  bad.push(...(await portugueseLeft(page, '/en/faq')));
   for (const path of ['/en/notation', '/en/notation/5x5', '/en/notation/pyraminx']) {
     await page.goto(path);
     await page.locator('.nt-move').first().click();

@@ -11,6 +11,8 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
     ['/megaminx', /Megaminx/],
     ['/6x6', /6x6/],
     ['/notacao', /notação/],
+    ['/perguntas', /Perguntas frequentes/],
+    ['/en/faq', /Frequently asked/],
     ['/en/notation/megaminx', /notation/],
     ['/en/7x7', /7x7/],
     ['/en/skewb', /Skewb/],
@@ -25,9 +27,14 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
   }
   await page.goto('/cronometro');
   await expect(page.locator('.tm-scr-text')).not.toBeEmpty();
+  // endereço que não existe: a tela "Página não encontrada", com o código 404 (o Google não indexa)
+  // (o status vem do servidor; a página em si pode sair do cache do modo offline)
+  expect((await page.request.get('/9x9')).status()).toBe(404);
   await page.goto('/9x9');
   await expect(page.locator('h2').first()).toHaveText('Página não encontrada');
-  for (const f of ['/sitemap.xml', '/robots.txt', '/site.webmanifest']) expect((await page.request.get(f)).status(), f).toBe(200);
+  for (const f of ['/en/3x3/outra', '/algoritmos/megaminx', '/nada.php', '/.well-known/ard.json']) expect((await page.request.get(f)).status(), f).toBe(404);
+  for (const f of ['/sitemap.xml', '/robots.txt', '/site.webmanifest', '/llms.txt']) expect((await page.request.get(f)).status(), f).toBe(200);
+  expect(await (await page.request.get('/llms.txt')).text()).toMatch(/^# CuboGuia/);
   check();
 });
 
@@ -157,4 +164,55 @@ test('prévia dos links: cada página com o título e o idioma dela', async ({ r
   expect((await meta('/en/timer?p=cube2&e=R%20U&t=4560&n=Sam')).title).toBe('Sam challenged you: 4.56 on the 2x2');
   expect((await meta('/cronometro?p=cube3&e=R&t=dnf')).image).toMatch(/og-desafio\.png$/);
   expect((await meta('/en')).image).toMatch(/og\.png$/);
+  // dados para o Google: nome do site na inicial e a trilha nas outras páginas
+  const ld = async (path: string) => JSON.parse((await (await request.get(path)).text()).match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
+  expect(await ld('/')).toMatchObject({ '@type': 'WebSite', name: 'CuboGuia' });
+  const crumbs = await ld('/en/skewb/tutorial');
+  expect(crumbs['@type']).toBe('BreadcrumbList');
+  expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(['Home', 'Skewb', 'Tutorial']);
+});
+
+test('tema claro: segue a escolha, fica guardado e troca pelo menu', async ({ page }, info) => {
+  const check = trackErrors(page);
+  const theme = () => page.evaluate(() => document.documentElement.dataset.theme);
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/cronometro');
+  expect(await theme(), 'segue o aparelho').toBe('light');
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(await bg()).toBe('rgb(243, 245, 250)');
+  // troca pelo botão (no celular, dentro do menu)
+  if (info.project.name === 'celular') {
+    await page.click('.menu-btn');
+    await page.click('.drawer-theme');
+  } else await page.click('.theme-btn');
+  expect(await theme()).toBe('dark');
+  expect(await page.locator('meta[name="theme-color"]').getAttribute('content')).toBe('#0b0e17');
+  // a escolha vale mais que o aparelho e continua depois de recarregar
+  await page.reload();
+  expect(await theme()).toBe('dark');
+  expect(await bg()).toBe('rgb(11, 14, 23)');
+  check();
+});
+
+test('tela inicial: "Depois de resolver" e perguntas frequentes', async ({ page }) => {
+  const check = trackErrors(page);
+  await page.goto('/');
+  const cards = page.locator('.after-card');
+  await expect(cards).toHaveCount(4);
+  await cards.nth(0).click();
+  await expect(page).toHaveURL(/\/notacao$/);
+  await page.goto('/');
+  await page.click('.after-faq a');
+  await expect(page).toHaveURL(/\/perguntas$/);
+  await expect(page.locator('h1')).toHaveText('Perguntas frequentes');
+  // a primeira vem aberta; as outras abrem ao tocar
+  await expect(page.locator('.faq-item').first()).toHaveAttribute('open', '');
+  const q = page.locator('.faq-item#camera');
+  await q.locator('summary').click();
+  await expect(q.locator('.faq-a')).toContainText('iluminado');
+  // os links das respostas levam para as páginas do site
+  await page.locator('.faq-item#comecar summary').click();
+  await page.click('.faq-item#comecar .faq-a a');
+  await expect(page).toHaveURL(/\/notacao$/);
+  check();
 });

@@ -1,0 +1,33 @@
+# CuboGuia
+
+> Site gratuito, em português e inglês, que ensina a resolver cubos mágicos e outros puzzles. A pessoa informa as cores do próprio puzzle (pintando num modelo 3D ou apontando a câmera) e recebe um tutorial animado, passo a passo, com o método para iniciantes ou o CFOP. Funciona no navegador, sem cadastro, e também sem internet (app instalável).
+
+Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb e Megaminx.
+
+## Resolver um puzzle
+
+- [Cubo 3x3](https://cuboguia.pages.dev/3x3): informar as cores e abrir o tutorial passo a passo
+- [Cubo 2x2](https://cuboguia.pages.dev/2x2)
+- [Cubo 4x4](https://cuboguia.pages.dev/4x4)
+- [Cubo 5x5](https://cuboguia.pages.dev/5x5)
+- [Cubo 6x6](https://cuboguia.pages.dev/6x6)
+- [Cubo 7x7](https://cuboguia.pages.dev/7x7)
+- [Pyraminx](https://cuboguia.pages.dev/pyraminx)
+- [Skewb](https://cuboguia.pages.dev/skewb)
+- [Megaminx](https://cuboguia.pages.dev/megaminx)
+
+## Aprender e treinar
+
+- [Notação](https://cuboguia.pages.dev/notacao): o que significam R, U', F2, Rw, M e os outros movimentos, cada um animado em 3D
+- [Algoritmos OLL e PLL do 3x3](https://cuboguia.pages.dev/algoritmos): OLL em 2 etapas, OLL completa (57) e PLL completa (21), com animação e modo treino
+- [Algoritmos do 2x2 (Ortega)](https://cuboguia.pages.dev/algoritmos/2x2)
+- [Algoritmos do Pyraminx](https://cuboguia.pages.dev/algoritmos/pyraminx)
+- [Cronômetro](https://cuboguia.pages.dev/cronometro): estilo competição, com inspeção, embaralhos, médias, recordes, sessões e desafio com amigos
+
+## English
+
+- [Home](https://cuboguia.pages.dev/en)
+- [3x3 Cube](https://cuboguia.pages.dev/en/3x3)
+- [Notation](https://cuboguia.pages.dev/en/notation)
+- [OLL and PLL algorithms](https://cuboguia.pages.dev/en/algorithms)
+- [Timer](https://cuboguia.pages.dev/en/timer)
