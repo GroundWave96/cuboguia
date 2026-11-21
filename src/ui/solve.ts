@@ -1,6 +1,6 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
 import { decodeState, encodeState, loadSpeed, loadState, saveMethod, saveSpeed } from '../core/store';
-import { navigate, puzzlePath, solvePath } from '../core/router';
+import { PATTERN_PUZZLES_R, navigate, patternsPath, puzzlePath, solvePath } from '../core/router';
 import { plural, tr } from '../core/i18n';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
@@ -330,6 +330,11 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
           ${steps.length ? `<button class="btn ghost" data-act="share">${icon('share')}${tr('Compartilhar', 'Share')}</button>` : ''}
           <a class="btn primary" href="${puzzlePath(puzzleId)}">${tr('Resolver outro cubo', 'Solve another one')}</a>
         </div>
+        ${
+          steps.length && PATTERN_PUZZLES_R.includes(puzzleId)
+            ? `<a class="done-patterns" href="${patternsPath(undefined, puzzleId)}">${icon('pattern')}<span>${tr('Que tal desenhar um padrão no cubo resolvido? <b>Xadrez, cubo dentro do cubo…</b>', 'How about making a pattern on your solved cube? <b>Checkerboard, cube in a cube…</b>')}</span></a>`
+            : ''
+        }
       </div>`;
   }
 

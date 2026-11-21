@@ -200,4 +200,34 @@
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/perguntas"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/faq"/>
   </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/padroes</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/patterns</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/padroes/4x4</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/4x4"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/4x4"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/patterns/4x4</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/4x4"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/4x4"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/padroes/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/patterns/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/5x5"/>
+  </url>
 </urlset>

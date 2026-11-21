@@ -62,8 +62,13 @@ export function mergePaths(svg: string): string {
 const wrap = (content: string) => `<svg viewBox="-4 -4 128 133" class="pz-icon" aria-hidden="true">${mergePaths(content)}</svg>`;
 
 // ---------------------------------------------------------------------------
-// Cubo NxN isométrico
-export function cubeIcon(n: number): string {
+// Cubo NxN isométrico (cima, frente à esquerda e direita à direita)
+
+/**
+ * Desenha um cubo NxN com a cor de cada adesivo visível. `color(face, linha, coluna)` segue a
+ * ordem dos estados (Kociemba): U com F embaixo, F e R com U em cima (coluna 0 do R = lado da frente).
+ */
+export function cubeStateIcon(n: number, color: (face: 'U' | 'F' | 'R', row: number, col: number) => string): string {
   const proj = (x: number, y: number, z: number): P => [60 + (x - y) * 47, 8 + (x + y) * 27 + (1 - z) * 54];
   const out: string[] = [];
   out.push(body([proj(0, 0, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0), proj(0, 1, 1)], 8));
@@ -71,21 +76,29 @@ export function cubeIcon(n: number): string {
   // vão entre adesivos proporcional à célula, um pouco maior nos cubos grandes para continuar visível
   const k = n <= 2 ? 0.8 : n === 3 ? 0.78 : n <= 5 ? 0.74 : 0.7;
   const radius = n <= 2 ? 6 : n === 3 ? 4.2 : n === 4 ? 3 : n === 5 ? 2.4 : 1.8;
-  // cor de cada face já com a luz: topo claro, frente esquerda média, direita mais escura
-  const TOP = '#ffd83a', LEFT = '#00a651', RIGHT = '#f2600f';
-  // uma face de cada vez (os adesivos da mesma cor seguidos viram um desenho só)
-  const faces: [(a0: number, a1: number, b0: number, b1: number) => P[], string][] = [
-    [(a0, a1, b0, b1) => [proj(a0, b0, 1), proj(a1, b0, 1), proj(a1, b1, 1), proj(a0, b1, 1)], TOP],
-    [(a0, a1, b0, b1) => [proj(a0, 1, 1 - b0), proj(a1, 1, 1 - b0), proj(a1, 1, 1 - b1), proj(a0, 1, 1 - b1)], LEFT],
-    [(a0, a1, b0, b1) => [proj(1, 1 - a0, 1 - b0), proj(1, 1 - a1, 1 - b0), proj(1, 1 - a1, 1 - b1), proj(1, 1 - a0, 1 - b1)], RIGHT],
+  // cada face: o quadrilátero da célula (coluna c, linha r)
+  const faces: ['U' | 'F' | 'R', (c: number, r: number) => P[]][] = [
+    ['U', (c, r) => [proj(c * d, r * d, 1), proj((c + 1) * d, r * d, 1), proj((c + 1) * d, (r + 1) * d, 1), proj(c * d, (r + 1) * d, 1)]],
+    ['F', (c, r) => [proj(c * d, 1, 1 - r * d), proj((c + 1) * d, 1, 1 - r * d), proj((c + 1) * d, 1, 1 - (r + 1) * d), proj(c * d, 1, 1 - (r + 1) * d)]],
+    ['R', (c, r) => [proj(1, 1 - c * d, 1 - r * d), proj(1, 1 - (c + 1) * d, 1 - r * d), proj(1, 1 - (c + 1) * d, 1 - (r + 1) * d), proj(1, 1 - c * d, 1 - (r + 1) * d)]],
   ];
-  for (const [quad, color] of faces)
-    for (let i = 0; i < n; i++)
-      for (let j = 0; j < n; j++) out.push(sticker(shrink(quad(i * d, (i + 1) * d, j * d, (j + 1) * d), k), color, radius));
+  for (const [face, quad] of faces) {
+    // agrupados por cor dentro da face (os seguidos da mesma cor viram um desenho só)
+    const cells: [string, string][] = [];
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) cells.push([color(face, r, c), sticker(shrink(quad(c, r), k), color(face, r, c), radius)]);
+    cells.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    out.push(...cells.map((x) => x[1]));
+  }
   // leve brilho no topo e sombra na direita
   out.push(shade([proj(0, 0, 1), proj(1, 0, 1), proj(1, 1, 1), proj(0, 1, 1)], '#ffffff', 0.06));
   out.push(shade([proj(1, 1, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0)], '#3a1200', 0.12));
   return wrap(out.join(''));
+}
+
+/** ícone do cubo NxN: cor de cada face já com a luz (topo claro, frente média, direita mais escura) */
+export function cubeIcon(n: number): string {
+  const FACE = { U: '#ffd83a', F: '#00a651', R: '#f2600f' };
+  return cubeStateIcon(n, (f) => FACE[f]);
 }
 
 // ---------------------------------------------------------------------------

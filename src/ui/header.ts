@@ -6,7 +6,7 @@
 import { getLang, tr, type Lang } from '../core/i18n';
 import { PUZZLES } from '../core/registry';
 import { FEEDBACK_EMAIL, feedbackLabel, wireFeedback } from './feedback';
-import { algsPath, faqPath, homePath, notationPath, pathInLang, puzzlePath, timerPath } from '../core/router';
+import { algsPath, faqPath, homePath, notationPath, patternsPath, pathInLang, puzzlePath, timerPath } from '../core/router';
 import { icon } from './icons';
 import { refreshInstall } from './pwa';
 import { toggleTheme } from './theme';
@@ -72,6 +72,7 @@ export function mountHeader() {
         <a class="drawer-link" href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
         <a class="drawer-link" href="${algsPath()}" data-nav="algs">${tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms')}</a>
         <a class="drawer-link" href="${notationPath()}" data-nav="notation">${tr("Notação (o que é R, U', F2…)", "Notation (what R, U', F2… mean)")}</a>
+        <a class="drawer-link" href="${patternsPath()}" data-nav="patterns">${tr('Padrões bonitos', 'Cube patterns')}</a>
         <a class="drawer-link" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
         <a class="drawer-link" href="${faqPath()}" data-nav="faq">${tr('Perguntas frequentes', 'FAQ')}</a>
         <button type="button" class="drawer-link drawer-theme" data-theme-toggle><span class="when-dark">${icon('sun')}${tr('Tema claro', 'Light theme')}</span><span class="when-light">${icon('moon')}${tr('Tema escuro', 'Dark theme')}</span></button>

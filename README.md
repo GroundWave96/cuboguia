@@ -129,6 +129,7 @@ Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.t
 | `/3x3/tutorial?m=método&s=estado` | tutorial |
 | `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
 | `/perguntas` | perguntas frequentes (`/en/faq`, `src/ui/faq.ts`) |
+| `/padroes`, `/padroes/4x4`, `/padroes/5x5` | padrões bonitos (`/en/patterns`, `src/puzzles/patterns.ts`, `src/ui/patternsPage.ts`) |
 | `/en`, `/en/3x3`, `/en/3x3/tutorial`, `/en/timer` | as mesmas páginas em inglês |
 
 Os links antigos (`#/p/cube3`, `#/cronometro?...`) viram o endereço novo sozinhos.

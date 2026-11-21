@@ -12,6 +12,8 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
     ['/6x6', /6x6/],
     ['/notacao', /notação/],
     ['/perguntas', /Perguntas frequentes/],
+    ['/padroes/4x4', /Padrões/],
+    ['/en/patterns', /patterns/],
     ['/en/faq', /Frequently asked/],
     ['/en/notation/megaminx', /notation/],
     ['/en/7x7', /7x7/],
@@ -194,11 +196,33 @@ test('tema claro: segue a escolha, fica guardado e troca pelo menu', async ({ pa
   check();
 });
 
+test('padrões: monta no 3D marcando o movimento e desfaz', async ({ page }) => {
+  const check = trackErrors(page);
+  await page.goto('/padroes');
+  await expect(page.locator('h1')).toHaveText('Padrões bonitos');
+  await expect(page.locator('.pt-card')).toHaveCount(12);
+  const card = page.locator('.pt-card[data-p="xadrez"]');
+  await card.locator('.pt-pic').click();
+  await expect(card).toHaveClass(/\bon\b/);
+  // o movimento da vez fica marcado na sequência
+  await expect(card.locator('.pt-alg span.now')).toHaveCount(1);
+  await expect(page.locator('.pt-tools')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.move-badge span')).toHaveText('Xadrez: pronto!');
+  await expect(card.locator('.pt-alg span.done')).toHaveCount(3);
+  await page.click('[data-undo]');
+  await expect(page.locator('.move-badge span')).toHaveText('De volta ao resolvido', { timeout: 8000 });
+  // outro cubo: a aba leva para os padrões dele
+  await page.click('.al-puzzles a[href="/padroes/5x5"]');
+  await expect(page).toHaveURL(/\/padroes\/5x5$/);
+  await expect(page.locator('.pt-card[data-p="cruz"]')).toHaveCount(1);
+  check();
+});
+
 test('tela inicial: "Depois de resolver" e perguntas frequentes', async ({ page }) => {
   const check = trackErrors(page);
   await page.goto('/');
   const cards = page.locator('.after-card');
-  await expect(cards).toHaveCount(4);
+  await expect(cards).toHaveCount(5);
   await cards.nth(0).click();
   await expect(page).toHaveURL(/\/notacao$/);
   await page.goto('/');

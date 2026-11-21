@@ -7,7 +7,7 @@
  * tests/meta.test.ts confere que batem com o registro e com o roteador.
  */
 export type MetaLang = 'pt' | 'en';
-export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'faq' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs' | 'notation'; id: string };
+export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'faq' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs' | 'notation' | 'patterns'; id: string };
 
 /** id → [nome pt, nome en, nome curto] */
 export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string; short: string }> = {
@@ -23,6 +23,7 @@ export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string
 };
 const ALG_IDS = ['cube3', 'cube2', 'pyraminx'];
 const NOTATION_IDS = ['cube3', 'cube5', 'pyraminx', 'skewb', 'megaminx'];
+const PATTERN_IDS = ['cube3', 'cube4', 'cube5'];
 const SITE = 'CuboGuia';
 
 export function pageMeta(p: MetaPage, lang: MetaLang): { title: string; description: string } {
@@ -76,6 +77,14 @@ export function pageMeta(p: MetaPage, lang: MetaLang): { title: string; descript
       ),
     };
   }
+  if (p.page === 'patterns')
+    return {
+      title: t(`Padrões bonitos para o ${pz.short} (xadrez, cubo dentro do cubo…) — ${SITE}`, `${pz.short} cube patterns (checkerboard, cube in a cube…) — ${SITE}`),
+      description: t(
+        `Figuras para montar no ${name} resolvido: xadrez, cubo dentro do cubo, cruz e outras, com os movimentos animados em 3D.`,
+        `Pictures to make on a solved ${name}: checkerboard, cube in a cube, cross and more, with the moves animated in 3D.`,
+      ),
+    };
   if (p.page === 'notation') {
     if (p.id === 'cube3')
       return {
@@ -134,6 +143,12 @@ export function metaRoute(pathname: string): { lang: MetaLang; meta: MetaPage } 
     if (parts.length === 2 && id && id !== 'cube3' && ALG_IDS.includes(id)) return { lang, meta: { page: 'algs', id } };
     return { lang, meta: { page: 'notfound' } };
   }
+  if (parts[0] === 'padroes' || parts[0] === 'patterns') {
+    if (parts.length === 1) return { lang, meta: { page: 'patterns', id: 'cube3' } };
+    const id = bySlug(parts[1]);
+    if (parts.length === 2 && id && id !== 'cube3' && PATTERN_IDS.includes(id)) return { lang, meta: { page: 'patterns', id } };
+    return { lang, meta: { page: 'notfound' } };
+  }
   if (parts[0] === 'notacao' || parts[0] === 'notation') {
     if (parts.length === 1) return { lang, meta: { page: 'notation', id: 'cube3' } };
     const id = bySlug(parts[1]);
@@ -163,6 +178,8 @@ function metaPath(p: MetaPage, lang: MetaLang): string {
       return (en ? '/en/algorithms' : '/algoritmos') + (p.id === 'cube3' ? '' : `/${slug}`);
     case 'notation':
       return (en ? '/en/notation' : '/notacao') + (p.id === 'cube3' ? '' : `/${slug}`);
+    case 'patterns':
+      return (en ? '/en/patterns' : '/padroes') + (p.id === 'cube3' ? '' : `/${slug}`);
     case 'input':
       return `${pre}/${slug}`;
     case 'solve':
@@ -179,9 +196,10 @@ export function breadcrumbs(p: MetaPage, lang: MetaLang): { name: string; path: 
   const name = pz ? t(pz.pt, pz.en) : '';
   if (p.page === 'timer') out.push({ name: t('Cronômetro', 'Timer'), path: metaPath(p, lang) });
   else if (p.page === 'faq') out.push({ name: t('Perguntas frequentes', 'FAQ'), path: metaPath(p, lang) });
-  else if (p.page === 'algs' || p.page === 'notation') {
+  else if (p.page === 'algs' || p.page === 'notation' || p.page === 'patterns') {
     const top = { page: p.page, id: 'cube3' } as MetaPage;
-    out.push({ name: p.page === 'algs' ? t('Algoritmos', 'Algorithms') : t('Notação', 'Notation'), path: metaPath(top, lang) });
+    const label = { algs: t('Algoritmos', 'Algorithms'), notation: t('Notação', 'Notation'), patterns: t('Padrões', 'Patterns') }[p.page];
+    out.push({ name: label, path: metaPath(top, lang) });
     if (p.id !== 'cube3') out.push({ name: pz!.short, path: metaPath(p, lang) });
   } else if (p.page === 'input') out.push({ name, path: metaPath(p, lang) });
   else if (p.page === 'solve') {
