@@ -99,6 +99,34 @@ test('mãos livres em inglês fala em inglês', async ({ page }) => {
   expect(last.text).not.toMatch(/Passo|horário|movimento/);
 });
 
+test('compartilhar o tutorial: pelo menu do aparelho ou copiando o link', async ({ page, context }) => {
+  const check = trackErrors(page);
+  await page.addInitScript(() => {
+    const w = window as unknown as { __shared: unknown[] };
+    w.__shared = [];
+    Object.defineProperty(navigator, 'share', { value: async (d: unknown) => void w.__shared.push(d), configurable: true });
+  });
+  await openRandomTutorial(page, '3x3');
+  await page.click('.share-tut');
+  const shared = await page.evaluate(() => (window as unknown as { __shared: { url: string; text: string }[] }).__shared);
+  expect(shared).toHaveLength(1);
+  expect(shared[0].url).toBe(page.url());
+  expect(shared[0].text).toContain('3x3');
+
+  // sem o menu de compartilhar (ex.: computador): copia o link
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.evaluate(() => Object.defineProperty(navigator, 'share', { value: undefined, configurable: true }));
+  await page.click('.share-tut');
+  await expect(page.locator('.toasts')).toContainText('Link copiado');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(page.url());
+
+  // "Como ler os movimentos?" leva para a página com cada movimento animado
+  await page.click('details.notation summary');
+  await page.click('.nt-link a');
+  await expect(page).toHaveURL(/\/notacao$/);
+  check();
+});
+
 test('passo novo não executa o primeiro movimento sozinho', async ({ page }) => {
   await openRandomTutorial(page, '3x3');
   // termina o passo 1 movimento a movimento

@@ -5,10 +5,6 @@ import { fromLegacyHash, homePath, navigate, parseRoute, pathInLang, setRouteHan
 import { mountHeader } from './ui/header';
 import { setupApp } from './ui/pwa';
 import { renderHome } from './ui/home';
-import { renderInput } from './ui/input';
-import { renderSolve } from './ui/solve';
-import { renderTimer } from './ui/timer';
-import { renderAlgs } from './ui/algs';
 
 export type Cleanup = () => void;
 
@@ -85,18 +81,21 @@ async function route() {
     if (r.page === 'timer') {
       setActiveNav('timer');
       setMeta({ page: 'timer' });
-      cleanup = await renderTimer(app, r.params);
+      cleanup = await (await import('./ui/timer')).renderTimer(app, r.params);
     } else if (r.page === 'algs') {
       setActiveNav('algs');
       setMeta({ page: 'algs', id: r.id });
-      cleanup = await renderAlgs(app, r.id);
+      cleanup = await (await import('./ui/algs')).renderAlgs(app, r.id);
+    } else if (r.page === 'notation') {
+      setActiveNav('notation');
+      setMeta({ page: 'notation', id: r.id });
+      cleanup = await (await import('./ui/notationPage')).renderNotation(app, r.id);
     } else if (r.page === 'input' || r.page === 'solve') {
       setActiveNav(r.id);
       setMeta({ page: r.page, id: r.id });
-      if (r.page === 'solve') cleanup = await renderSolve(app, r.id, r.params);
-      else {
-        cleanup = await renderInput(app, r.id, r.params);
-      }
+      // cada página carrega o código dela só quando é aberta (a tela inicial fica leve)
+      if (r.page === 'solve') cleanup = await (await import('./ui/solve')).renderSolve(app, r.id, r.params);
+      else cleanup = await (await import('./ui/input')).renderInput(app, r.id, r.params);
     } else if (r.page === 'notfound') {
       setActiveNav('');
       setMeta({ page: 'notfound' });

@@ -22,7 +22,7 @@ describe('títulos das páginas', () => {
   });
 
   it('o servidor entende os endereços igual ao site', () => {
-    const paths = ['/', '/en', '/3x3', '/en/3x3', '/2x2/tutorial', '/en/megaminx/tutorial', '/cronometro', '/en/timer', '/algoritmos', '/algoritmos/2x2', '/en/algorithms/pyraminx', '/algoritmos/4x4', '/9x9', '/en/nada', '/3x3/outra'];
+    const paths = ['/', '/en', '/3x3', '/en/3x3', '/2x2/tutorial', '/en/megaminx/tutorial', '/cronometro', '/en/timer', '/algoritmos', '/algoritmos/2x2', '/en/algorithms/pyraminx', '/algoritmos/4x4', '/notacao', '/notacao/5x5', '/en/notation/megaminx', '/notacao/2x2', '/en/notation/x', '/9x9', '/en/nada', '/3x3/outra'];
     for (const path of paths) {
       const site = parseRoute(path, '');
       const server = metaRoute(path)!;
@@ -36,7 +36,7 @@ describe('títulos das páginas', () => {
 
   it('inglês em inglês e português em português', () => {
     const PT = /[ãõçáéíóúâêô]|\b(resolva|resolver|cubo mágico|passo a passo|página|cronômetro|algoritmos do)\b/i;
-    const pages = [{ page: 'home' }, { page: 'timer' }, { page: 'notfound' }, ...Object.keys(META_PUZZLES).flatMap((id) => [{ page: 'input', id }, { page: 'solve', id }]), ...['cube3', 'cube2', 'pyraminx'].map((id) => ({ page: 'algs', id }))] as Parameters<typeof pageMeta>[0][];
+    const pages = [{ page: 'home' }, { page: 'timer' }, { page: 'notfound' }, ...Object.keys(META_PUZZLES).flatMap((id) => [{ page: 'input', id }, { page: 'solve', id }]), ...['cube3', 'cube2', 'pyraminx'].map((id) => ({ page: 'algs', id })), ...['cube3', 'cube5', 'pyraminx', 'skewb', 'megaminx'].map((id) => ({ page: 'notation', id }))] as Parameters<typeof pageMeta>[0][];
     for (const p of pages) {
       const en = pageMeta(p, 'en');
       expect(`${en.title} ${en.description}`, JSON.stringify(p)).not.toMatch(PT);

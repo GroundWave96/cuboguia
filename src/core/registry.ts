@@ -14,6 +14,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('Pocket cube. Iniciante ou solução ótima.', 'Pocket cube. Beginner or optimal solution.');
     },
     available: true,
+    methods: 2,
     icon: cubeIcon(2),
     load: () => import('../puzzles/cube2').then((m) => m.default as PuzzleImpl),
   },
@@ -28,6 +29,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('O clássico. Método de iniciante passo a passo.', 'The classic. Beginner method, step by step.');
     },
     available: true,
+    methods: 2,
     icon: cubeIcon(3),
     load: () => import('../puzzles/cube3').then((m) => m.default as PuzzleImpl),
   },
@@ -42,6 +44,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('Revenge. Centros, arestas, paridades e fim como 3x3.', 'Revenge. Centers, edges, parities, then like a 3x3.');
     },
     available: true,
+    methods: 2,
     icon: cubeIcon(4),
     load: () => import('../puzzles/cube4').then((m) => m.default as PuzzleImpl),
   },
@@ -56,6 +59,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('Professor. Centros, arestas e fim como 3x3.', 'Professor. Centers, edges, then like a 3x3.');
     },
     available: true,
+    methods: 2,
     icon: cubeIcon(5),
     load: () => import('../puzzles/cube5').then((m) => m.default as PuzzleImpl),
   },
@@ -70,6 +74,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('Centros grandes, arestas de 4 peças, paridades e fim como 3x3.', 'Big centers, 4-piece edges, parities, then like a 3x3.');
     },
     available: true,
+    methods: 2,
     icon: cubeIcon(6),
     load: () => import('../puzzles/cube6').then((m) => m.default as PuzzleImpl),
   },
@@ -84,6 +89,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('O maior de todos aqui. Centros, arestas e fim como 3x3.', 'The biggest one here. Centers, edges, then like a 3x3.');
     },
     available: true,
+    methods: 2,
     icon: cubeIcon(7),
     load: () => import('../puzzles/cube7').then((m) => m.default as PuzzleImpl),
   },
@@ -98,6 +104,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('O triângulo. Iniciante ou solução ótima.', 'The triangle. Beginner or optimal solution.');
     },
     available: true,
+    methods: 2,
     icon: pyraminxIcon(),
     load: () => import('../puzzles/pyraminx').then((m) => m.default as PuzzleImpl),
   },
@@ -112,6 +119,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('O cubo que gira pelos cantos. Iniciante ou solução ótima.', 'The cube that turns around its corners. Beginner or optimal solution.');
     },
     available: true,
+    methods: 2,
     icon: skewbIcon(),
     load: () => import('../puzzles/skewb').then((m) => m.default as PuzzleImpl),
   },
@@ -126,6 +134,7 @@ export const PUZZLES: PuzzleDefinition[] = [
       return tr('Dodecaedro de 12 faces. Camada por camada.', '12-sided dodecahedron. Layer by layer.');
     },
     available: true,
+    methods: 2,
     icon: megaminxIcon(),
     load: () => import('../puzzles/megaminx').then((m) => m.default as PuzzleImpl),
   },

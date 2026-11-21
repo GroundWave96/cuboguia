@@ -10,6 +10,8 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
     ['/pyraminx', /Pyraminx/],
     ['/megaminx', /Megaminx/],
     ['/6x6', /6x6/],
+    ['/notacao', /notação/],
+    ['/en/notation/megaminx', /notation/],
     ['/en/7x7', /7x7/],
     ['/en/skewb', /Skewb/],
     ['/algoritmos', /OLL e PLL/],
@@ -26,6 +28,47 @@ test('cada endereço abre direto (como um link compartilhado)', async ({ page })
   await page.goto('/9x9');
   await expect(page.locator('h2').first()).toHaveText('Página não encontrada');
   for (const f of ['/sitemap.xml', '/robots.txt', '/site.webmanifest']) expect((await page.request.get(f)).status(), f).toBe(200);
+  check();
+});
+
+test('notação: cada movimento anima no 3D', async ({ page }) => {
+  const check = trackErrors(page);
+  await page.goto('/notacao');
+  await expect(page.locator('h1')).toHaveText('Aprenda a notação');
+  const card = page.locator(`.nt-move[data-m="R'"]`).first();
+  await card.click();
+  await expect(card).toHaveClass(/\bon\b/);
+  await expect(page.locator('.move-badge strong')).toHaveText("R'");
+  await expect(page.locator('.move-badge')).toContainText('anti-horário');
+  // volta sozinho ao cubo arrumado
+  await expect(card).not.toHaveClass(/\bon\b/, { timeout: 6000 });
+  for (const [slug, m] of [
+    ['5x5', '2R'],
+    ['pyraminx', 'U'],
+    ['skewb', 'R'],
+    ['megaminx', 'U'],
+  ]) {
+    await page.click(`.al-puzzles a[href="/notacao/${slug}"]`);
+    await expect(page).toHaveURL(new RegExp(`/notacao/${slug}$`));
+    await page.locator(`.nt-move[data-m="${m}"]`).first().click();
+    await expect(page.locator('.move-badge strong')).toHaveText(m);
+  }
+  check();
+});
+
+test('tela inicial: soma os métodos sem carregar os puzzles', async ({ page }) => {
+  const check = trackErrors(page);
+  const loaded: string[] = [];
+  page.on('request', (r) => {
+    const m = /assets\/(cube\d|pyraminx|skewb|megaminx)-/.exec(r.url());
+    if (m) loaded.push(m[1]);
+  });
+  await page.goto('/');
+  await page.locator('#stat-methods').scrollIntoViewIfNeeded();
+  await expect(page.locator('#stat-methods')).toHaveText('18');
+  await page.waitForTimeout(1500);
+  // só a vitrine carrega um puzzle (e o próximo dela), não os 9
+  expect(new Set(loaded).size).toBeLessThanOrEqual(2);
   check();
 });
 

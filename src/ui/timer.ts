@@ -14,6 +14,7 @@ import { homePath, timerPath } from '../core/router';
 import { MAX_NAME, challengeQuery, cleanName, readChallenge, type Challenge } from '../core/challenge';
 import { averageOf, best, bestAverage, fmt, fmtSolve, inspectionPenalty, mean, newRecords, value, type Penalty, type RecordKind, type Solve } from '../core/timerstats';
 import { ImportError, exportJson, mergeSolves, parseImport } from '../core/timerio';
+import { MAIN, addSession, cleanSessionName, loadSessions, saveSessions, solvesKey, type PuzzleSessions } from '../core/sessions';
 import { tr } from '../core/i18n';
 import type { PuzzleImpl } from '../core/types';
 import { icon } from './icons';
@@ -53,17 +54,17 @@ function saveCfg(c: Cfg) {
     /* sem armazenamento: só não lembra */
   }
 }
-function loadSolves(puzzle: string): Solve[] {
+function loadSolves(puzzle: string, session = MAIN): Solve[] {
   try {
-    const v = JSON.parse(localStorage.getItem(`cubo:timer:${puzzle}`) ?? '[]');
+    const v = JSON.parse(localStorage.getItem(solvesKey(puzzle, session)) ?? '[]');
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
 }
-function saveSolves(puzzle: string, solves: Solve[]) {
+function saveSolves(puzzle: string, solves: Solve[], session = MAIN) {
   try {
-    localStorage.setItem(`cubo:timer:${puzzle}`, JSON.stringify(solves.slice(-MAX_SAVED)));
+    localStorage.setItem(solvesKey(puzzle, session), JSON.stringify(solves.slice(-MAX_SAVED)));
   } catch {
     /* sem armazenamento: os tempos valem só nesta visita */
   }
@@ -112,6 +113,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
         <button class="tm-opt" data-opt="inspection" aria-pressed="false" title="${tr('15 s para olhar o cubo antes de começar, como nas competições', '15 s to look at the puzzle before starting, like in competitions')}"><span class="sw" aria-hidden="true"></span>${tr('Inspeção 15 s', '15 s inspection')}</button>
         ${touchDevice ? `<button class="tm-opt" data-opt="fingers" aria-pressed="false" title="${tr('Quantos dedos para começar e parar', 'How many fingers to start and stop')}"><span class="sw" aria-hidden="true"></span>${tr('Dois dedos', 'Two fingers')}</button>` : ''}
         <button class="tm-opt" data-opt="preview" aria-pressed="false" title="${tr('Mostrar como o puzzle fica depois de embaralhar', 'Show how the puzzle looks after scrambling')}"><span class="sw" aria-hidden="true"></span>${tr('Desenho', 'Preview')}</button>
+        <label class="tm-sess" title="${tr('Sessões separam os tempos dentro do mesmo puzzle (ex.: uma mão, treino)', 'Sessions keep times apart within the same puzzle (e.g. one-handed, practice)')}"><span>${tr('Sessão', 'Session')}</span><select class="tm-sess-sel" aria-label="${tr('Sessão', 'Session')}"></select></label>
       </div>
     </div>
     <div class="tm-challenge card" hidden></div>
@@ -142,7 +144,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
         <span class="tm-list-acts">
           <button class="btn ghost sm" data-act="export" title="${tr('Baixar um arquivo com os tempos de todos os puzzles', 'Download a file with the times of every puzzle')}">${icon('download')}${tr('Exportar', 'Export')}</button>
           <button class="btn ghost sm" data-act="import" title="${tr('Abrir um arquivo exportado do CuboGuia ou do csTimer', 'Open a file exported from CuboGuia or csTimer')}">${icon('upload')}${tr('Importar', 'Import')}</button>
-          <button class="btn ghost sm" data-act="clear" title="${tr('Apagar todos os tempos deste puzzle', 'Delete every time for this puzzle')}">${tr('Limpar<span class="long"> sessão</span>', 'Clear<span class="long"> session</span>')}</button>
+          <button class="btn ghost sm" data-act="clear" title="${tr('Apagar todos os tempos desta sessão', 'Delete every time in this session')}">${tr('Limpar<span class="long"> sessão</span>', 'Clear<span class="long"> session</span>')}</button>
         </span>
         <input type="file" class="tm-file" accept=".json,.txt,application/json,text/plain" hidden>
       </div>
@@ -177,7 +179,8 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   const chart = createTimeChart($<HTMLElement>('.tm-chart'));
 
   let impl: PuzzleImpl | null = null;
-  let solves = loadSolves(cfg.puzzle);
+  let sess: PuzzleSessions = loadSessions(cfg.puzzle);
+  let solves = loadSolves(cfg.puzzle, sess.cur);
   let scramble: string[] = [];
   /** desafio aberto: o embaralho e o tempo de quem desafiou (since = desde quando vale) */
   let challenge: (Challenge & { since: number }) | null = received ? { ...received, since: Date.now() } : null;
@@ -293,7 +296,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     needRelease = anyDown(); // os dedos/o espaço que pararam ainda estão apertados
     cancelAnimationFrame(raf);
     solves.push({ ms, pen: inspectPen, scramble: scramble.join(' '), at: Date.now() });
-    saveSolves(cfg.puzzle, solves);
+    saveSolves(cfg.puzzle, solves, sess.cur);
     timeEl.textContent = fmtSolve(solves[solves.length - 1]);
     navigator.vibrate?.(40);
     newScramble();
@@ -468,7 +471,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     const s = solves[i];
     if (!s) return;
     s.pen = s.pen === pen ? 0 : pen;
-    saveSolves(cfg.puzzle, solves);
+    saveSolves(cfg.puzzle, solves, sess.cur);
     if (i === solves.length - 1) hidePb();
     if (i === solves.length - 1 && phase === 'idle') timeEl.textContent = fmtSolve(s);
     renderStats();
@@ -477,7 +480,7 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   function remove(i: number) {
     if (i === solves.length - 1) hidePb();
     solves.splice(i, 1);
-    saveSolves(cfg.puzzle, solves);
+    saveSolves(cfg.puzzle, solves, sess.cur);
     if (i === solves.length && phase === 'idle') timeEl.textContent = solves.length ? fmtSolve(solves[solves.length - 1]) : '0.00';
     renderStats();
     renderChallenge();
@@ -631,10 +634,15 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
   });
   // ---- exportar e importar (um arquivo .json; também lê o do csTimer)
   $<HTMLElement>('[data-act="export"]').addEventListener('click', () => {
-    const all = Object.fromEntries(available.map((p) => [p.id, p.id === cfg.puzzle ? solves : loadSolves(p.id)]));
-    const total = Object.values(all).reduce((a, l) => a + l.length, 0);
+    const solvesOf = (id: string, sid: string) => (id === cfg.puzzle && sid === sess.cur ? solves : loadSolves(id, sid));
+    const all = Object.fromEntries(available.map((p) => [p.id, solvesOf(p.id, MAIN)]));
+    const extra: Record<string, Record<string, Solve[]>> = {};
+    for (const p of available)
+      for (const s of (p.id === cfg.puzzle ? sess : loadSessions(p.id)).list)
+        if (s.id !== MAIN) (extra[p.id] ??= {})[s.name] = solvesOf(p.id, s.id);
+    const total = [...Object.values(all), ...Object.values(extra).flatMap((byName) => Object.values(byName))].reduce((a, l) => a + l.length, 0);
     if (!total) return toast(tr('Ainda não há tempos para exportar.', 'There are no times to export yet.'));
-    const blob = new Blob([exportJson(all)], { type: 'application/json' });
+    const blob = new Blob([exportJson(all, Date.now(), extra)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `cuboguia-tempos-${new Date().toISOString().slice(0, 10)}.json`;
@@ -654,23 +662,35 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     try {
       const res = parseImport(await f.text(), available.map((p) => p.id));
       let added = 0;
-      const where: string[] = [];
-      for (const [id, list] of Object.entries(res.byPuzzle)) {
-        const cur = id === cfg.puzzle ? solves : loadSolves(id);
-        const m = mergeSolves(cur, list);
-        if (!m.added) continue;
+      const where = new Set<string>();
+      const mergeInto = (id: string, sid: string, list: Solve[]) => {
+        const live = id === cfg.puzzle && sid === sess.cur;
+        const m = mergeSolves(live ? solves : loadSolves(id, sid), list);
+        if (!m.added) return;
         added += m.added;
-        where.push(puzzleName(id));
-        saveSolves(id, m.merged);
-        if (id === cfg.puzzle) solves = m.merged.slice(-MAX_SAVED);
+        where.add(puzzleName(id));
+        saveSolves(id, m.merged, sid);
+        if (live) solves = m.merged.slice(-MAX_SAVED);
+      };
+      // arquivo do CuboGuia: a principal volta para a principal; do csTimer: entra na sessão aberta
+      for (const [id, list] of Object.entries(res.byPuzzle)) mergeInto(id, res.source === 'cuboguia' ? MAIN : id === cfg.puzzle ? sess.cur : loadSessions(id).cur, list);
+      // sessões extras: pelo nome (cria a sessão se ainda não existe)
+      for (const [id, byName] of Object.entries(res.bySession)) {
+        const data = id === cfg.puzzle ? sess : loadSessions(id);
+        for (const [name, list] of Object.entries(byName)) {
+          const s = addSession(data, name);
+          if (s) mergeInto(id, s.id, list);
+        }
+        saveSessions(id, data);
       }
+      renderSessions();
       hidePb();
       renderStats();
       paint();
       const from = res.source === 'cstimer' ? ' (csTimer)' : '';
       toast(
         added
-          ? tr(`${added} tempos importados${from}: ${where.join(', ')}.`, `${added} times imported${from}: ${where.join(', ')}.`)
+          ? tr(`${added} tempos importados${from}: ${[...where].join(', ')}.`, `${added} times imported${from}: ${[...where].join(', ')}.`)
           : tr('Esses tempos já estavam aqui — nada novo para importar.', 'Those times were already here — nothing new to import.'),
       );
     } catch (e) {
@@ -683,9 +703,9 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     }
   });
   $<HTMLElement>('[data-act="clear"]').addEventListener('click', () => {
-    if (!solves.length || !confirm(tr(`Apagar os ${solves.length} tempos deste puzzle?`, `Delete all ${solves.length} times for this puzzle?`))) return;
+    if (!solves.length || !confirm(tr(`Apagar os ${solves.length} tempos desta sessão?`, `Delete all ${solves.length} times in this session?`))) return;
     solves = [];
-    saveSolves(cfg.puzzle, solves);
+    saveSolves(cfg.puzzle, solves, sess.cur);
     hidePb();
     timeEl.textContent = '0.00';
     renderStats();
@@ -719,11 +739,68 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
     }),
   );
 
+  // ---- sessões: tempos separados dentro do mesmo puzzle
+  const sessSel = $<HTMLSelectElement>('.tm-sess-sel');
+  const sessName = (id = sess.cur) => sess.list.find((s) => s.id === id)?.name || tr('Principal', 'Main');
+  function renderSessions() {
+    const cur = sess.cur !== MAIN;
+    sessSel.innerHTML =
+      sess.list.map((s) => `<option value="${s.id}">${esc(s.name || tr('Principal', 'Main'))}</option>`).join('') +
+      `<option value="+new">${tr('+ Nova sessão…', '+ New session…')}</option>` +
+      (cur ? `<option value="+rename">${tr(`Renomear “${esc(sessName())}”…`, `Rename “${esc(sessName())}”…`)}</option><option value="+delete">${tr(`Apagar “${esc(sessName())}”…`, `Delete “${esc(sessName())}”…`)}</option>` : '');
+    sessSel.value = sess.cur;
+  }
+  function switchSession(id: string) {
+    sess.cur = id;
+    saveSessions(cfg.puzzle, sess);
+    solves = loadSolves(cfg.puzzle, id);
+    hidePb();
+    timeEl.textContent = solves.length ? fmtSolve(solves[solves.length - 1]) : '0.00';
+    renderSessions();
+    renderStats();
+    paint();
+  }
+  sessSel.addEventListener('change', () => {
+    const v = sessSel.value;
+    sessSel.blur(); // o espaço volta a ser do cronômetro
+    if (!v.startsWith('+')) return switchSession(v);
+    sessSel.value = sess.cur;
+    if (v === '+new') {
+      const name = prompt(tr('Nome da nova sessão (ex.: Uma mão, Treino):', 'Name for the new session (e.g. One-handed, Practice):'), '');
+      if (name === null) return;
+      const before = sess.list.length;
+      const s = addSession(sess, name);
+      if (!s) return toast(cleanSessionName(name) ? tr('Chegou ao limite de sessões deste puzzle.', 'You’ve reached the session limit for this puzzle.') : tr('Dê um nome para a sessão.', 'Give the session a name.'));
+      if (sess.list.length === before) toast(tr(`Já existe a sessão “${s.name}” — abrindo ela.`, `There’s already a “${s.name}” session — opening it.`));
+      switchSession(s.id);
+    } else if (v === '+rename') {
+      const name = prompt(tr('Novo nome da sessão:', 'New session name:'), sessName());
+      const clean = cleanSessionName(name ?? '');
+      if (!clean) return;
+      if (sess.list.some((s) => s.id !== sess.cur && s.id !== MAIN && s.name.toLowerCase() === clean.toLowerCase())) return toast(tr('Já existe uma sessão com esse nome.', 'There’s already a session with that name.'));
+      sess.list.find((s) => s.id === sess.cur)!.name = clean;
+      saveSessions(cfg.puzzle, sess);
+      renderSessions();
+    } else if (v === '+delete') {
+      if (!confirm(tr(`Apagar a sessão “${sessName()}” e os ${solves.length} tempos dela?`, `Delete the “${sessName()}” session and its ${solves.length} times?`))) return;
+      try {
+        localStorage.removeItem(solvesKey(cfg.puzzle, sess.cur));
+      } catch {
+        /* sem armazenamento */
+      }
+      sess.list = sess.list.filter((s) => s.id !== sess.cur);
+      switchSession(MAIN);
+    }
+  });
+  renderSessions();
+
   async function choose(id: string) {
     cfg.puzzle = id;
     saveCfg(cfg);
     hidePb();
-    solves = loadSolves(id);
+    sess = loadSessions(id);
+    solves = loadSolves(id, sess.cur);
+    renderSessions();
     timeEl.textContent = solves.length ? fmtSolve(solves[solves.length - 1]) : '0.00';
     renderOpts();
     renderStats();
