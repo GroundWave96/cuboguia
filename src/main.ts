@@ -157,11 +157,12 @@ document.addEventListener('click', (e) => {
   const url = new URL(a.href, location.href);
   if (url.origin !== location.origin) return;
   e.preventDefault();
-  if (url.pathname + url.search === location.pathname + location.search) {
+  if (url.pathname + url.search === location.pathname + location.search && !url.hash) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
-  navigate(url.pathname + url.search);
+  // o #pergunta vai junto (abre a resposta certa nas perguntas frequentes)
+  navigate(url.pathname + url.search + url.hash);
 });
 
 /**

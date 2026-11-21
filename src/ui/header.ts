@@ -14,6 +14,34 @@ import { toggleTheme } from './theme';
 /** botão do tema: mostra o sol no escuro (vai para o claro) e a lua no claro */
 const themeLabel = () => tr('Trocar entre tema claro e escuro', 'Switch between light and dark theme', 'Cambiar entre tema claro y oscuro');
 
+/** o topo passou da largura (algo sobrepõe ou sai da tela)? */
+function topbarOverflows(bar: HTMLElement): boolean {
+  const nav = bar.querySelector<HTMLElement>('#main-nav');
+  if (bar.scrollWidth > bar.clientWidth + 1) return true;
+  if (!nav || nav.offsetParent === null) return false;
+  if (nav.scrollWidth > nav.clientWidth + 1) return true;
+  const n = nav.getBoundingClientRect();
+  const brand = bar.querySelector('.brand')?.getBoundingClientRect();
+  const cta = bar.querySelector<HTMLElement>('.nav-cta');
+  const c = cta && cta.offsetParent !== null ? cta.getBoundingClientRect() : null;
+  return (!!brand && n.left < brand.right + 4) || (!!c && n.right > c.left - 4) || n.right > bar.getBoundingClientRect().right;
+}
+
+/**
+ * Esconde partes do topo, uma de cada vez, até tudo caber: "Como funciona", o texto do
+ * "Instalar app", o "Resolver agora" e por fim o menu inteiro (vira o botão ☰).
+ */
+export function fitTopbar() {
+  const bar = document.querySelector<HTMLElement>('.topbar-inner');
+  if (!bar) return;
+  const levels = ['fit-1', 'fit-2', 'fit-3', 'fit-4'];
+  bar.classList.remove(...levels);
+  for (const l of levels) {
+    if (!topbarOverflows(bar)) return;
+    bar.classList.add(l);
+  }
+}
+
 export function mountHeader() {
   const nav = document.getElementById('main-nav')!;
   const available = PUZZLES.filter((p) => p.available);
@@ -108,6 +136,7 @@ export function mountHeader() {
     const credit = document.querySelector('.footer-credit');
     if (credit?.firstChild?.nodeType === Node.TEXT_NODE) credit.firstChild.textContent = tr('\n          Desenvolvido por\n          ', '\n          Made by\n          ', '\n          Hecho por\n          ');
     refreshInstall();
+    fitTopbar();
   }
 
   const ddBtn = () => nav.querySelector<HTMLButtonElement>('.nav-dd-btn')!;
@@ -145,6 +174,15 @@ export function mountHeader() {
     }
   });
   wireFeedback();
+  // o topo se reajusta quando a janela muda, as fontes chegam ou o "Instalar app" aparece
+  let fitting = 0;
+  const refit = () => {
+    cancelAnimationFrame(fitting);
+    fitting = requestAnimationFrame(fitTopbar);
+  };
+  window.addEventListener('resize', refit);
+  document.fonts?.ready.then(refit);
+  new MutationObserver(refit).observe(nav, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
   document.addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest('[data-theme-toggle]')) toggleTheme();
   });
@@ -177,5 +215,7 @@ export function mountHeader() {
     });
     setMega(false);
     setDrawer(false);
+    // o nome do puzzle no botão muda a largura do menu
+    fitTopbar();
   };
 }
