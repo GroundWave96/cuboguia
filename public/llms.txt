@@ -22,6 +22,8 @@ Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb e Megaminx.
 - [Algoritmos OLL e PLL do 3x3](https://cuboguia.pages.dev/algoritmos): OLL em 2 etapas, OLL completa (57) e PLL completa (21), com animação e modo treino
 - [Algoritmos do 2x2 (Ortega)](https://cuboguia.pages.dev/algoritmos/2x2)
 - [Algoritmos do Pyraminx](https://cuboguia.pages.dev/algoritmos/pyraminx)
+- [Padrões bonitos](https://cuboguia.pages.dev/padroes): xadrez, cubo dentro do cubo, cruz e outras figuras para montar no 3x3, 4x4 e 5x5
+- [Perguntas frequentes](https://cuboguia.pages.dev/perguntas)
 - [Cronômetro](https://cuboguia.pages.dev/cronometro): estilo competição, com inspeção, embaralhos, médias, recordes, sessões e desafio com amigos
 
 ## English

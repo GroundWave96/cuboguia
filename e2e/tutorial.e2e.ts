@@ -23,6 +23,8 @@ for (const slug of SLUGS)
     // pula passo a passo até o fim
     for (let i = 0; i < 400 && !(await page.locator('.done-panel').count()); i++) await page.click('[data-act="nextStep"]');
     await expect(page.locator('.done-panel h2')).toContainText(/resolvido/i);
+    // nos cubos com padrões, o convite para desenhar um no cubo resolvido
+    await expect(page.locator('.done-patterns')).toHaveCount(['3x3', '4x4', '5x5'].includes(slug) ? 1 : 0);
     check();
   });
 

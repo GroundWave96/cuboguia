@@ -88,6 +88,10 @@ async function route() {
       setActiveNav('algs');
       setMeta({ page: 'algs', id: r.id });
       cleanup = await (await import('./ui/algs')).renderAlgs(app, r.id);
+    } else if (r.page === 'patterns') {
+      setActiveNav('patterns');
+      setMeta({ page: 'patterns', id: r.id });
+      cleanup = await (await import('./ui/patternsPage')).renderPatterns(app, r.id);
     } else if (r.page === 'faq') {
       setActiveNav('faq');
       setMeta({ page: 'faq' });
@@ -153,11 +157,27 @@ document.addEventListener('click', (e) => {
   navigate(url.pathname + url.search);
 });
 
+/**
+ * Uma troca de página de cada vez: se a pessoa clica em outro link enquanto a página anterior
+ * ainda está carregando (internet lenta), a nova só começa quando a anterior termina — senão a
+ * antiga, ao terminar de carregar, tomaria o lugar da nova. Trocas seguidas viram uma só.
+ */
+let routing: Promise<void> = Promise.resolve();
+let queued = false;
+function go() {
+  if (queued) return;
+  queued = true;
+  routing = routing.then(() => {
+    queued = false;
+    return route();
+  });
+}
+
 setupApp();
-setRouteHandler(route);
-window.addEventListener('popstate', route);
+setRouteHandler(go);
+window.addEventListener('popstate', go);
 
 // links antigos (#/p/cube3, #/cronometro?...) viram o endereço novo
 const legacy = fromLegacyHash(location.hash);
 if (legacy) history.replaceState(null, '', legacy);
-route();
+go();

@@ -1,7 +1,7 @@
 import { getLang, tr } from '../core/i18n';
 import { clearProgress, listProgress, type Progress } from '../core/progress';
 import { PUZZLES, loadPuzzle } from '../core/registry';
-import { algsPath, faqPath, homePath, notationPath, puzzlePath, solvePath, timerPath } from '../core/router';
+import { algsPath, faqPath, homePath, notationPath, patternsPath, puzzlePath, solvePath, timerPath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
 import { icon, type IconName } from './icons';
 
@@ -87,6 +87,13 @@ function afterCards(): { href: string; icon: IconName; title: string; text: stri
       title: tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms'),
       text: tr('Os algoritmos do CFOP para ficar rápido, com animação e modo treino.', 'The CFOP algorithms to get fast, with animation and a practice mode.'),
       go: tr('Ver os algoritmos', 'See the algorithms'),
+    },
+    {
+      href: patternsPath(),
+      icon: 'pattern',
+      title: tr('Padrões bonitos', 'Cube patterns'),
+      text: tr('Xadrez, cubo dentro do cubo, cruz e outras figuras para montar no cubo resolvido.', 'Checkerboard, cube in a cube, cross and other pictures to make on a solved cube.'),
+      go: tr('Ver os padrões', 'See the patterns'),
     },
     {
       href: timerPath(),
