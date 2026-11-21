@@ -17,6 +17,11 @@ const MIDDLE: Record<string, [string, string]> = {
   S: ['Fatia do meio da frente (sentido da frente)', 'Front middle slice (same way as F)'],
 };
 
+/** "da direita", "de cima": a preposição muda com a face (só em português) */
+const FROM_FACE: Record<string, string> = { U: 'de cima', D: 'de baixo', F: 'da frente', B: 'de trás', R: 'da direita', L: 'da esquerda' };
+const FROM_FACE_EN: Record<string, string> = { U: 'top', D: 'bottom', F: 'front', B: 'back', R: 'right', L: 'left' };
+const ordinal = (k: number) => (k === 2 ? '2nd' : k === 3 ? '3rd' : `${k}th`);
+
 /** "2ª camada da direita (fatia de dentro) · horário ↻" */
 export function describeNxNMove(m: string, withColor: boolean): string {
   const rot = /^([xyz])/.exec(m);
@@ -29,8 +34,8 @@ export function describeNxNMove(m: string, withColor: boolean): string {
   const mv = parseMove(m);
   const face = faceText(mv.face, withColor);
   const what =
-    mv.from === 2 && mv.depth === 2
-      ? tr(`2ª camada da ${FACE_NAME[mv.face].toLowerCase()} (fatia de dentro)`, `2nd layer from the ${FACE_NAME[mv.face].toLowerCase()} (inner slice)`)
+    mv.from === mv.depth && mv.from > 1
+      ? tr(`${mv.from}ª camada ${FROM_FACE[mv.face]} (fatia de dentro)`, `${ordinal(mv.from)} layer from the ${FROM_FACE_EN[mv.face]} (inner slice)`)
       : mv.depth > 1
         ? tr(
             `${face} + ${mv.depth - 1} ${mv.depth > 2 ? 'camadas' : 'camada'} de dentro (${mv.depth} camadas juntas)`,

@@ -59,6 +59,8 @@ export const PREVIEW_NAMES: Record<string, string> = {
   cube3: '3x3',
   cube4: '4x4',
   cube5: '5x5',
+  cube6: '6x6',
+  cube7: '7x7',
   pyraminx: 'Pyraminx',
   skewb: 'Skewb',
   megaminx: 'Megaminx',

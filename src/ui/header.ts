@@ -5,6 +5,7 @@
  */
 import { getLang, tr, type Lang } from '../core/i18n';
 import { PUZZLES } from '../core/registry';
+import { FEEDBACK_EMAIL, feedbackLabel, wireFeedback } from './feedback';
 import { algsPath, homePath, pathInLang, puzzlePath, timerPath } from '../core/router';
 import { icon } from './icons';
 import { refreshInstall } from './pwa';
@@ -68,6 +69,7 @@ export function mountHeader() {
         <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}${tr('Instalar app (funciona sem internet)', 'Install app (works offline)')}</button>
         <div class="mega-title">Puzzles</div>
         <div class="mega-grid">${available.map(card).join('')}</div>
+        <a class="drawer-link drawer-feedback" data-feedback href="mailto:${FEEDBACK_EMAIL}">${icon('mail')}${feedbackLabel()}</a>
         ${soon.length ? `<div class="mega-title soon-title">${tr('Em breve', 'Coming soon')}</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
       </div>`;
     menuBtn.setAttribute('aria-label', tr('Abrir menu', 'Open menu'));
@@ -86,6 +88,8 @@ export function mountHeader() {
     }
     const sub = document.querySelector('.footer-sub');
     if (sub) sub.textContent = tr('Aprenda a resolver o cubo mágico, passo a passo.', 'Learn to solve the Rubik’s cube, step by step.');
+    const fb = document.querySelector('.footer-feedback');
+    if (fb) fb.innerHTML = `${icon('mail')}${feedbackLabel()}`;
     const credit = document.querySelector('.footer-credit');
     if (credit?.firstChild?.nodeType === Node.TEXT_NODE) credit.firstChild.textContent = tr('\n          Desenvolvido por\n          ', '\n          Made by\n          ');
     refreshInstall();
@@ -125,6 +129,7 @@ export function mountHeader() {
       setDrawer(false);
     }
   });
+  wireFeedback();
   // a escolha de idioma fica lembrada (para o convite "Prefer English?" não voltar)
   document.addEventListener('click', (e) => {
     const l = (e.target as HTMLElement).closest<HTMLElement>('[data-lang]')?.dataset.lang;

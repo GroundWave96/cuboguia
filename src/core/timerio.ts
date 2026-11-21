@@ -45,6 +45,8 @@ function csPuzzle(scrType: string | undefined): string | null {
   if (t.startsWith('333')) return 'cube3';
   if (t.startsWith('444')) return 'cube4';
   if (t.startsWith('555')) return 'cube5';
+  if (t.startsWith('666')) return 'cube6';
+  if (t.startsWith('777')) return 'cube7';
   if (t.startsWith('pyr')) return 'pyraminx';
   if (t.startsWith('skb')) return 'skewb';
   if (t.startsWith('mgm')) return 'megaminx';

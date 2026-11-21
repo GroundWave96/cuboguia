@@ -4,6 +4,7 @@ import type { PuzzleImpl } from '../../core/types';
 import { COLOR_HEX, CUBE3_COLORS } from '../cube3/colors';
 import { invertMove } from '../nxn/geometry';
 import { NxNView } from '../nxn/NxNView';
+import { evenScanOrder, pickOrder } from '../nxn/evenscan';
 import { ANY_FACE_HINTS, buildNet, buildScan } from '../nxn/layout';
 import { geo4 as geo } from './pieces';
 import { validateCube4 } from './validate';
@@ -14,42 +15,7 @@ const SCAN = buildScan(geo, CUBE3_COLORS, {
   hints: ANY_FACE_HINTS,
 });
 
-/** gira a imagem 4x4 de uma face ¼ de volta (sentido horário na tela) */
-const turnImage = <T>(img: T[]) => Array.from({ length: 16 }, (_, k) => img[(3 - (k % 4)) * 4 + ((k / 4) | 0)]);
-const pick = <T>(state: T[], order: number[]) => order.map((i) => state[i]);
-
-/**
- * Se a leitura não formar um 4x4 possível, testa os enganos mais comuns — girou para a
- * direita (2ª e 4ª faces trocadas), mostrou o topo/a base girados ou trocados — do que
- * muda menos para o que muda mais, e fica com a primeira montagem válida.
- * Não há posição de referência: o cubo fica como foi lido (a 1ª face é a da frente).
- */
-function scanOrder(state: string[]): number[] {
-  const ids = state.map((_, i) => i);
-  const ok = (s: string[]) => validateCube4(s).ok;
-  if (ok(state)) return ids;
-  const images = SCAN.map((f) => f.grid.flat());
-  const tries: { cost: number; slots: number[][] }[] = [];
-  for (const sides of [false, true])
-    for (const swapUD of [false, true])
-      for (let ru = 0; ru < 4; ru++)
-        for (let rd = 0; rd < 4; rd++) {
-          const slots = [...images];
-          if (sides) [slots[1], slots[3]] = [images[3], images[1]];
-          let up = swapUD ? images[5] : images[4], down = swapUD ? images[4] : images[5];
-          for (let k = 0; k < ru; k++) up = turnImage(up);
-          for (let k = 0; k < rd; k++) down = turnImage(down);
-          slots[4] = up;
-          slots[5] = down;
-          tries.push({ cost: +sides + +swapUD + +(ru > 0) + +(rd > 0), slots });
-        }
-  for (const t of tries.sort((a, b) => a.cost - b.cost)) {
-    const order = [...ids];
-    SCAN.forEach((f, k) => f.grid.flat().forEach((i, j) => (order[i] = t.slots[k][j])));
-    if (ok(pick(state, order))) return order;
-  }
-  return ids;
-}
+const scanOrder = evenScanOrder(4, SCAN, (s) => validateCube4(s).ok);
 
 /** embaralho com faces e fatias internas */
 function scramble(len = 40): string[] {
@@ -91,7 +57,7 @@ const cube4: PuzzleImpl = {
   locationMap: (m) => geo.locationMap(m),
   scramble,
   validate: validateCube4,
-  repairScan: (state) => pick(state, scanOrder(state)),
+  repairScan: (state) => pickOrder(state, scanOrder(state)),
   scanOrder,
   get methods() {
     return [

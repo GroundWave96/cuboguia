@@ -48,8 +48,8 @@ export function cubeIcon(n: number): string {
   out.push(body([proj(0, 0, 1), proj(1, 0, 1), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0), proj(0, 1, 1)], 8));
   const d = 1 / n;
   // vão entre adesivos proporcional à célula, um pouco maior nos cubos grandes para continuar visível
-  const k = n <= 2 ? 0.8 : n === 3 ? 0.78 : 0.74;
-  const radius = n <= 2 ? 6 : n === 3 ? 4.2 : n === 4 ? 3 : 2.4;
+  const k = n <= 2 ? 0.8 : n === 3 ? 0.78 : n <= 5 ? 0.74 : 0.7;
+  const radius = n <= 2 ? 6 : n === 3 ? 4.2 : n === 4 ? 3 : n === 5 ? 2.4 : 1.8;
   // cor de cada face já com a luz: topo claro, frente esquerda média, direita mais escura
   const TOP = '#ffd83a', LEFT = '#00a651', RIGHT = '#f2600f';
   for (let i = 0; i < n; i++)

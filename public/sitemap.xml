@@ -51,6 +51,26 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/5x5"/>
   </url>
   <url>
+    <loc>https://cuboguia.pages.dev/6x6</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/6x6"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/6x6"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/6x6</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/6x6"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/6x6"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/7x7</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/7x7"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/7x7"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/7x7</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/7x7"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/7x7"/>
+  </url>
+  <url>
     <loc>https://cuboguia.pages.dev/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/pyraminx"/>
