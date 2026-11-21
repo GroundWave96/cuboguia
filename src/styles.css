@@ -924,7 +924,9 @@ body.timing .tm-pad { position: fixed; inset: 0; z-index: 30; border-radius: 0; 
 body.timing .lang-offer { display: none; }
 
 /* ---------- Aplicativo (instalar, versão nova) ---------- */
-.nav-install { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--accent-2); font: 600 0.9rem var(--font); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+/* no topo, só o ícone (o nome fica no balão e para leitores de tela) */
+.nav-install { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--accent-2); font: 600 0.9rem var(--font); padding: 8px 10px; border-radius: 999px; cursor: pointer; }
+.nav-install-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .nav-install:hover { background: rgba(63,208,201,0.1); }
 .nav-install .ico { width: 17px; height: 17px; }
 /* tema claro/escuro: sol no escuro (vai para o claro), lua no claro */
@@ -936,11 +938,6 @@ body.timing .lang-offer { display: none; }
 .drawer-theme span { display: inline-flex; align-items: center; gap: 8px; }
 .drawer-theme .ico { width: 18px; height: 18px; color: var(--accent-2); }
 .nav-install[hidden], .drawer-install[hidden] { display: none; }
-/* telas médias: só o ícone (o texto não cabe ao lado do "Resolver agora") */
-@media (max-width: 1100px) {
-  .nav-install { padding: 8px 10px; }
-  .nav-install-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-}
 /*
  * O topo se ajusta sozinho (fitTopbar em src/ui/header.ts): quando não cabe (idioma com nomes
  * mais longos, botão "Instalar app" aparecendo…), esconde uma parte de cada vez.
@@ -948,8 +945,6 @@ body.timing .lang-offer { display: none; }
 /* nada do menu quebra linha: se não couber, o ajuste esconde partes */
 .nav > *, .nav a, .nav-install, .nav-cta { flex: none; white-space: nowrap; }
 .topbar-inner.fit-1 .nav-extra { display: none; }
-.topbar-inner.fit-2 .nav-install { padding: 8px 10px; }
-.topbar-inner.fit-2 .nav-install-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .topbar-inner.fit-3 .nav-cta { display: none; }
 .topbar-inner.fit-4 .nav { display: none; }
 .topbar-inner.fit-4 .menu-btn { display: flex; }

@@ -28,13 +28,13 @@ function topbarOverflows(bar: HTMLElement): boolean {
 }
 
 /**
- * Esconde partes do topo, uma de cada vez, até tudo caber: "Como funciona", o texto do
- * "Instalar app", o "Resolver agora" e por fim o menu inteiro (vira o botão ☰).
+ * Esconde partes do topo, uma de cada vez, até tudo caber: "Como funciona", o "Resolver agora"
+ * e por fim o menu inteiro (vira o botão ☰).
  */
 export function fitTopbar() {
   const bar = document.querySelector<HTMLElement>('.topbar-inner');
   if (!bar) return;
-  const levels = ['fit-1', 'fit-2', 'fit-3', 'fit-4'];
+  const levels = ['fit-1', 'fit-3', 'fit-4'];
   bar.classList.remove(...levels);
   for (const l of levels) {
     if (!topbarOverflows(bar)) return;
