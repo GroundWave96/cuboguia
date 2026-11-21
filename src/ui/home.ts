@@ -3,6 +3,7 @@ import { clearProgress, listProgress, type Progress } from '../core/progress';
 import { PUZZLES, loadPuzzle } from '../core/registry';
 import { algsPath, faqPath, homePath, notationPath, patternsPath, puzzlePath, solvePath, timerPath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
+import { FAQ_HIGHLIGHTS } from './faq';
 import { icon, type IconName } from './icons';
 
 /** quantos movimentos de embaralho e a velocidade da vitrine para cada puzzle */
@@ -264,7 +265,17 @@ export function renderHome(app: HTMLElement) {
         )
         .join('')}
     </div>
-    <p class="after-faq reveal">${tr('Ficou com alguma dúvida?', 'Got a question?', '¿Tienes alguna duda?')} <a href="${faqPath()}">${tr('Veja as perguntas frequentes', 'See the FAQ', 'Ver las preguntas frecuentes')} →</a></p>
+    <div class="faq-cta card reveal">
+      <span class="faq-cta-ico" aria-hidden="true">${icon('help')}</span>
+      <div class="faq-cta-body">
+        <h3>${tr('Ficou com alguma dúvida?', 'Got a question?', '¿Tienes alguna duda?')}</h3>
+        <p>${tr('As respostas para as perguntas mais comuns de quem está começando:', 'Answers to the most common questions from beginners:', 'Las respuestas a las preguntas más comunes de quien está empezando:')}</p>
+        <div class="faq-cta-qs">${FAQ_HIGHLIGHTS()
+          .map((q) => `<a class="faq-q" href="${faqPath()}#${q.id}">${q.text}</a>`)
+          .join('')}</div>
+      </div>
+      <a class="btn primary faq-cta-go" href="${faqPath()}">${tr('Ver todas as perguntas', 'See all questions', 'Ver todas las preguntas')} <span aria-hidden="true">→</span></a>
+    </div>
   </section>`;
 
   // ---------------------------------------------------------------- esquecer um tutorial em andamento (o X)

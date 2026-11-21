@@ -226,14 +226,25 @@ test('tela inicial: "Depois de resolver" e perguntas frequentes', async ({ page 
   await cards.nth(0).click();
   await expect(page).toHaveURL(/\/notacao$/);
   await page.goto('/');
-  await page.click('.after-faq a');
+  // atalho direto para uma resposta
+  await page.click('.faq-q[href$="#comprar"]');
+  await expect(page).toHaveURL(/\/perguntas#comprar$/);
+  await expect(page.locator('.faq-item#comprar')).toHaveAttribute('open', '');
+  await expect(page.locator('.faq-item[open]')).toHaveCount(1);
+  await page.goto('/');
+  await page.click('.faq-cta-go');
   await expect(page).toHaveURL(/\/perguntas$/);
   await expect(page.locator('h1')).toHaveText('Perguntas frequentes');
-  // a primeira vem aberta; as outras abrem ao tocar
+  // a primeira vem aberta; abrir outra fecha a anterior (uma de cada vez)
   await expect(page.locator('.faq-item').first()).toHaveAttribute('open', '');
   const q = page.locator('.faq-item#camera');
   await q.locator('summary').click();
   await expect(q.locator('.faq-a')).toContainText('iluminado');
+  await expect(page.locator('.faq-item[open]')).toHaveCount(1);
+  await expect(page).toHaveURL(/#camera$/);
+  // tocar de novo fecha
+  await q.locator('summary').click();
+  await expect(page.locator('.faq-item[open]')).toHaveCount(0);
   // os links das respostas levam para as páginas do site
   await page.locator('.faq-item#comecar summary').click();
   await page.click('.faq-item#comecar .faq-a a');

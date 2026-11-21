@@ -127,7 +127,18 @@ export const FAQS: Faq[] = [
   },
 ];
 
+/** perguntas que a tela inicial mostra como atalho (abrem direto na resposta) */
+export const FAQ_HIGHLIGHTS = (): { id: string; text: string }[] => [
+  { id: 'impossivel', text: tr('O site diz que meu cubo é impossível', 'The site says my cube is impossible', 'La web dice que mi cubo es imposible') },
+  { id: 'tempo', text: tr('Quanto tempo leva para aprender?', 'How long does it take to learn?', '¿Cuánto se tarda en aprender?') },
+  { id: 'errei', text: tr('Errei um movimento, e agora?', 'I made a wrong move, now what?', 'Me equivoqué en un movimiento, ¿y ahora?') },
+  { id: 'comprar', text: tr('Qual cubo comprar?', 'Which cube should I buy?', '¿Qué cubo compro?') },
+];
+
 export function renderFaq(app: HTMLElement) {
+  // a pergunta do endereço (/perguntas#comprar) abre sozinha; sem ela, a primeira
+  const fromHash = FAQS.find((f) => `#${f.id}` === location.hash)?.id;
+  const first = fromHash ?? FAQS[0].id;
   app.innerHTML = `
   <section class="page narrow faq">
     <span class="eyebrow">${tr('Ajuda', 'Help', 'Ayuda')}</span>
@@ -135,8 +146,8 @@ export function renderFaq(app: HTMLElement) {
     <p class="lead">${tr('As dúvidas mais comuns de quem está aprendendo a resolver o cubo mágico.', 'The most common questions from people learning to solve the Rubik’s cube.', 'Las dudas más comunes de quien está aprendiendo a resolver el cubo de Rubik.')}</p>
     <div class="faq-list">
       ${FAQS.map(
-        (f, i) => `
-        <details class="faq-item card" id="${f.id}" ${i === 0 || location.hash === `#${f.id}` ? 'open' : ''}>
+        (f) => `
+        <details class="faq-item card" id="${f.id}" ${f.id === first ? 'open' : ''}>
           <summary><span>${f.q()}</span>${icon('chevronDown')}</summary>
           <div class="faq-a"><p>${f.a()}</p></div>
         </details>`,
@@ -148,4 +159,56 @@ export function renderFaq(app: HTMLElement) {
       <a class="btn ghost" href="${homePath()}">${tr('Ver todos os puzzles', 'See all puzzles', 'Ver todos los puzzles')}</a>
     </div>
   </section>`;
+  wireAccordion(app.querySelector<HTMLElement>('.faq-list')!);
+  if (fromHash) {
+    const el = document.getElementById(fromHash)!;
+    el.classList.add('flash');
+    requestAnimationFrame(() => el.scrollIntoView({ block: 'center' }));
+  }
+}
+
+/**
+ * Uma pergunta aberta de cada vez: a resposta desliza para abrir e fechar, as outras fecham
+ * e ficam mais apagadas (a aberta fica em foco). O endereço guarda a pergunta aberta (#id),
+ * para dar para mandar o link direto para uma resposta.
+ */
+function wireAccordion(list: HTMLElement) {
+  const items = [...list.querySelectorAll<HTMLDetailsElement>('.faq-item')];
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sync = () => list.classList.toggle('has-open', items.some((d) => d.open && !d.classList.contains('closing')));
+  const answer = (d: HTMLDetailsElement) => d.querySelector<HTMLElement>('.faq-a')!;
+
+  function open(d: HTMLDetailsElement) {
+    d.open = true;
+    d.classList.remove('closing');
+    const a = answer(d);
+    if (!calm) a.animate([{ height: '0px', opacity: 0 }, { height: `${a.scrollHeight}px`, opacity: 1 }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  }
+  function close(d: HTMLDetailsElement) {
+    if (!d.open || d.classList.contains('closing')) return;
+    if (calm) return void (d.open = false);
+    d.classList.add('closing');
+    const a = answer(d);
+    a.animate([{ height: `${a.scrollHeight}px`, opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 220, easing: 'ease-in' }).onfinish = () => {
+      if (!d.classList.contains('closing')) return; // reaberta no meio
+      d.classList.remove('closing');
+      d.open = false;
+      sync();
+    };
+  }
+
+  for (const d of items)
+    d.querySelector('summary')!.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (d.open && !d.classList.contains('closing')) {
+        close(d);
+        history.replaceState(history.state, '', location.pathname);
+      } else {
+        items.filter((o) => o !== d).forEach(close);
+        open(d);
+        history.replaceState(history.state, '', `${location.pathname}#${d.id}`);
+      }
+      sync();
+    });
+  sync();
 }
