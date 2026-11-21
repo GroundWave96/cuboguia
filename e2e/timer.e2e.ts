@@ -40,6 +40,50 @@ test('computador: segurar espaço, soltar e parar', async ({ page }, info) => {
   check();
 });
 
+test('sessões: tempos separados dentro do mesmo puzzle', async ({ page }, info) => {
+  test.skip(info.project.name !== 'computador', 'teclado');
+  const check = trackErrors(page);
+  const inSession = (id: string) => page.evaluate((id) => JSON.parse(localStorage.getItem('cubo:timer:cube3:' + id) ?? '[]').length, id);
+  await page.goto('/cronometro');
+  await expect(page.locator('.tm-scr-text')).not.toBeEmpty();
+  await expect(page.locator('.tm-sess-sel option:checked')).toHaveText('Principal');
+  await solveWithSpace(page, 300);
+  expect(await saved(page)).toBe(1);
+  // nova sessão
+  page.once('dialog', (d) => d.accept('Uma mão'));
+  await page.selectOption('.tm-sess-sel', '+new');
+  await expect(page.locator('.tm-sess-sel option:checked')).toHaveText('Uma mão');
+  await expect(page.locator('.tm-times li[data-i]')).toHaveCount(0);
+  await solveWithSpace(page, 300);
+  await solveWithSpace(page, 400);
+  expect(await inSession('s1')).toBe(2);
+  expect(await saved(page), 'a principal não muda').toBe(1);
+  // continua na sessão depois de recarregar
+  await page.reload();
+  await expect(page.locator('.tm-sess-sel option:checked')).toHaveText('Uma mão');
+  await expect(page.locator('.tm-times li[data-i]')).toHaveCount(2);
+  // renomear
+  page.once('dialog', (d) => d.accept('OH'));
+  await page.selectOption('.tm-sess-sel', '+rename');
+  await expect(page.locator('.tm-sess-sel option:checked')).toHaveText('OH');
+  // outro puzzle tem as próprias sessões
+  await page.click('.tm-pz[data-pz="cube2"]');
+  await expect(page.locator('.tm-sess-sel option')).toHaveCount(2); // Principal + "Nova sessão…"
+  await page.click('.tm-pz[data-pz="cube3"]');
+  await expect(page.locator('.tm-sess-sel option:checked')).toHaveText('OH');
+  // volta para a principal
+  await page.selectOption('.tm-sess-sel', 'main');
+  await expect(page.locator('.tm-times li[data-i]')).toHaveCount(1);
+  // apagar a sessão
+  await page.selectOption('.tm-sess-sel', 's1');
+  page.once('dialog', (d) => d.accept());
+  await page.selectOption('.tm-sess-sel', '+delete');
+  await expect(page.locator('.tm-sess-sel option:checked')).toHaveText('Principal');
+  expect(await page.evaluate(() => localStorage.getItem('cubo:timer:cube3:s1'))).toBeNull();
+  await expect(page.locator('.tm-times li[data-i]')).toHaveCount(1);
+  check();
+});
+
 test('celular: dois dedos para começar e para parar', async ({ page, context }, info) => {
   test.skip(info.project.name !== 'celular', 'toque');
   const check = trackErrors(page);

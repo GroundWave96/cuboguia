@@ -205,7 +205,7 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
       </div>
       <details class="notation al-notation">
         <summary>${tr('Como ler os algoritmos?', 'How to read the algorithms?')}</summary>
-        ${notationHtml(impl)}
+        ${notationHtml(impl, pz.id)}
         ${pz.extraNotation() ? `<ul class="notation-list">${pz.extraNotation()}</ul>` : ''}
       </details>
     </div>

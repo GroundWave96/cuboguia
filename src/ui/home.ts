@@ -221,13 +221,12 @@ export function renderHome(app: HTMLElement) {
     };
     tick();
   }
-  // total de métodos (carrega os puzzles em segundo plano)
-  Promise.all(available.map((p) => loadPuzzle(p.id))).then((impls) => {
-    const el = app.querySelector<HTMLElement>('#stat-methods');
-    if (!el) return;
-    el.dataset.count = String(impls.reduce((a, im) => a + im.methods.length, 0));
+  // total de métodos (o número fica no registro: não precisa carregar os puzzles)
+  {
+    const el = app.querySelector<HTMLElement>('#stat-methods')!;
+    el.dataset.count = String(available.reduce((a, p) => a + p.methods, 0));
     if (el.closest('.in')) countUp(el);
-  });
+  }
 
   // ---------------------------------------------------------------- vitrine
   // só um enfeite: puzzles em ordem aleatória aparecem, embaralham, se resolvem e dão lugar ao próximo
@@ -298,8 +297,22 @@ export function renderHome(app: HTMLElement) {
     }
   }
 
-  if (reduceMotion) show(nextId());
-  else loop();
+  // o 3D é o arquivo mais pesado do site: só começa depois que a página terminou de carregar,
+  // e com economia de dados (ou 2G) a vitrine fica num desenho parado
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  const lightMode = !!conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType ?? '');
+  const start = () => {
+    if (!alive) return;
+    if (lightMode) {
+      const def = available.find((p) => p.id === 'cube3') ?? available[0];
+      stage.insertAdjacentHTML('beforeend', `<div class="showcase-static" aria-hidden="true">${def.icon}</div>`);
+      caption.textContent = def.name;
+    } else if (reduceMotion) show(nextId());
+    else loop();
+  };
+  const whenIdle = () => ('requestIdleCallback' in window ? requestIdleCallback(start, { timeout: 1200 }) : setTimeout(start, 150));
+  if (document.readyState === 'complete') whenIdle();
+  else window.addEventListener('load', whenIdle, { once: true });
 
   return () => {
     alive = false;

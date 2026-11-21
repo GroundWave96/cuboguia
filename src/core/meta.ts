@@ -7,7 +7,7 @@
  * tests/meta.test.ts confere que batem com o registro e com o roteador.
  */
 export type MetaLang = 'pt' | 'en';
-export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs'; id: string };
+export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs' | 'notation'; id: string };
 
 /** id → [nome pt, nome en, nome curto] */
 export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string; short: string }> = {
@@ -22,6 +22,7 @@ export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string
   megaminx: { slug: 'megaminx', pt: 'Megaminx', en: 'Megaminx', short: 'Megaminx' },
 };
 const ALG_IDS = ['cube3', 'cube2', 'pyraminx'];
+const NOTATION_IDS = ['cube3', 'cube5', 'pyraminx', 'skewb', 'megaminx'];
 const SITE = 'CuboGuia';
 
 export function pageMeta(p: MetaPage, lang: MetaLang): { title: string; description: string } {
@@ -67,6 +68,24 @@ export function pageMeta(p: MetaPage, lang: MetaLang): { title: string; descript
       ),
     };
   }
+  if (p.page === 'notation') {
+    if (p.id === 'cube3')
+      return {
+        title: t(`Notação do cubo mágico (R, U', F2…) animada em 3D — ${SITE}`, `Rubik’s cube notation (R, U', F2…) animated in 3D — ${SITE}`),
+        description: t(
+          'Aprenda o que quer dizer cada letra dos algoritmos e tutoriais de cubo mágico: faces, sentido, duas camadas, fatias do meio e giros do cubo inteiro, cada um animado em 3D.',
+          'Learn what each letter in Rubik’s cube algorithms and tutorials means: faces, direction, two layers, middle slices and whole-cube rotations, each animated in 3D.',
+        ),
+      };
+    const label = p.id === 'cube5' ? t('dos cubos grandes (4x4 a 7x7)', 'for big cubes (4x4 to 7x7)') : t(`do ${pz.short}`, `for the ${pz.short}`);
+    return {
+      title: t(`Notação ${label} animada em 3D — ${SITE}`, `Notation ${label} animated in 3D — ${SITE}`),
+      description: t(
+        `O que quer dizer cada movimento ${label}, com animação 3D de cada um.`,
+        `What each move ${label} means, with a 3D animation of each one.`,
+      ),
+    };
+  }
   if (p.page === 'solve')
     return {
       title: t(`Tutorial: resolvendo o ${name} passo a passo — ${SITE}`, `Tutorial: solving the ${name} step by step — ${SITE}`),
@@ -104,6 +123,12 @@ export function metaRoute(pathname: string): { lang: MetaLang; meta: MetaPage } 
     if (parts.length === 1) return { lang, meta: { page: 'algs', id: 'cube3' } };
     const id = bySlug(parts[1]);
     if (parts.length === 2 && id && id !== 'cube3' && ALG_IDS.includes(id)) return { lang, meta: { page: 'algs', id } };
+    return { lang, meta: { page: 'notfound' } };
+  }
+  if (parts[0] === 'notacao' || parts[0] === 'notation') {
+    if (parts.length === 1) return { lang, meta: { page: 'notation', id: 'cube3' } };
+    const id = bySlug(parts[1]);
+    if (parts.length === 2 && id && id !== 'cube3' && NOTATION_IDS.includes(id)) return { lang, meta: { page: 'notation', id } };
     return { lang, meta: { page: 'notfound' } };
   }
   const id = bySlug(parts[0]);

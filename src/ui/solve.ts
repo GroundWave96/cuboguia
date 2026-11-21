@@ -4,6 +4,7 @@ import { navigate, puzzlePath, solvePath } from '../core/router';
 import { plural, tr } from '../core/i18n';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
+import { toast } from './toast';
 import { notationHtml } from './notation';
 import { keepScreenOn } from './wakelock';
 import { loadProgress, movesSignature, saveProgress } from '../core/progress';
@@ -89,7 +90,10 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   app.innerHTML = `
   <section class="page workspace solve">
     <div class="ws-header">
-      <a class="back" href="${puzzlePath(puzzleId)}">← ${tr('Editar cores', 'Edit colors')}</a>
+      <div class="ws-toprow">
+        <a class="back" href="${puzzlePath(puzzleId)}">← ${tr('Editar cores', 'Edit colors')}</a>
+        ${steps.length ? `<button type="button" class="btn ghost sm share-tut" data-act="share" title="${tr('Mandar o link deste tutorial (o mesmo cubo e a mesma solução)', 'Send a link to this tutorial (same cube, same solution)')}">${icon('share')}<span>${tr('Compartilhar', 'Share')}</span></button>` : ''}
+      </div>
       <h1>${tr(`Tutorial: resolvendo seu ${def.short}`, `Tutorial: solving your ${def.short}`)}</h1>
       <p>${sol.method} · <b>${steps.length}</b> ${plural(steps.length, 'passo', 'passos', 'step', 'steps')} · <b>${flat.length}</b> ${plural(flat.length, 'movimento', 'movimentos', 'move', 'moves')}. ${impl.holdHint} ${tr('Mantenha essa posição o tempo todo.', 'Keep it in this position the whole time.')}</p>
       <div class="method-switch" role="group" aria-label="${tr('Método', 'Method')}">
@@ -142,7 +146,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
           )}</p>
           <details class="notation">
             <summary>${tr('Como ler os movimentos?', 'How to read the moves?')}</summary>
-            ${notationHtml(impl)}
+            ${notationHtml(impl, puzzleId)}
           </details>
         </div>
         <div class="done-host" hidden></div>
@@ -323,6 +327,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
         }</p>
         <div class="row-actions center">
           ${steps.length ? `<button class="btn ghost" data-act="restart">${tr('Rever do início', 'Watch again from the start')}</button>` : ''}
+          ${steps.length ? `<button class="btn ghost" data-act="share">${icon('share')}${tr('Compartilhar', 'Share')}</button>` : ''}
           <a class="btn primary" href="${puzzlePath(puzzleId)}">${tr('Resolver outro cubo', 'Solve another one')}</a>
         </div>
       </div>`;
@@ -445,6 +450,27 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   });
   app.addEventListener('pointerdown', () => (interacted = true), { capture: true, once: true });
 
+  /** manda o link deste tutorial: quem abrir vê o mesmo cubo e a mesma solução, desde o passo 1 */
+  async function share() {
+    const url = location.origin + solvePath(puzzleId, methodId, stateCode);
+    const text = tr(`Tutorial passo a passo para resolver este ${def!.short} no CuboGuia:`, `Step-by-step tutorial to solve this ${def!.short} on CuboGuia:`);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: tr(`Tutorial do ${def!.short} no CuboGuia`, `${def!.short} tutorial on CuboGuia`), text, url });
+        return;
+      } catch (e) {
+        if ((e as DOMException).name === 'AbortError') return; // a pessoa cancelou
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      toast(tr('Link copiado! Quem abrir vê o mesmo cubo e a mesma solução.', 'Link copied! Whoever opens it sees the same cube and solution.'));
+    } catch {
+      toast(tr(`Copie o link: ${url}`, `Copy the link: ${url}`), 8000);
+    }
+  }
+  app.querySelector('[data-act="share"]')?.addEventListener('click', share);
+
   // um só ouvinte para os botões do painel (os botões do passo são recriados a cada passo)
   panel.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement;
@@ -468,6 +494,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     else if (act === 'play') play();
     else if (act === 'pause') pause();
     else if (act === 'restart') goToStep(0);
+    else if (act === 'share') share();
   });
   const range = panel.querySelector<HTMLInputElement>('.speed input')!;
   range.addEventListener('input', () => {

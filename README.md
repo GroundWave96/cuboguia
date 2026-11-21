@@ -125,6 +125,7 @@ Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.t
 |---|---|
 | `/` | início |
 | `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/6x6`, `/7x7`, `/pyraminx`, `/skewb`, `/megaminx` | informar as cores |
+| `/notacao`, `/notacao/5x5` (e `/pyraminx`, `/skewb`, `/megaminx`) | notação com cada movimento animado (`/en/notation`) |
 | `/3x3/tutorial?m=método&s=estado` | tutorial |
 | `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
 | `/en`, `/en/3x3`, `/en/3x3/tutorial`, `/en/timer` | as mesmas páginas em inglês |
@@ -160,6 +161,18 @@ próximo movimento (Web Speech API, `src/ui/handsfree.ts`: nada sai do aparelho)
 cubo 3D avança um movimento (arrastar continua girando a vista). A escolha fica lembrada
 (`cubo:handsfree`). Os navegadores só falam depois do primeiro toque na página.
 
+## Tutorial: compartilhar
+
+O botão "Compartilhar" (topo do tutorial e tela final) manda o link do tutorial — o mesmo cubo e
+a mesma solução, desde o passo 1 — pelo menu do aparelho, ou copia o link quando não há menu.
+
+## Carregamento
+
+A tela inicial só baixa o próprio código: as outras páginas (`src/ui/input.ts`, `solve.ts`,
+`timer.ts`, `algs.ts`, `notationPage.ts`) são carregadas quando abertas, o total de métodos vem
+do registro (`methods` em `src/core/registry.ts`, conferido em `tests/sessions.test.ts`) e a
+vitrine 3D só começa depois do evento `load`; com economia de dados ou 2G ela fica num desenho parado.
+
 ## Sugestões e erros
 
 O rodapé (e o menu do celular) tem "Mandar sugestão ou avisar erro": abre o e-mail da pessoa
@@ -191,6 +204,13 @@ A notação aceita rotações do cubo inteiro (`x`, `y`, `z`), além de `M`, `E`
 - **Exportar/importar** (`src/core/timerio.ts`): um `.json` com os tempos de todos os puzzles.
   A importação também aceita o arquivo de exportação do **csTimer** (o tipo de embaralho de cada
   sessão decide o puzzle) e junta sem repetir tempos.
+
+## Cronômetro: sessões
+
+Cada puzzle tem a sessão principal (os tempos de sempre, em `cubo:timer:<puzzle>`) e as que a
+pessoa criar (`cubo:timer:<puzzle>:s1`...; a lista em `cubo:timer:sessions`, `src/core/sessions.ts`).
+Exportar leva todas: a principal em `solves` e as outras em `sessions`, pelo nome; importar recria
+as sessões pelo nome. Do csTimer, os tempos entram na sessão aberta.
 
 ## Prévia dos links (WhatsApp, redes sociais)
 

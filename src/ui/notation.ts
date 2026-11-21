@@ -1,8 +1,10 @@
 /** Explicação da notação de um puzzle (o que cada letra quer dizer): tutorial e cronômetro. */
 import { tr } from '../core/i18n';
 import type { PuzzleImpl } from '../core/types';
+import { notationIdFor, notationPath } from '../core/router';
 
-export function notationHtml(impl: PuzzleImpl): string {
+/** explicação curta + link para a página com cada movimento animado (sem o link na própria página de notação) */
+export function notationHtml(impl: PuzzleImpl, puzzleId?: string): string {
   return `<p>${impl.notationIntro ?? tr('Cada letra é uma face. Gire-a olhando <b>de frente para ela</b>:', 'Each letter is a face. Turn it while <b>looking straight at it</b>:')}</p>
     <ul class="notation-list">${impl.notationHelp.map((h) => `<li><code>${h.move}</code> ${h.text}</li>`).join('')}</ul>
     ${
@@ -13,5 +15,5 @@ export function notationHtml(impl: PuzzleImpl): string {
         `<p><code>R</code> = clockwise · <code>R'</code> = counterclockwise · <code>R2</code> = half turn.</p>
     <p>Lowercase letter (<code>r</code>) = the face <b>and</b> the middle layer together (two layers).</p>`,
       )
-    }`;
+    }${puzzleId ? `<p class="nt-link"><a href="${notationPath(undefined, notationIdFor(puzzleId))}">${tr('Ver cada movimento animado em 3D →', 'See each move animated in 3D →')}</a></p>` : ''}`;
 }

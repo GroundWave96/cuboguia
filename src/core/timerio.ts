@@ -1,7 +1,9 @@
 /**
  * Exportar e importar os tempos do cronômetro (um arquivo .json).
  *
- * Formato do CuboGuia: { app: 'cuboguia', version: 1, exportedAt, solves: { cube3: [Solve...] } }.
+ * Formato do CuboGuia: { app: 'cuboguia', version: 1, exportedAt, solves: { cube3: [Solve...] },
+ * sessions?: { cube3: { 'Uma mão': [Solve...] } } } — `solves` é a sessão principal de cada puzzle
+ * e `sessions` as outras, pelo nome (versões antigas do site só leem `solves`).
  * Também lê o arquivo de exportação do csTimer (o cronômetro mais usado pelos speedcubers):
  * { session1: [[[pen, ms], scramble, comment, timestamp], ...], properties: { sessionData } }.
  */
@@ -14,6 +16,8 @@ const MAX_SCRAMBLE = 2000;
 export interface ImportResult {
   source: 'cuboguia' | 'cstimer';
   byPuzzle: Record<string, Solve[]>;
+  /** sessões extras (só no arquivo do CuboGuia): puzzle → nome da sessão → tempos */
+  bySession: Record<string, Record<string, Solve[]>>;
   /** tempos de puzzles que o site não tem (ou inválidos), deixados de fora */
   skipped: number;
 }
@@ -24,9 +28,14 @@ export class ImportError extends Error {
   }
 }
 
-export function exportJson(byPuzzle: Record<string, Solve[]>, now = Date.now()): string {
+export function exportJson(byPuzzle: Record<string, Solve[]>, now = Date.now(), bySession: Record<string, Record<string, Solve[]>> = {}): string {
   const solves = Object.fromEntries(Object.entries(byPuzzle).filter(([, s]) => s.length));
-  return JSON.stringify({ app: EXPORT_APP, version: 1, exportedAt: new Date(now).toISOString(), solves });
+  const sessions = Object.fromEntries(
+    Object.entries(bySession)
+      .map(([p, byName]) => [p, Object.fromEntries(Object.entries(byName).filter(([, s]) => s.length))] as const)
+      .filter(([, byName]) => Object.keys(byName).length),
+  );
+  return JSON.stringify({ app: EXPORT_APP, version: 1, exportedAt: new Date(now).toISOString(), solves, ...(Object.keys(sessions).length ? { sessions } : {}) });
 }
 
 function cleanSolve(o: unknown): Solve | null {
@@ -86,7 +95,7 @@ function readCsTimer(data: Record<string, unknown>, puzzles: string[]): ImportRe
       (byPuzzle[puzzle] ??= []).push(s);
     }
   }
-  return { source: 'cstimer', byPuzzle, skipped };
+  return { source: 'cstimer', byPuzzle, bySession: {}, skipped };
 }
 
 /** lê um arquivo exportado (do CuboGuia ou do csTimer) */
@@ -111,10 +120,24 @@ export function parseImport(text: string, puzzles: string[]): ImportResult {
         else skipped++;
       }
     }
-    res = { source: 'cuboguia', byPuzzle, skipped };
+    const bySession: Record<string, Record<string, Solve[]>> = {};
+    if (d.sessions && typeof d.sessions === 'object' && !Array.isArray(d.sessions))
+      for (const [puzzle, byName] of Object.entries(d.sessions as Record<string, unknown>)) {
+        if (!byName || typeof byName !== 'object' || Array.isArray(byName)) continue;
+        for (const [name, list] of Object.entries(byName as Record<string, unknown>)) {
+          if (!Array.isArray(list) || typeof name !== 'string' || !name.trim()) continue;
+          for (const o of list) {
+            const s = puzzles.includes(puzzle) ? cleanSolve(o) : null;
+            if (s) ((bySession[puzzle] ??= {})[name] ??= []).push(s);
+            else skipped++;
+          }
+        }
+      }
+    res = { source: 'cuboguia', byPuzzle, bySession, skipped };
   } else if (Object.keys(d).some((k) => /^session\d+$/.test(k))) res = readCsTimer(d, puzzles);
   else throw new ImportError('format');
-  if (!Object.values(res.byPuzzle).some((l) => l.length)) throw new ImportError('empty');
+  const any = Object.values(res.byPuzzle).some((l) => l.length) || Object.values(res.bySession).some((byName) => Object.values(byName).some((l) => l.length));
+  if (!any) throw new ImportError('empty');
   return res;
 }
 

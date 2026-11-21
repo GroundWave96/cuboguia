@@ -187,6 +187,8 @@ export interface PuzzleDefinition {
   short: string;
   readonly subtitle: string;
   available: boolean;
+  /** quantos métodos de solução (a tela inicial soma sem carregar os puzzles; tests/meta.test.ts confere) */
+  methods: number;
   /** SVG decorativo do card */
   icon: string;
   load?: () => Promise<PuzzleImpl>;

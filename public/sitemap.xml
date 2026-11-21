@@ -140,4 +140,54 @@
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/pyraminx"/>
   </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/notacao</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/notation</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/notacao/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/notation/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/notacao/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/notation/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/notacao/skewb</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/skewb"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/skewb"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/notation/skewb</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/skewb"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/skewb"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/notacao/megaminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/megaminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/notation/megaminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/megaminx"/>
+  </url>
 </urlset>

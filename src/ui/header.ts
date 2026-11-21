@@ -6,7 +6,7 @@
 import { getLang, tr, type Lang } from '../core/i18n';
 import { PUZZLES } from '../core/registry';
 import { FEEDBACK_EMAIL, feedbackLabel, wireFeedback } from './feedback';
-import { algsPath, homePath, pathInLang, puzzlePath, timerPath } from '../core/router';
+import { algsPath, homePath, notationPath, pathInLang, puzzlePath, timerPath } from '../core/router';
 import { icon } from './icons';
 import { refreshInstall } from './pwa';
 
@@ -56,6 +56,7 @@ export function mountHeader() {
       </div>
       <a href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
       <a href="${algsPath()}" data-nav="algs">${tr('Algoritmos', 'Algorithms')}</a>
+      <a href="${notationPath()}" data-nav="notation">${tr('Notação', 'Notation')}</a>
       <a href="${homePath()}" data-scroll="como-funciona" class="nav-extra">${tr('Como funciona', 'How it works')}</a>
       <button type="button" class="nav-install" data-install hidden title="${tr('Instalar o CuboGuia como app (funciona sem internet)', 'Install CuboGuia as an app (works offline)')}">${icon('download')}<span class="nav-install-txt">${tr('Instalar app', 'Install app')}</span></button>
       ${langSwitch('nav-lang')}`;
@@ -65,6 +66,7 @@ export function mountHeader() {
         <a class="drawer-link" href="${homePath()}" data-nav="home">${tr('Início', 'Home')}</a>
         <a class="drawer-link" href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
         <a class="drawer-link" href="${algsPath()}" data-nav="algs">${tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms')}</a>
+        <a class="drawer-link" href="${notationPath()}" data-nav="notation">${tr("Notação (o que é R, U', F2…)", "Notation (what R, U', F2… mean)")}</a>
         <a class="drawer-link" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
         <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}${tr('Instalar app (funciona sem internet)', 'Install app (works offline)')}</button>
         <div class="mega-title">Puzzles</div>
