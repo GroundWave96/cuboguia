@@ -1,6 +1,6 @@
 # CuboGuia
 
-> Site gratuito, em português e inglês, que ensina a resolver cubos mágicos e outros puzzles. A pessoa informa as cores do próprio puzzle (pintando num modelo 3D ou apontando a câmera) e recebe um tutorial animado, passo a passo, com o método para iniciantes ou o CFOP. Funciona no navegador, sem cadastro, e também sem internet (app instalável).
+> Site gratuito, em português, inglês e espanhol, que ensina a resolver cubos mágicos e outros puzzles. A pessoa informa as cores do próprio puzzle (pintando num modelo 3D ou apontando a câmera) e recebe um tutorial animado, passo a passo, com o método para iniciantes ou o CFOP. Funciona no navegador, sem cadastro, e também sem internet (app instalável).
 
 Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb e Megaminx.
 
@@ -33,3 +33,13 @@ Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb e Megaminx.
 - [Notation](https://cuboguia.pages.dev/en/notation)
 - [OLL and PLL algorithms](https://cuboguia.pages.dev/en/algorithms)
 - [Timer](https://cuboguia.pages.dev/en/timer)
+
+## Español
+
+- [Inicio](https://cuboguia.pages.dev/es)
+- [Cubo 3x3](https://cuboguia.pages.dev/es/3x3)
+- [Notación](https://cuboguia.pages.dev/es/notacion)
+- [Algoritmos OLL y PLL](https://cuboguia.pages.dev/es/algoritmos)
+- [Patrones](https://cuboguia.pages.dev/es/patrones)
+- [Cronómetro](https://cuboguia.pages.dev/es/cronometro)
+- [Preguntas frecuentes](https://cuboguia.pages.dev/es/preguntas)

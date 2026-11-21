@@ -110,7 +110,7 @@ const cube2: PuzzleImpl = {
   get holdHint() {
     return tr(
       'Segure o cubo com o canto <b>branco-azul-vermelho</b> atrás, embaixo, à esquerda — com o <b>branco para baixo</b>. Ele é a referência e não sai do lugar.',
-      'Hold the cube with the <b>white-blue-red</b> corner at the back, bottom, left — with <b>white facing down</b>. It’s the reference and never moves.',
+      'Hold the cube with the <b>white-blue-red</b> corner at the back, bottom, left — with <b>white facing down</b>. It’s the reference and never moves.', 'Sujeta el cubo con la esquina <b>blanca-azul-roja</b> atrás, abajo, a la izquierda, con el <b>blanco hacia abajo</b>. Es la referencia y nunca se mueve.',
     );
   },
   stickerCount: geo.count,
@@ -136,20 +136,20 @@ const cube2: PuzzleImpl = {
     return [
       {
         id: 'beginner',
-        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
-        tagline: tr('Para aprender · ~60 movimentos', 'To learn · ~60 moves'),
+        name: tr('Iniciante (camadas)', 'Beginner (layers)', 'Principiante (capas)'),
+        tagline: tr('Para aprender · ~60 movimentos', 'To learn · ~60 moves', 'Para aprender · ~60 movimientos'),
         description: tr(
           'Face branca, depois face amarela (Sune) e por fim trocar os cantos (T-perm). Só 3 algoritmos.',
-          'White face, then yellow face (Sune) and finally swap the corners (T-perm). Only 3 algorithms.',
+          'White face, then yellow face (Sune) and finally swap the corners (T-perm). Only 3 algorithms.', 'Cara blanca, después cara amarilla (Sune) y al final intercambiar las esquinas (T-perm). Solo 3 algoritmos.',
         ),
       },
       {
         id: 'optimal',
-        name: tr('Avançado (ótimo)', 'Advanced (optimal)'),
-        tagline: tr('A menor solução · ≤ 11 movimentos', 'The shortest solution · ≤ 11 moves'),
+        name: tr('Avançado (ótimo)', 'Advanced (optimal)', 'Avanzado (óptimo)'),
+        tagline: tr('A menor solução · ≤ 11 movimentos', 'The shortest solution · ≤ 11 moves', 'La solución más corta · ≤ 11 movimientos'),
         description: tr(
           'O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.',
-          'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.',
+          'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.', 'El ordenador encuentra el camino más corto posible. Ideal para comparar y descubrir atajos.',
         ),
       },
     ];
@@ -161,7 +161,7 @@ const cube2: PuzzleImpl = {
   get scanHint() {
     return tr(
       'Pode começar por <b>qualquer face</b>, segurando o cubo do jeito que quiser — só não troque a posição entre uma face e outra: gire para a esquerda como as setas indicam. No fim, o site descobre sozinho como o cubo estava virado.',
-      'You can start with <b>any face</b>, holding the cube however you like — just don’t change your grip between faces: turn it to the left as the arrows show. At the end, the site works out by itself how the cube was held.',
+      'You can start with <b>any face</b>, holding the cube however you like — just don’t change your grip between faces: turn it to the left as the arrows show. At the end, the site works out by itself how the cube was held.', 'Puedes empezar por <b>cualquier cara</b>, sujetando el cubo como quieras; solo no cambies la forma de sujetarlo entre una cara y otra: gíralo hacia la izquierda como indican las flechas. Al final, la web descubre sola cómo estaba sujeto el cubo.',
     );
   },
   normalize: normalizeScan,

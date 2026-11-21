@@ -40,8 +40,8 @@ export function validatePyraminx(state: PuzzleState): ValidationResult {
   // pontas e centros nunca saem do seu vértice: só podem estar girados
   let wrongPlace = false;
   for (const [kind, list] of [
-    [['Um centro', 'A center'], geo.centers],
-    [['Uma ponta', 'A tip'], geo.tips],
+    [['Um centro', 'A center', 'Un centro'], geo.centers],
+    [['Uma ponta', 'A tip', 'Una punta'], geo.tips],
   ] as const)
     for (const pos of list) {
       const want = pos.map(faceKey);
@@ -51,7 +51,7 @@ export function validatePyraminx(state: PuzzleState): ValidationResult {
         errors.push(
           tr(
             `${kind[0]} com as cores ${pieceName(got)} está com as cores em ordem impossível — confira a pintura.`,
-            `${kind[1]} with the colors ${pieceName(got)} has its colors in an impossible order — check the painting.`,
+            `${kind[1]} with the colors ${pieceName(got)} has its colors in an impossible order — check the painting.`, `${kind[2]} con los colores ${pieceName(got)} tiene los colores en un orden imposible: revisa la pintura.`,
           ),
         );
     }
@@ -61,7 +61,7 @@ export function validatePyraminx(state: PuzzleState): ValidationResult {
       errors: [
         tr(
           'As cores dos centros/pontas não batem com a posição do pyraminx. Segure com o centro SEM amarelo em cima e o centro SEM verde atrás (embaixo), e confira a pintura das pontas e dos centros.',
-          'The center/tip colors don’t match the Pyraminx position. Hold it with the center WITHOUT yellow on top and the center WITHOUT green at the back (bottom), and check how the tips and centers were painted.',
+          'The center/tip colors don’t match the Pyraminx position. Hold it with the center WITHOUT yellow on top and the center WITHOUT green at the back (bottom), and check how the tips and centers were painted.', 'Los colores de los centros y las puntas no coinciden con la posición del Pyraminx. Sujétalo con el centro SIN amarillo arriba y el centro SIN verde atrás (abajo), y revisa cómo se pintaron las puntas y los centros.',
         ),
       ],
     };
@@ -81,7 +81,7 @@ export function validatePyraminx(state: PuzzleState): ValidationResult {
     ep.push(j);
   }
   if (errors.length) return { ok: false, errors };
-  if (parity(ep)) errors.push(tr('Duas arestas estão trocadas de lugar — confira as cores das arestas.', 'Two edges are swapped — check the edge colors.'));
+  if (parity(ep)) errors.push(tr('Duas arestas estão trocadas de lugar — confira as cores das arestas.', 'Two edges are swapped — check the edge colors.', 'Hay dos aristas intercambiadas: revisa los colores de las aristas.'));
   if (errors.length) return { ok: false, errors };
   // aresta virada sozinha: o solucionador ótimo não encontra solução
   try {

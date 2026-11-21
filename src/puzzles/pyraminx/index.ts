@@ -7,7 +7,7 @@ import { buildPyraNet, buildPyraScan, pyraPieces } from './layout';
 import { solvePyraBeginner, solvePyraOptimal } from './solver';
 import { validatePyraminx } from './validate';
 
-const VERT_TEXT = i18nMap({ U: ['Cima', 'Top'], L: ['Esquerda', 'Left'], R: ['Direita', 'Right'], B: ['Trás', 'Back'] });
+const VERT_TEXT = i18nMap({ U: ['Cima', 'Top', 'Arriba'], L: ['Esquerda', 'Left', 'Izquierda'], R: ['Direita', 'Right', 'Derecha'], B: ['Trás', 'Back', 'Atrás'] });
 
 const SCAN = buildPyraScan(PYRA_COLORS);
 
@@ -77,13 +77,13 @@ const pyraminx: PuzzleImpl = {
   get holdHint() {
     return tr(
       'Segure o pyraminx igual ao desenho 3D: em cima, a <b>ponta sem amarelo</b>; atrás, a <b>ponta sem verde</b> (cada ponta tem 3 cores). Assim a face da frente é a verde e a base, a amarela.',
-      'Hold the Pyraminx like the 3D drawing: on top, the <b>tip without yellow</b>; at the back, the <b>tip without green</b> (each tip has 3 colors). That makes the front face green and the bottom yellow.',
+      'Hold the Pyraminx like the 3D drawing: on top, the <b>tip without yellow</b>; at the back, the <b>tip without green</b> (each tip has 3 colors). That makes the front face green and the bottom yellow.', 'Sujeta el Pyraminx como en el dibujo 3D: arriba, la <b>punta sin amarillo</b>; atrás, la <b>punta sin verde</b> (cada punta tiene 3 colores). Así la cara del frente es verde y la base es amarilla.',
     );
   },
   get scanHint() {
     return tr(
       'Pode começar com <b>qualquer face</b> de frente para a câmera e <b>qualquer ponta</b> para cima — no fim o site descobre sozinho como o pyraminx estava. Depois é só girar como as setas mandam.',
-      'You can start with <b>any face</b> toward the camera and <b>any tip</b> pointing up — at the end the site works out by itself how the Pyraminx was held. Then just turn it as the arrows say.',
+      'You can start with <b>any face</b> toward the camera and <b>any tip</b> pointing up — at the end the site works out by itself how the Pyraminx was held. Then just turn it as the arrows say.', 'Puedes empezar con <b>cualquier cara</b> hacia la cámara y <b>cualquier punta</b> hacia arriba; al final la web descubre sola cómo estaba sujeto el Pyraminx. Después solo gíralo como indican las flechas.',
     );
   },
   normalize: normalizePyra,
@@ -101,15 +101,15 @@ const pyraminx: PuzzleImpl = {
     return [
       {
         id: 'beginner',
-        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
-        tagline: tr('Para aprender · ~20 movimentos', 'To learn · ~20 moves'),
-        description: tr('Pontas, centros, a base amarela e por fim o topo com poucos algoritmos.', 'Tips, centers, the yellow bottom and finally the top with few algorithms.'),
+        name: tr('Iniciante (camadas)', 'Beginner (layers)', 'Principiante (capas)'),
+        tagline: tr('Para aprender · ~20 movimentos', 'To learn · ~20 moves', 'Para aprender · ~20 movimientos'),
+        description: tr('Pontas, centros, a base amarela e por fim o topo com poucos algoritmos.', 'Tips, centers, the yellow bottom and finally the top with few algorithms.', 'Puntas, centros, la base amarilla y al final la parte de arriba con pocos algoritmos.'),
       },
       {
         id: 'optimal',
-        name: tr('Avançado (ótimo)', 'Advanced (optimal)'),
-        tagline: tr('A menor solução · ≤ 11 + pontas', 'The shortest solution · ≤ 11 + tips'),
-        description: tr('O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.', 'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.'),
+        name: tr('Avançado (ótimo)', 'Advanced (optimal)', 'Avanzado (óptimo)'),
+        tagline: tr('A menor solução · ≤ 11 + pontas', 'The shortest solution · ≤ 11 + tips', 'La solución más corta · ≤ 11 + puntas'),
+        description: tr('O computador calcula o caminho mais curto possível. Ótimo para comparar e descobrir atalhos.', 'The computer finds the shortest possible path. Great for comparing and discovering shortcuts.', 'El ordenador encuentra el camino más corto posible. Ideal para comparar y descubrir atajos.'),
       },
     ];
   },
@@ -141,25 +141,25 @@ const pyraminx: PuzzleImpl = {
   scan: SCAN,
   describeMove: (m) => {
     const { vert, tip } = geo.parse(m);
-    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺') : tr('horário ↻', 'clockwise ↻');
+    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺', 'antihorario ↺') : tr('horário ↻', 'clockwise ↻', 'horario ↻');
     const where = VERT_TEXT[VERTS[vert]].toLowerCase();
-    return `${tip ? tr(`Só a ponta ${where}`, `Just the ${where} tip`) : tr(`Camada ${where}`, `${VERT_TEXT[VERTS[vert]]} layer`)} · ${dir} (120°)`;
+    return `${tip ? tr(`Só a ponta ${where}`, `Just the ${where} tip`, `Solo la punta ${where}`) : tr(`Camada ${where}`, `${VERT_TEXT[VERTS[vert]]} layer`, `Capa ${VERT_TEXT[VERTS[vert]]}`)} · ${dir} (120°)`;
   },
   get notationIntro() {
-    return tr('Cada letra é um <b>vértice</b> (uma ponta). Gire olhando a ponta <b>de fora</b>:', 'Each letter is a <b>vertex</b> (a tip). Turn it while looking at the tip <b>from outside</b>:');
+    return tr('Cada letra é um <b>vértice</b> (uma ponta). Gire olhando a ponta <b>de fora</b>:', 'Each letter is a <b>vertex</b> (a tip). Turn it while looking at the tip <b>from outside</b>:', 'Cada letra es un <b>vértice</b> (una punta). Gíralo mirando la punta <b>desde fuera</b>:');
   },
   get notationNote() {
     return tr(
       "<p><code>U L R B</code> = camada grande do vértice (ponta + centro + 3 arestas) · <code>u l r b</code> = só a ponta · <code>'</code> = anti-horário. Cada giro é ⅓ de volta (120°), olhando o vértice de fora.</p>",
-      "<p><code>U L R B</code> = the vertex’s big layer (tip + center + 3 edges) · <code>u l r b</code> = just the tip · <code>'</code> = counterclockwise. Each turn is ⅓ of a rotation (120°), looking at the vertex from outside.</p>",
+      "<p><code>U L R B</code> = the vertex’s big layer (tip + center + 3 edges) · <code>u l r b</code> = just the tip · <code>'</code> = counterclockwise. Each turn is ⅓ of a rotation (120°), looking at the vertex from outside.</p>", "<p><code>U L R B</code> = la capa grande del vértice (punta + centro + 3 aristas) · <code>u l r b</code> = solo la punta · <code>'</code> = antihorario. Cada giro es ⅓ de vuelta (120°), mirando el vértice desde fuera.</p>",
     );
   },
   get notationHelp() {
     return [
-      { move: 'U', text: tr('vértice de cima', 'top vertex') },
-      { move: 'L', text: tr('vértice da frente-esquerda', 'front-left vertex') },
-      { move: 'R', text: tr('vértice da frente-direita', 'front-right vertex') },
-      { move: 'B', text: tr('vértice de trás', 'back vertex') },
+      { move: 'U', text: tr('vértice de cima', 'top vertex', 'vértice de arriba') },
+      { move: 'L', text: tr('vértice da frente-esquerda', 'front-left vertex', 'vértice delantero izquierdo') },
+      { move: 'R', text: tr('vértice da frente-direita', 'front-right vertex', 'vértice delantero derecho') },
+      { move: 'B', text: tr('vértice de trás', 'back vertex', 'vértice de atrás') },
     ];
   },
 };

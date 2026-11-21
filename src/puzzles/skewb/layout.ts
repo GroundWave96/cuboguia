@@ -68,21 +68,21 @@ export function buildSkewbNet(): NonNullable<PuzzleImpl['netSvg']> {
 // ---------------------------------------------------------------------------
 // Câmera: como no 2x2 (sem centro fixo), começa por qualquer face e o site acha a posição no fim
 const HINTS = i18nMap({
-  F: ['Comece por <b>qualquer face</b>', 'Start with <b>any face</b>'],
-  R: ['Gire o Skewb ¼ de volta para a esquerda', 'Turn the Skewb ¼ to the left'],
-  B: ['Mais ¼ para a esquerda', 'Another ¼ to the left'],
-  L: ['Mais ¼ para a esquerda', 'Another ¼ to the left'],
-  U: ['Volte à primeira face e incline: topo para a câmera', 'Back to the first face, then tilt: top toward the camera'],
-  D: ['Agora a base para a câmera', 'Now the bottom toward the camera'],
+  F: ['Comece por <b>qualquer face</b>', 'Start with <b>any face</b>', 'Empieza por <b>cualquier cara</b>'],
+  R: ['Gire o Skewb ¼ de volta para a esquerda', 'Turn the Skewb ¼ to the left', 'Gira el Skewb ¼ hacia la izquierda'],
+  B: ['Mais ¼ para a esquerda', 'Another ¼ to the left', 'Otro ¼ hacia la izquierda'],
+  L: ['Mais ¼ para a esquerda', 'Another ¼ to the left', 'Otro ¼ hacia la izquierda'],
+  U: ['Volte à primeira face e incline: topo para a câmera', 'Back to the first face, then tilt: top toward the camera', 'Vuelve a la primera cara e inclínalo: la parte de arriba hacia la cámara'],
+  D: ['Agora a base para a câmera', 'Now the bottom toward the camera', 'Ahora la parte de abajo hacia la cámara'],
 }) as Record<FaceId, string>;
-const TITLE = i18nMap({ F: ['Frente', 'Front'], R: ['Direita', 'Right'], B: ['Trás', 'Back'], L: ['Esquerda', 'Left'], U: ['Topo', 'Top'], D: ['Base', 'Bottom'] }) as Record<FaceId, string>;
+const TITLE = i18nMap({ F: ['Frente', 'Front', 'Frente'], R: ['Direita', 'Right', 'Derecha'], B: ['Trás', 'Back', 'Atrás'], L: ['Esquerda', 'Left', 'Izquierda'], U: ['Topo', 'Top', 'Arriba'], D: ['Base', 'Bottom', 'Abajo'] }) as Record<FaceId, string>;
 const UP_LABEL = i18nMap({
-  F: ['TOPO', 'TOP'],
-  R: ['TOPO', 'TOP'],
-  B: ['TOPO', 'TOP'],
-  L: ['TOPO', 'TOP'],
-  U: ['LADO DE TRÁS', 'BACK SIDE'],
-  D: ['LADO DA FRENTE', 'FRONT SIDE'],
+  F: ['TOPO', 'TOP', 'ARRIBA'],
+  R: ['TOPO', 'TOP', 'ARRIBA'],
+  B: ['TOPO', 'TOP', 'ARRIBA'],
+  L: ['TOPO', 'TOP', 'ARRIBA'],
+  U: ['LADO DE TRÁS', 'BACK SIDE', 'LADO DE ATRÁS'],
+  D: ['LADO DA FRENTE', 'FRONT SIDE', 'LADO DEL FRENTE'],
 }) as Record<FaceId, string>;
 
 export function buildSkewbScan(): ScanFace[] {

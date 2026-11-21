@@ -18,7 +18,7 @@ interface FlatMove {
 
 export async function renderSolve(app: HTMLElement, puzzleId: string, params: URLSearchParams) {
   const def = getPuzzle(puzzleId);
-  if (!def?.available) throw new Error(tr('Este puzzle ainda não está disponível.', 'This puzzle isn’t available yet.'));
+  if (!def?.available) throw new Error(tr('Este puzzle ainda não está disponível.', 'This puzzle isn’t available yet.', 'Este puzzle todavía no está disponible.'));
   const impl: PuzzleImpl = await loadPuzzle(puzzleId);
 
   const initial: PuzzleState | null = decodeState(params.get('s') ?? '', impl.stickerCount, impl.colors.map((c) => c.key)) ?? loadState(puzzleId);
@@ -27,11 +27,11 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     return () => {};
   }
   const valid = impl.validate(initial);
-  if (!valid.ok) throw new Error(tr('O cubo informado não é válido: ', 'The puzzle you entered isn’t valid: ') + valid.errors.join(' '));
+  if (!valid.ok) throw new Error(tr('O cubo informado não é válido: ', 'The puzzle you entered isn’t valid: ', 'El puzzle que indicaste no es válido: ') + valid.errors.join(' '));
 
   const methodId = impl.methods.some((m) => m.id === params.get('m')) ? params.get('m')! : impl.methods[0].id;
   // aviso enquanto calcula (o Megaminx leva 1–3 s)
-  app.innerHTML = `<section class="page narrow"><div class="card loading-card"><div class="spinner" aria-hidden="true"></div><h2>${tr('Calculando a solução…', 'Working out the solution…')}</h2><p>${tr(`Montando o passo a passo para o seu ${def.name}.`, `Building the step-by-step guide for your ${def.name}.`)}</p></div></section>`;
+  app.innerHTML = `<section class="page narrow"><div class="card loading-card"><div class="spinner" aria-hidden="true"></div><h2>${tr('Calculando a solução…', 'Working out the solution…', 'Calculando la solución…')}</h2><p>${tr(`Montando o passo a passo para o seu ${def.name}.`, `Building the step-by-step guide for your ${def.name}.`, `Armando la guía paso a paso para tu ${def.name}.`)}</p></div></section>`;
   await new Promise((r) => setTimeout(r, 40));
   const sol: Solution = impl.solve(initial, methodId);
   saveMethod(methodId);
@@ -69,8 +69,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   const describeMove = (m: string) => {
     if (impl.describeMove) return impl.describeMove(m);
     const wide = m[0] !== m[0].toUpperCase() || m.includes('w');
-    const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? tr(' + meio (2 camadas)', ' + middle (2 layers)') : '');
-    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺') : m.endsWith('2') ? tr('meia volta (180°)', 'half turn (180°)') : tr('horário ↻', 'clockwise ↻');
+    const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? tr(' + meio (2 camadas)', ' + middle (2 layers)', ' + medio (2 capas)') : '');
+    const dir = m.endsWith("'") ? tr('anti-horário ↺', 'counterclockwise ↺', 'antihorario ↺') : m.endsWith('2') ? tr('meia volta (180°)', 'half turn (180°)', 'media vuelta (180°)') : tr('horário ↻', 'clockwise ↻', 'horario ↻');
     return `${f} · ${dir}`;
   };
 
@@ -91,12 +91,12 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   <section class="page workspace solve">
     <div class="ws-header">
       <div class="ws-toprow">
-        <a class="back" href="${puzzlePath(puzzleId)}">← ${tr('Editar cores', 'Edit colors')}</a>
-        ${steps.length ? `<button type="button" class="btn ghost sm share-tut" data-act="share" title="${tr('Mandar o link deste tutorial (o mesmo cubo e a mesma solução)', 'Send a link to this tutorial (same cube, same solution)')}">${icon('share')}<span>${tr('Compartilhar', 'Share')}</span></button>` : ''}
+        <a class="back" href="${puzzlePath(puzzleId)}">← ${tr('Editar cores', 'Edit colors', 'Editar colores')}</a>
+        ${steps.length ? `<button type="button" class="btn ghost sm share-tut" data-act="share" title="${tr('Mandar o link deste tutorial (o mesmo cubo e a mesma solução)', 'Send a link to this tutorial (same cube, same solution)', 'Enviar un enlace a este tutorial (mismo cubo, misma solución)')}">${icon('share')}<span>${tr('Compartilhar', 'Share', 'Compartir')}</span></button>` : ''}
       </div>
-      <h1>${tr(`Tutorial: resolvendo seu ${def.short}`, `Tutorial: solving your ${def.short}`)}</h1>
-      <p>${sol.method} · <b>${steps.length}</b> ${plural(steps.length, 'passo', 'passos', 'step', 'steps')} · <b>${flat.length}</b> ${plural(flat.length, 'movimento', 'movimentos', 'move', 'moves')}. ${impl.holdHint} ${tr('Mantenha essa posição o tempo todo.', 'Keep it in this position the whole time.')}</p>
-      <div class="method-switch" role="group" aria-label="${tr('Método', 'Method')}">
+      <h1>${tr(`Tutorial: resolvendo seu ${def.short}`, `Tutorial: solving your ${def.short}`, `Tutorial: resolviendo tu ${def.short}`)}</h1>
+      <p>${sol.method} · <b>${steps.length}</b> ${plural(steps.length, 'passo', 'passos', 'step', 'steps', 'paso', 'pasos')} · <b>${flat.length}</b> ${plural(flat.length, 'movimento', 'movimentos', 'move', 'moves', 'movimiento', 'movimientos')}. ${impl.holdHint} ${tr('Mantenha essa posição o tempo todo.', 'Keep it in this position the whole time.', 'Mantenlo en esta posición todo el tiempo.')}</p>
+      <div class="method-switch" role="group" aria-label="${tr('Método', 'Method', 'Método')}">
         ${impl.methods
           .map(
             (m) =>
@@ -114,38 +114,38 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <div class="ws-view card">
         <div class="view-host" id="view-host"></div>
         <div class="move-badge" aria-live="polite"><strong></strong><span></span></div>
-        <div class="hf-hint" ${handsFree ? '' : 'hidden'}>${icon('voice')}<span>${tr('Toque no cubo para o próximo movimento', 'Tap the cube for the next move')}</span></div>
-        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view')}">${icon('resetView')}</button>
+        <div class="hf-hint" ${handsFree ? '' : 'hidden'}>${icon('voice')}<span>${tr('Toque no cubo para o próximo movimento', 'Tap the cube for the next move', 'Toca el cubo para el siguiente movimiento')}</span></div>
+        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view', 'Volver a la vista inicial')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view', 'Volver a la vista inicial')}">${icon('resetView')}</button>
       </div>
       <div class="ws-panel card step-panel">
-        <div class="resume-note" hidden>${icon('history')}<span></span><button class="btn ghost sm" data-act="restart">${tr('Começar do início', 'Start over')}</button><button class="icon-btn" data-act="hideResume" aria-label="${tr('Fechar', 'Close')}" title="${tr('Fechar', 'Close')}">${icon('close')}</button></div>
+        <div class="resume-note" hidden>${icon('history')}<span></span><button class="btn ghost sm" data-act="restart">${tr('Começar do início', 'Start over', 'Empezar de nuevo')}</button><button class="icon-btn" data-act="hideResume" aria-label="${tr('Fechar', 'Close', 'Cerrar')}" title="${tr('Fechar', 'Close', 'Cerrar')}">${icon('close')}</button></div>
         <div class="step-body"></div>
-        <div class="step-ok" hidden>${icon('checkCircle')}<span>${tr('Passo concluído! Avance para o <b>próximo passo</b>.', 'Step done! Move on to the <b>next step</b>.')}</span></div>
+        <div class="step-ok" hidden>${icon('checkCircle')}<span>${tr('Passo concluído! Avance para o <b>próximo passo</b>.', 'Step done! Move on to the <b>next step</b>.', '¡Paso terminado! Pasa al <b>siguiente paso</b>.')}</span></div>
         <!-- controles: ficam presos na parte de baixo da tela enquanto o painel passa por ela -->
         <div class="step-dock">
           <div class="controls">
-            <button class="ctl" data-act="prevStep" title="${tr('Passo anterior', 'Previous step')} (PageUp)" aria-label="${tr('Passo anterior', 'Previous step')}">${icon('stepPrev')}</button>
-            <button class="ctl" data-act="prevMove" title="${tr('Desfazer movimento', 'Undo move')} (←)" aria-label="${tr('Desfazer movimento', 'Undo move')}">${icon('movePrev')}</button>
+            <button class="ctl" data-act="prevStep" title="${tr('Passo anterior', 'Previous step', 'Paso anterior')} (PageUp)" aria-label="${tr('Passo anterior', 'Previous step', 'Paso anterior')}">${icon('stepPrev')}</button>
+            <button class="ctl" data-act="prevMove" title="${tr('Desfazer movimento', 'Undo move', 'Deshacer movimiento')} (←)" aria-label="${tr('Desfazer movimento', 'Undo move', 'Deshacer movimiento')}">${icon('movePrev')}</button>
             <button class="ctl main" data-act="main"></button>
-            <button class="ctl" data-act="nextMove" title="${tr('Próximo movimento', 'Next move')} (→)" aria-label="${tr('Próximo movimento', 'Next move')}">${icon('moveNext')}</button>
-            <button class="ctl" data-act="nextStep" title="${tr('Próximo passo', 'Next step')} (PageDown)" aria-label="${tr('Próximo passo', 'Next step')}">${icon('stepNext')}</button>
+            <button class="ctl" data-act="nextMove" title="${tr('Próximo movimento', 'Next move', 'Siguiente movimiento')} (→)" aria-label="${tr('Próximo movimento', 'Next move', 'Siguiente movimiento')}">${icon('moveNext')}</button>
+            <button class="ctl" data-act="nextStep" title="${tr('Próximo passo', 'Next step', 'Siguiente paso')} (PageDown)" aria-label="${tr('Próximo passo', 'Next step', 'Siguiente paso')}">${icon('stepNext')}</button>
           </div>
         </div>
         <div class="step-foot">
           <div class="foot-row">
-            <label class="speed">${tr('Velocidade', 'Speed')} <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
+            <label class="speed">${tr('Velocidade', 'Speed', 'Velocidad')} <input type="range" min="0.4" max="2.5" step="0.1" value="${speed}"><span>${speed.toFixed(1)}×</span></label>
             ${
               canSpeak()
-                ? `<button type="button" class="btn ghost sm hf-toggle" data-act="handsfree" aria-pressed="${handsFree}" title="${tr('O site fala cada movimento e um toque no cubo avança', 'The site reads each move aloud and a tap on the cube moves on')}">${icon('voice')}<span>${tr('Mãos livres', 'Hands-free')}</span></button>`
+                ? `<button type="button" class="btn ghost sm hf-toggle" data-act="handsfree" aria-pressed="${handsFree}" title="${tr('O site fala cada movimento e um toque no cubo avança', 'The site reads each move aloud and a tap on the cube moves on', 'La web lee cada movimiento en voz alta y un toque en el cubo avanza')}">${icon('voice')}<span>${tr('Mãos livres', 'Hands-free', 'Manos libres')}</span></button>`
                 : ''
             }
           </div>
           <p class="hf-note" ${handsFree ? '' : 'hidden'}>${tr(
             'Mãos livres ligado: o site fala cada movimento em voz alta. Faça o movimento no seu cubo e <b>toque no cubo da tela</b> para ir ao próximo (arrastar continua girando a vista). Aumente o volume do aparelho.',
-            'Hands-free is on: the site reads each move aloud. Do the move on your cube and <b>tap the cube on the screen</b> for the next one (dragging still turns the view). Turn up your device’s volume.',
+            'Hands-free is on: the site reads each move aloud. Do the move on your cube and <b>tap the cube on the screen</b> for the next one (dragging still turns the view). Turn up your device’s volume.', 'Manos libres activado: la web lee cada movimiento en voz alta. Haz el movimiento en tu cubo y <b>toca el cubo en la pantalla</b> para el siguiente (arrastrar sigue girando la vista). Sube el volumen del dispositivo.',
           )}</p>
           <details class="notation">
-            <summary>${tr('Como ler os movimentos?', 'How to read the moves?')}</summary>
+            <summary>${tr('Como ler os movimentos?', 'How to read the moves?', '¿Cómo leer los movimientos?')}</summary>
             ${notationHtml(impl, puzzleId)}
           </details>
         </div>
@@ -284,7 +284,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       })
       .join('');
     body.innerHTML = `
-      <div class="step-meta"><span class="pill">${tr('Etapa', 'Stage')} ${stageIndex(st.stageId) + 1} · ${stage.name}</span><span>${tr(`Passo ${cur + 1} de ${steps.length}`, `Step ${cur + 1} of ${steps.length}`)}</span></div>
+      <div class="step-meta"><span class="pill">${tr('Etapa', 'Stage', 'Etapa')} ${stageIndex(st.stageId) + 1} · ${stage.name}</span><span>${tr(`Passo ${cur + 1} de ${steps.length}`, `Step ${cur + 1} of ${steps.length}`, `Paso ${cur + 1} de ${steps.length}`)}</span></div>
       <div class="progress"><span></span></div>
       <h2 class="step-title">${st.title}</h2>
       <p class="stage-goal">${icon('target')}<span>${stage.goal}</span></p>
@@ -316,23 +316,23 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       <div class="done-panel">
         <div class="confetti" aria-hidden="true">${'<i></i>'.repeat(24)}</div>
         <div class="trophy">${icon('trophy')}</div>
-        <h2>${steps.length ? tr('Cubo resolvido!', 'Solved!') : tr('Seu cubo já está resolvido!', 'Your puzzle is already solved!')}</h2>
+        <h2>${steps.length ? tr('Cubo resolvido!', 'Solved!', '¡Resuelto!') : tr('Seu cubo já está resolvido!', 'Your puzzle is already solved!', '¡Tu puzzle ya está resuelto!')}</h2>
         <p>${
           steps.length
             ? tr(
                 `Foram ${steps.length} passos e ${flat.length} movimentos. Com a prática, os algoritmos ficam automáticos — tente de novo embaralhando o cubo!`,
-                `That was ${steps.length} steps and ${flat.length} moves. With practice the algorithms become automatic — scramble it and try again!`,
+                `That was ${steps.length} steps and ${flat.length} moves. With practice the algorithms become automatic — scramble it and try again!`, `Fueron ${steps.length} pasos y ${flat.length} movimientos. Con práctica, los algoritmos se vuelven automáticos: ¡mézclalo y prueba otra vez!`,
               )
-            : tr('Embaralhe o cubo e informe as cores de novo para ver o tutorial.', 'Scramble it and enter the colors again to see the tutorial.')
+            : tr('Embaralhe o cubo e informe as cores de novo para ver o tutorial.', 'Scramble it and enter the colors again to see the tutorial.', 'Mézclalo e indica los colores de nuevo para ver el tutorial.')
         }</p>
         <div class="row-actions center">
-          ${steps.length ? `<button class="btn ghost" data-act="restart">${tr('Rever do início', 'Watch again from the start')}</button>` : ''}
-          ${steps.length ? `<button class="btn ghost" data-act="share">${icon('share')}${tr('Compartilhar', 'Share')}</button>` : ''}
-          <a class="btn primary" href="${puzzlePath(puzzleId)}">${tr('Resolver outro cubo', 'Solve another one')}</a>
+          ${steps.length ? `<button class="btn ghost" data-act="restart">${tr('Rever do início', 'Watch again from the start', 'Ver otra vez desde el principio')}</button>` : ''}
+          ${steps.length ? `<button class="btn ghost" data-act="share">${icon('share')}${tr('Compartilhar', 'Share', 'Compartir')}</button>` : ''}
+          <a class="btn primary" href="${puzzlePath(puzzleId)}">${tr('Resolver outro cubo', 'Solve another one', 'Resolver otro')}</a>
         </div>
         ${
           steps.length && PATTERN_PUZZLES_R.includes(puzzleId)
-            ? `<a class="done-patterns" href="${patternsPath(undefined, puzzleId)}">${icon('pattern')}<span>${tr('Que tal desenhar um padrão no cubo resolvido? <b>Xadrez, cubo dentro do cubo…</b>', 'How about making a pattern on your solved cube? <b>Checkerboard, cube in a cube…</b>')}</span></a>`
+            ? `<a class="done-patterns" href="${patternsPath(undefined, puzzleId)}">${icon('pattern')}<span>${tr('Que tal desenhar um padrão no cubo resolvido? <b>Xadrez, cubo dentro do cubo…</b>', 'How about making a pattern on your solved cube? <b>Checkerboard, cube in a cube…</b>', '¿Qué tal hacer un patrón en tu cubo resuelto? <b>Ajedrez, cubo dentro del cubo…</b>')}</span></a>`
             : ''
         }
       </div>`;
@@ -378,7 +378,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
       badge.classList.add('show', 'active');
     } else if (pos < stepEnd(cur)) {
       badge.querySelector('strong')!.textContent = flat[pos].move;
-      badge.querySelector('span')!.textContent = tr('Próximo: ', 'Next: ') + describeMove(flat[pos].move);
+      badge.querySelector('span')!.textContent = tr('Próximo: ', 'Next: ', 'Siguiente: ') + describeMove(flat[pos].move);
       badge.classList.add('show');
       badge.classList.remove('active');
     } else {
@@ -402,19 +402,19 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     const done = stepDone();
     stepOk.hidden = !done;
     prevMoveBtn.disabled = pos === 0;
-    const space = tr('espaço', 'space');
-    if (playing) setMain('pause', `${tr('Pausar', 'Pause')} (${space})`, icon('pause'));
-    else if (done) setMain('play', `${tr('Próximo passo', 'Next step')} (${space})`, `${icon('stepNext')}<span>${tr('Próximo passo', 'Next step')}</span>`, true);
-    else setMain('play', `${tr('Animar o passo', 'Play the step')} (${space})`, icon('play'));
+    const space = tr('espaço', 'space', 'espacio');
+    if (playing) setMain('pause', `${tr('Pausar', 'Pause', 'Pausa')} (${space})`, icon('pause'));
+    else if (done) setMain('play', `${tr('Próximo passo', 'Next step', 'Siguiente paso')} (${space})`, `${icon('stepNext')}<span>${tr('Próximo passo', 'Next step', 'Siguiente paso')}</span>`, true);
+    else setMain('play', `${tr('Animar o passo', 'Play the step', 'Reproducir el paso')} (${space})`, icon('play'));
   }
 
   /** o que falar agora (mãos livres) */
   function announcement(): string {
-    if (finished()) return steps.length ? tr('Cubo resolvido! Parabéns!', 'Solved! Well done!') : '';
-    if (stepDone()) return tr('Passo concluído. Toque no cubo para abrir o próximo passo.', 'Step done. Tap the cube to open the next step.');
+    if (finished()) return steps.length ? tr('Cubo resolvido! Parabéns!', 'Solved! Well done!', '¡Resuelto! ¡Bien hecho!') : '';
+    if (stepDone()) return tr('Passo concluído. Toque no cubo para abrir o próximo passo.', 'Step done. Tap the cube to open the next step.', 'Paso terminado. Toca el cubo para abrir el siguiente paso.');
     const mv = describeMove(flat[pos].move);
     if (pos === stepStart[cur])
-      return tr(`Passo ${cur + 1} de ${steps.length}: ${steps[cur].title}. Primeiro movimento: ${mv}`, `Step ${cur + 1} of ${steps.length}: ${steps[cur].title}. First move: ${mv}`);
+      return tr(`Passo ${cur + 1} de ${steps.length}: ${steps[cur].title}. Primeiro movimento: ${mv}`, `Step ${cur + 1} of ${steps.length}: ${steps[cur].title}. First move: ${mv}`, `Paso ${cur + 1} de ${steps.length}: ${steps[cur].title}. Primer movimiento: ${mv}`);
     return mv;
   }
 
@@ -458,10 +458,10 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   /** manda o link deste tutorial: quem abrir vê o mesmo cubo e a mesma solução, desde o passo 1 */
   async function share() {
     const url = location.origin + solvePath(puzzleId, methodId, stateCode);
-    const text = tr(`Tutorial passo a passo para resolver este ${def!.short} no CuboGuia:`, `Step-by-step tutorial to solve this ${def!.short} on CuboGuia:`);
+    const text = tr(`Tutorial passo a passo para resolver este ${def!.short} no CuboGuia:`, `Step-by-step tutorial to solve this ${def!.short} on CuboGuia:`, `Tutorial paso a paso para resolver este ${def!.short} en CuboGuia:`);
     if (navigator.share) {
       try {
-        await navigator.share({ title: tr(`Tutorial do ${def!.short} no CuboGuia`, `${def!.short} tutorial on CuboGuia`), text, url });
+        await navigator.share({ title: tr(`Tutorial do ${def!.short} no CuboGuia`, `${def!.short} tutorial on CuboGuia`, `Tutorial del ${def!.short} en CuboGuia`), text, url });
         return;
       } catch (e) {
         if ((e as DOMException).name === 'AbortError') return; // a pessoa cancelou
@@ -469,9 +469,9 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     }
     try {
       await navigator.clipboard.writeText(`${text} ${url}`);
-      toast(tr('Link copiado! Quem abrir vê o mesmo cubo e a mesma solução.', 'Link copied! Whoever opens it sees the same cube and solution.'));
+      toast(tr('Link copiado! Quem abrir vê o mesmo cubo e a mesma solução.', 'Link copied! Whoever opens it sees the same cube and solution.', '¡Enlace copiado! Quien lo abra verá el mismo cubo y la misma solución.'));
     } catch {
-      toast(tr(`Copie o link: ${url}`, `Copy the link: ${url}`), 8000);
+      toast(tr(`Copie o link: ${url}`, `Copy the link: ${url}`, `Copia el enlace: ${url}`), 8000);
     }
   }
   app.querySelector('[data-act="share"]')?.addEventListener('click', share);
@@ -550,7 +550,7 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
     render();
     resumeNote.querySelector('span')!.innerHTML = tr(
       `Continuando de onde você parou: <b>passo ${cur + 1} de ${steps.length}</b>.`,
-      `Picking up where you left off: <b>step ${cur + 1} of ${steps.length}</b>.`,
+      `Picking up where you left off: <b>step ${cur + 1} of ${steps.length}</b>.`, `Siguiendo donde lo dejaste: <b>paso ${cur + 1} de ${steps.length}</b>.`,
     );
     resumeNote.hidden = langSwitch;
     // celular: o cubo fica fixo no topo; rola até o aviso aparecer logo abaixo dele

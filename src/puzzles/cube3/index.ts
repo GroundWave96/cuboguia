@@ -15,7 +15,7 @@ const geo = new NxNGeometry(3);
 const cube3: PuzzleImpl = {
   colors: CUBE3_COLORS,
   get holdHint() {
-    return tr('Segure o cubo com o <b>amarelo</b> em cima e o <b>verde</b> de frente.', 'Hold the cube with <b>yellow</b> on top and <b>green</b> in front.');
+    return tr('Segure o cubo com o <b>amarelo</b> em cima e o <b>verde</b> de frente.', 'Hold the cube with <b>yellow</b> on top and <b>green</b> in front.', 'Sujeta el cubo con el <b>amarillo</b> arriba y el <b>verde</b> al frente.');
   },
   stickerCount: geo.count,
   solvedState: () => geo.solved(),
@@ -29,20 +29,20 @@ const cube3: PuzzleImpl = {
     return [
       {
         id: 'beginner',
-        name: tr('Iniciante (camadas)', 'Beginner (layers)'),
-        tagline: tr('Para aprender · ~130 movimentos', 'To learn · ~130 moves'),
+        name: tr('Iniciante (camadas)', 'Beginner (layers)', 'Principiante (capas)'),
+        tagline: tr('Para aprender · ~130 movimentos', 'To learn · ~130 moves', 'Para aprender · ~130 movimientos'),
         description: tr(
           'Camada por camada, com poucos algoritmos para decorar. O melhor jeito de resolver pela primeira vez.',
-          'Layer by layer, with few algorithms to memorize. The best way to solve it for the first time.',
+          'Layer by layer, with few algorithms to memorize. The best way to solve it for the first time.', 'Capa por capa, con pocos algoritmos para memorizar. La mejor forma de resolverlo por primera vez.',
         ),
       },
       {
         id: 'cfop',
-        name: tr('CFOP (avançado)', 'CFOP (advanced)'),
-        tagline: tr('O dos speedcubers · ~70 movimentos', 'What speedcubers use · ~70 moves'),
+        name: tr('CFOP (avançado)', 'CFOP (advanced)', 'CFOP (avanzado)'),
+        tagline: tr('O dos speedcubers · ~70 movimentos', 'What speedcubers use · ~70 moves', 'Lo que usan los speedcubers · ~70 movimientos'),
         description: tr(
           'Cruz planejada de uma vez, pares no F2L e OLL/PLL em 2 etapas. Mais rápido e com bem menos movimentos.',
-          'Cross planned in one go, pairs in F2L and OLL/PLL in 2 looks. Faster and with far fewer moves.',
+          'Cross planned in one go, pairs in F2L and OLL/PLL in 2 looks. Faster and with far fewer moves.', 'Cruz planeada de una vez, pares en F2L y OLL/PLL en 2 pasos. Más rápido y con muchos menos movimientos.',
         ),
       },
     ];

@@ -270,14 +270,14 @@ interface Ctx {
 }
 
 /** rótulos dos trechos (guardados em português na biblioteca; traduzidos ao mostrar) */
-const SEG_LABELS: Record<string, [string, string]> = {
-  Posicionar: ['Posicionar', 'Setup'],
-  Gatilho: ['Gatilho', 'Trigger'],
-  'Comutador de centros': ['Comutador de centros', 'Center commutator'],
-  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle'],
-  'Paridade das arestas': ['Paridade das arestas', 'Edge parity'],
-  'Paridade OLL': ['Paridade OLL', 'OLL parity'],
-  'Paridade PLL': ['Paridade PLL', 'PLL parity'],
+const SEG_LABELS: Record<string, [string, string, string]> = {
+  Posicionar: ['Posicionar', 'Setup', 'Preparar'],
+  Gatilho: ['Gatilho', 'Trigger', 'Truco'],
+  'Comutador de centros': ['Comutador de centros', 'Center commutator', 'Conmutador de centros'],
+  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle', 'Ciclo de 3 piezas'],
+  'Paridade das arestas': ['Paridade das arestas', 'Edge parity', 'Paridad de aristas'],
+  'Paridade OLL': ['Paridade OLL', 'OLL parity', 'Paridad de OLL'],
+  'Paridade PLL': ['Paridade PLL', 'PLL parity', 'Paridad de PLL'],
 };
 const segLabel = (l: string) => (SEG_LABELS[l] ? tr(...SEG_LABELS[l]) : l);
 
@@ -328,16 +328,16 @@ function solveCenters(ctx: Ctx) {
       push(
         ctx,
         stage,
-        tr(`Centro ${cname(f)}: ${ready} de 8`, `${cap(cname(f))} center: ${ready} of 8`),
+        tr(`Centro ${cname(f)}: ${ready} de 8`, `${cap(cname(f))} center: ${ready} of 8`, `Centro ${cname(f)}: ${ready} de 8`),
         order === 0
-          ? tr(`Leve adesivos ${cname(f)} para o centro ${cname(f)}, em volta do adesivo fixo do meio.`, `Bring ${cname(f)} stickers to the ${cname(f)} center, around the fixed middle sticker.`)
+          ? tr(`Leve adesivos ${cname(f)} para o centro ${cname(f)}, em volta do adesivo fixo do meio.`, `Bring ${cname(f)} stickers to the ${cname(f)} center, around the fixed middle sticker.`, `Lleva pegatinas de color ${cname(f)} al centro ${cname(f)}, alrededor de la pegatina fija del medio.`)
           : order === 1
-            ? tr(`Monte o centro ${cname(f)} sem desmanchar o centro branco.`, `Build the ${cname(f)} center without breaking the white center.`)
+            ? tr(`Monte o centro ${cname(f)} sem desmanchar o centro branco.`, `Build the ${cname(f)} center without breaking the white center.`, `Arma el centro ${cname(f)} sin romper el centro blanco.`)
             : order < 5
-              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`)
+              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`, `Arma el centro ${cname(f)} sin romper los centros que ya están hechos.`)
               : tr(
                   `Os dois últimos centros (${cname(5)} e ${cname(4)}) se montam juntos, trocando peças entre eles.`,
-                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`,
+                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`, `Los dos últimos centros (${cname(5)} y ${cname(4)}) se arman juntos, intercambiando piezas entre ellos.`,
                 ),
         r.path,
         FACE_CENTERS[f],
@@ -454,10 +454,10 @@ function solveEdges(ctx: Ctx) {
       push(
         ctx,
         'edges',
-        tr('Paridade das arestas', 'Edge parity'),
+        tr('Paridade das arestas', 'Edge parity', 'Paridad de aristas'),
         tr(
           'Sobraram duas pontas trocadas — isso acontece no 5x5 e não tem como resolver só com ciclos de 3 peças. Este algoritmo troca as duas pontas de uma aresta; os centros se mexem no meio e voltam no fim.',
-          'Two wings are left swapped — this happens on a 5x5 and can’t be fixed with 3-piece cycles alone. This algorithm swaps the two wings of one edge; the centers move along the way and come back at the end.',
+          'Two wings are left swapped — this happens on a 5x5 and can’t be fixed with 3-piece cycles alone. This algorithm swaps the two wings of one edge; the centers move along the way and come back at the end.', 'Quedaron dos mitades intercambiadas: pasa en el 5x5 y no se arregla solo con ciclos de 3 piezas. Este algoritmo intercambia las dos mitades de una arista; los centros se mueven por el camino y vuelven al final.',
         ),
         [m],
         [open[0].at, partner(open[0].at), open[1].at, partner(open[1].at), ...open[0].midge],
@@ -486,10 +486,10 @@ function solveEdges(ctx: Ctx) {
     push(
       ctx,
       'edges',
-      bestGain > 1 ? tr(`Pontas ${names.join(' e ')}`, `${names.join(' and ')} wings`) : tr(`Ponta ${names[0]}`, `${names[0]} wing`),
+      bestGain > 1 ? tr(`Pontas ${names.join(' e ')}`, `${names.join(' and ')} wings`, `Mitades ${names.join(' y ')}`) : tr(`Ponta ${names[0]}`, `${names[0]} wing`, `Mitad ${names[0]}`),
       tr(
         `Um ciclo de 3 pontas: ${bestGain > 1 ? 'duas pontas vão' : 'uma ponta vai'} para o lado do meio da ${bestGain > 1 ? 'aresta delas' : 'aresta dela'}. Só essas 3 pontas se mexem — os centros e o resto saem do lugar no meio do algoritmo e voltam no fim. (${paired()} de 12 arestas completas antes deste passo.)`,
-        `A 3-wing cycle: ${bestGain > 1 ? 'two wings go' : 'one wing goes'} next to the middle of ${bestGain > 1 ? 'their edge' : 'its edge'}. Only these 3 wings move — the centers and everything else leave their spots during the algorithm and come back at the end. (${paired()} of 12 edges complete before this step.)`,
+        `A 3-wing cycle: ${bestGain > 1 ? 'two wings go' : 'one wing goes'} next to the middle of ${bestGain > 1 ? 'their edge' : 'its edge'}. Only these 3 wings move — the centers and everything else leave their spots during the algorithm and come back at the end. (${paired()} of 12 edges complete before this step.)`, `Un ciclo de 3 mitades: ${bestGain > 1 ? 'dos mitades van' : 'una mitad va'} junto al medio de ${bestGain > 1 ? 'su arista' : 'su arista'}. Solo se mueven estas 3 mitades; los centros y todo lo demás salen de su sitio durante el algoritmo y vuelven al final. (${paired()} de 12 aristas completas antes de este paso.)`,
       ),
       [m],
       [...best.p.flatMap((x) => [x, partner(x)]), ...placedNow.flatMap((w) => w.midge)],
@@ -500,10 +500,10 @@ function solveEdges(ctx: Ctx) {
 
 // ---------------------------------------------------------------------------
 export const CUBE5_STAGES = (): SolutionStage[] => [
-  { id: 'c-white', name: tr('Centro branco', 'White center'), goal: tr('Montar os 9 adesivos do centro da face branca.', 'Build the 9 stickers of the white face’s center.') },
-  { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center'), goal: tr('Montar o centro amarelo, do lado oposto ao branco.', 'Build the yellow center, opposite the white one.') },
-  { id: 'c-sides', name: tr('Centros laterais', 'Side centers'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.') },
-  { id: 'edges', name: tr('Arestas', 'Edges'), goal: tr('Juntar as duas pontas de cada aresta ao meio dela, formando 12 arestas inteiras.', 'Bring the two wings of each edge next to its middle, forming 12 complete edges.') },
+  { id: 'c-white', name: tr('Centro branco', 'White center', 'Centro blanco'), goal: tr('Montar os 9 adesivos do centro da face branca.', 'Build the 9 stickers of the white face’s center.', 'Arma las 9 pegatinas del centro de la cara blanca.') },
+  { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center', 'Centro amarillo'), goal: tr('Montar o centro amarelo, do lado oposto ao branco.', 'Build the yellow center, opposite the white one.', 'Arma el centro amarillo, opuesto al blanco.') },
+  { id: 'c-sides', name: tr('Centros laterais', 'Side centers', 'Centros de los lados'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.', 'Arma los 4 centros de los lados sin romper los que ya están hechos.') },
+  { id: 'edges', name: tr('Arestas', 'Edges', 'Aristas'), goal: tr('Juntar as duas pontas de cada aresta ao meio dela, formando 12 arestas inteiras.', 'Bring the two wings of each edge next to its middle, forming 12 complete edges.', 'Junta las dos mitades de cada arista junto a su medio, formando 12 aristas completas.') },
 ];
 
 export function solveCube5(state: PuzzleState, method: 'beginner' | 'cfop' = 'beginner'): Solution {
@@ -526,8 +526,8 @@ export function solveCube5(state: PuzzleState, method: 'beginner' | 'cfop' = 'be
     })),
   ];
   return {
-    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)'),
-    stages: [...CUBE5_STAGES(), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`) }))],
+    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP', 'Reducción + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)', 'Reducción (principiante)'),
+    stages: [...CUBE5_STAGES(), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`, `Como un 3x3: ${sg.name}`) }))],
     steps,
   };
 }

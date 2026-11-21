@@ -4,230 +4,414 @@
     <loc>https://cuboguia.pages.dev/</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/2x2</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/2x2"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/2x2"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/2x2"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/2x2</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/2x2"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/2x2"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/2x2"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/3x3</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/3x3"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/3x3"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/3x3"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/3x3</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/3x3"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/3x3"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/3x3"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/4x4</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/4x4"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/4x4"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/4x4"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/4x4</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/4x4"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/4x4"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/4x4"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/5x5</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/5x5"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/5x5"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/5x5</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/5x5"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/5x5"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/6x6</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/6x6"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/6x6"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/6x6"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/6x6</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/6x6"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/6x6"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/6x6"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/7x7</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/7x7"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/7x7"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/7x7"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/7x7</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/7x7"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/7x7"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/7x7"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/pyraminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/pyraminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/skewb</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/skewb"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/skewb"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/skewb"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/skewb</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/skewb"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/skewb"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/skewb"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/megaminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/megaminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/megaminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/megaminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/megaminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/megaminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/cronometro</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/cronometro"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/timer"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/cronometro"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/timer</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/cronometro"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/timer"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/cronometro"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/algoritmos</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/algorithms</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/algoritmos/2x2</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/2x2"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/2x2"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos/2x2"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/algorithms/2x2</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/2x2"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/2x2"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos/2x2"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/algoritmos/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos/pyraminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/algorithms/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos/pyraminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/notacao</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/notation</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/notacao/5x5</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/5x5"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/5x5"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/notation/5x5</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/5x5"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/5x5"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/notacao/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/pyraminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/notation/pyraminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/pyraminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/pyraminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/notacao/skewb</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/skewb"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/skewb"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/skewb"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/notation/skewb</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/skewb"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/skewb"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/skewb"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/notacao/megaminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/megaminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/megaminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/notation/megaminx</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/megaminx"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/megaminx"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/perguntas</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/perguntas"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/faq"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/preguntas"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/faq</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/perguntas"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/faq"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/preguntas"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/padroes</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/patterns</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/padroes/4x4</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/4x4"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/4x4"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones/4x4"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/patterns/4x4</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/4x4"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/4x4"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones/4x4"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/padroes/5x5</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/5x5"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones/5x5"/>
   </url>
   <url>
     <loc>https://cuboguia.pages.dev/en/patterns/5x5</loc>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/5x5"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/2x2</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/2x2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/2x2"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/2x2"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/3x3</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/3x3"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/3x3"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/3x3"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/4x4</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/4x4"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/4x4"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/4x4"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/6x6</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/6x6"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/6x6"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/6x6"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/7x7</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/7x7"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/7x7"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/7x7"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/skewb</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/skewb"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/skewb"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/skewb"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/megaminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/megaminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/cronometro</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/cronometro"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/timer"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/cronometro"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/algoritmos</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/algoritmos/2x2</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/2x2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/2x2"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos/2x2"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/algoritmos/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/algoritmos/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/algorithms/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/algoritmos/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/notacion</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/notacion/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/5x5"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/notacion/pyraminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/pyraminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/pyraminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/notacion/skewb</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/skewb"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/skewb"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/skewb"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/notacion/megaminx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/notacao/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/notation/megaminx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/notacion/megaminx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/preguntas</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/perguntas"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/faq"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/preguntas"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/patrones</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/patrones/4x4</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/4x4"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/4x4"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones/4x4"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/patrones/5x5</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/padroes/5x5"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/patterns/5x5"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/patrones/5x5"/>
   </url>
 </urlset>

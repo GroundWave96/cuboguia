@@ -28,7 +28,7 @@ export interface AlgCase {
   set: string;
   group: string;
   /** nome internacional (ou [pt, en] quando tem tradução) */
-  name: string | [string, string];
+  name: string | [string, string, string];
   alg: string;
   /** outro algoritmo comum para o mesmo caso (conferido nos testes) */
   alt?: string;

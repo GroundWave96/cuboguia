@@ -16,7 +16,7 @@ export function validateSkewb(state: PuzzleState): ValidationResult {
 
   const count = new Map<string, number>();
   for (const c of state) count.set(c, (count.get(c) ?? 0) + 1);
-  for (const [c, n] of count) if (n !== 5) errors.push(msg.colorCount(name(c), n, 5, [': um centro e 4 cantos', ': one center and 4 corners']));
+  for (const [c, n] of count) if (n !== 5) errors.push(msg.colorCount(name(c), n, 5, [': um centro e 4 cantos', ': one center and 4 corners', ': un centro y 4 esquinas']));
   if (errors.length) return { ok: false, errors };
 
   // centros: uma cor em cada
@@ -26,7 +26,7 @@ export function validateSkewb(state: PuzzleState): ValidationResult {
     errors.push(
       tr(
         `Dois centros (o quadrado do meio das faces) estão com a cor ${name(dupCenter)} — cada centro tem uma cor diferente.`,
-        `Two centers (the square in the middle of the faces) are ${name(dupCenter)} — each center has a different color.`,
+        `Two centers (the square in the middle of the faces) are ${name(dupCenter)} — each center has a different color.`, `Dos centros (el cuadrado del medio de las caras) son ${name(dupCenter)}; cada centro tiene un color distinto.`,
       ),
     );
 
@@ -54,7 +54,7 @@ export function validateSkewb(state: PuzzleState): ValidationResult {
       errors: [
         tr(
           'O canto amarelo-verde-laranja precisa ficar em cima, na frente, à direita (amarelo em cima, verde na frente).',
-          'The yellow-green-orange corner must be at the top front right (yellow on top, green in front).',
+          'The yellow-green-orange corner must be at the top front right (yellow on top, green in front).', 'La esquina amarilla-verde-naranja debe estar arriba, delante a la derecha (amarillo arriba, verde al frente).',
         ),
       ],
     };
@@ -64,14 +64,14 @@ export function validateSkewb(state: PuzzleState): ValidationResult {
     errors.push(
       tr(
         'Algum canto está girado (ou dois cantos trocados) de um jeito que não acontece num Skewb de verdade — confira as cores dos cantos.',
-        'A corner is twisted (or two corners are swapped) in a way that can’t happen on a real Skewb — check the corner colors.',
+        'A corner is twisted (or two corners are swapped) in a way that can’t happen on a real Skewb — check the corner colors.', 'Una esquina está girada (o dos esquinas intercambiadas) de una forma que no puede pasar en un Skewb real: revisa los colores de las esquinas.',
       ),
     );
   if (!r.centers)
     errors.push(
       tr(
         'Dois centros estão trocados de um jeito que não acontece num Skewb de verdade — confira os quadrados do meio das faces.',
-        'Two centers are swapped in a way that can’t happen on a real Skewb — check the squares in the middle of the faces.',
+        'Two centers are swapped in a way that can’t happen on a real Skewb — check the squares in the middle of the faces.', 'Dos centros están intercambiados de una forma que no puede pasar en un Skewb real: revisa los cuadrados del medio de las caras.',
       ),
     );
   return { ok: errors.length === 0, errors };

@@ -1,6 +1,6 @@
 /** Versão em inglês: nada em português em nenhuma tela. */
 import { expect, test } from '@playwright/test';
-import { portugueseLeft, trackErrors } from './helpers';
+import { openRandomTutorial, portugueseLeft, trackErrors } from './helpers';
 
 test.use({ locale: 'en-US' });
 
@@ -78,4 +78,42 @@ test('seletor de idioma leva para a mesma página', async ({ page }, info) => {
   await expect(page).toHaveURL(/\/en\/3x3$/);
   await page.click('.nav-lang [data-lang="pt"]');
   await expect(page).toHaveURL(/\/3x3$/);
+});
+
+/** português ou inglês que sobrou na versão em espanhol */
+const NOT_ES = /[ãõçÃÕÇ]|\b(não|você|uma|com|faça|então|também|peça|peças|canto|cantos|camada|camadas|embaixo|aresta|arestas|the|and|with|step|steps|edge|edges|corner|corners|layer|layers|moves|white|yellow|green|solve|timer|scramble)\b/i;
+
+test('versão em espanhol: telas em espanhol, do início ao fim do tutorial', async ({ page }, info) => {
+  test.skip(info.project.name !== 'computador', 'o celular já é testado em português');
+  test.slow();
+  const check = trackErrors(page);
+  const bad: string[] = [];
+  await page.goto('/es');
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe('es');
+  await expect(page.locator('h1')).toContainText('Resuelve');
+  bad.push(...(await portugueseLeft(page, '/es', NOT_ES)));
+  await openRandomTutorial(page, '3x3', '/es');
+  await expect(page.locator('.step-meta')).toContainText(/Paso 1 de/);
+  bad.push(...(await portugueseLeft(page, '/es/3x3 tutorial', NOT_ES)));
+  for (const path of ['/es/3x3', '/es/megaminx', '/es/cronometro', '/es/algoritmos', '/es/algoritmos/2x2', '/es/notacion', '/es/notacion/5x5', '/es/patrones/4x4', '/es/preguntas', '/es/nada']) {
+    await page.goto(path);
+    await page.waitForTimeout(300);
+    bad.push(...(await portugueseLeft(page, path, NOT_ES)));
+  }
+  expect([...new Set(bad)]).toEqual([]);
+  // seletor de idioma: mesma página em espanhol e de volta
+  await page.goto('/padroes');
+  await page.click('.nav-lang [data-lang="es"]');
+  await expect(page).toHaveURL(/\/es\/patrones$/);
+  await expect(page.locator('h1')).toHaveText('Patrones bonitos');
+  await page.click('.nav-lang [data-lang="pt"]');
+  await expect(page).toHaveURL(/\/padroes$/);
+  check();
+});
+
+test('prévia em espanhol para o WhatsApp', async ({ request }) => {
+  const html = await (await request.get('/es/cronometro?p=cube3&e=R%20U&t=12340&n=Ana')).text();
+  expect(html).toContain('<html lang="es"');
+  expect(html).toMatch(/<meta property="og:title" content="Ana te retó: 12\.34 en el 3x3"/);
+  expect(html).toContain('hreflang="es"');
 });

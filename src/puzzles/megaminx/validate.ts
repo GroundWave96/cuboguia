@@ -67,7 +67,7 @@ export function validateMegaminx(state: PuzzleState): ValidationResult {
     ep.push(j);
   }
   if (errors.length) return { ok: false, errors };
-  if (parity(cp) !== 0) errors.push(tr('Dois cantos estão trocados de lugar — confira as cores dos cantos.', 'Two corners are swapped — check the corner colors.'));
-  if (parity(ep) !== 0) errors.push(tr('Duas arestas estão trocadas de lugar — confira as cores das arestas.', 'Two edges are swapped — check the edge colors.'));
+  if (parity(cp) !== 0) errors.push(tr('Dois cantos estão trocados de lugar — confira as cores dos cantos.', 'Two corners are swapped — check the corner colors.', 'Hay dos esquinas intercambiadas: revisa los colores de las esquinas.'));
+  if (parity(ep) !== 0) errors.push(tr('Duas arestas estão trocadas de lugar — confira as cores das arestas.', 'Two edges are swapped — check the edge colors.', 'Hay dos aristas intercambiadas: revisa los colores de las aristas.'));
   return { ok: errors.length === 0, errors };
 }

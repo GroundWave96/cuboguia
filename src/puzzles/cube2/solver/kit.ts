@@ -116,7 +116,7 @@ export function pushStep(ctx: Ctx, stageId: string, title: string, description: 
 }
 
 export const setupText = (setup: string[]) =>
-  setup.length ? tr(`Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. `, `First turn the top layer: <b>${setup.join(' ')}</b>. `) : '';
+  setup.length ? tr(`Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. `, `First turn the top layer: <b>${setup.join(' ')}</b>. `, `Primero gira la capa de arriba: <b>${setup.join(' ')}</b>. `) : '';
 
 /** Junta ajustes do topo ao algoritmo seguinte e cria um passo por algoritmo. */
 export function stepsFromMacros(
@@ -136,7 +136,7 @@ export function stepsFromMacros(
     const afterSetup = applyPerm(before, composePerm(setup));
     const d = describe(m, setup, afterSetup, applyPerm(afterSetup, m.perm));
     pushStep(ctx, stageId, d.title, d.text, [
-      { label: tr('Ajuste do topo', 'Top adjustment'), moves: setup },
+      { label: tr('Ajuste do topo', 'Top adjustment', 'Ajuste de arriba'), moves: setup },
       { label: d.algLabel, moves: m.moves },
     ], focusFn(before));
     setup = [];
@@ -145,9 +145,9 @@ export function stepsFromMacros(
     pushStep(
       ctx,
       stageId,
-      tr('Ajuste da camada de cima', 'Top layer adjustment'),
-      tr('Gire a camada de cima para alinhar com a de baixo.', 'Turn the top layer to line it up with the bottom one.'),
-      [{ label: tr('Ajuste do topo', 'Top adjustment'), moves: setup }],
+      tr('Ajuste da camada de cima', 'Top layer adjustment', 'Ajuste de la capa de arriba'),
+      tr('Gire a camada de cima para alinhar com a de baixo.', 'Turn the top layer to line it up with the bottom one.', 'Gira la capa de arriba para alinearla con la de abajo.'),
+      [{ label: tr('Ajuste do topo', 'Top adjustment', 'Ajuste de arriba'), moves: setup }],
       focusFn(ctx.s),
     );
 }

@@ -7,11 +7,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'cube2',
     slug: '2x2',
     get name() {
-      return tr('Cubo 2x2', '2x2 Cube');
+      return tr('Cubo 2x2', '2x2 Cube', 'Cubo 2x2');
     },
     short: '2x2',
     get subtitle() {
-      return tr('Pocket cube. Iniciante ou solução ótima.', 'Pocket cube. Beginner or optimal solution.');
+      return tr('Pocket cube. Iniciante ou solução ótima.', 'Pocket cube. Beginner or optimal solution.', 'Cubo de bolsillo. Solución para principiantes u óptima.');
     },
     available: true,
     methods: 2,
@@ -22,11 +22,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'cube3',
     slug: '3x3',
     get name() {
-      return tr('Cubo 3x3', '3x3 Cube');
+      return tr('Cubo 3x3', '3x3 Cube', 'Cubo 3x3');
     },
     short: '3x3',
     get subtitle() {
-      return tr('O clássico. Método de iniciante passo a passo.', 'The classic. Beginner method, step by step.');
+      return tr('O clássico. Método de iniciante passo a passo.', 'The classic. Beginner method, step by step.', 'El clásico. Método para principiantes, paso a paso.');
     },
     available: true,
     methods: 2,
@@ -37,11 +37,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'cube4',
     slug: '4x4',
     get name() {
-      return tr('Cubo 4x4', '4x4 Cube');
+      return tr('Cubo 4x4', '4x4 Cube', 'Cubo 4x4');
     },
     short: '4x4',
     get subtitle() {
-      return tr('Revenge. Centros, arestas, paridades e fim como 3x3.', 'Revenge. Centers, edges, parities, then like a 3x3.');
+      return tr('Revenge. Centros, arestas, paridades e fim como 3x3.', 'Revenge. Centers, edges, parities, then like a 3x3.', 'Revenge. Centros, aristas, paridades y después como un 3x3.');
     },
     available: true,
     methods: 2,
@@ -52,11 +52,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'cube5',
     slug: '5x5',
     get name() {
-      return tr('Cubo 5x5', '5x5 Cube');
+      return tr('Cubo 5x5', '5x5 Cube', 'Cubo 5x5');
     },
     short: '5x5',
     get subtitle() {
-      return tr('Professor. Centros, arestas e fim como 3x3.', 'Professor. Centers, edges, then like a 3x3.');
+      return tr('Professor. Centros, arestas e fim como 3x3.', 'Professor. Centers, edges, then like a 3x3.', 'Professor. Centros, aristas y después como un 3x3.');
     },
     available: true,
     methods: 2,
@@ -67,11 +67,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'cube6',
     slug: '6x6',
     get name() {
-      return tr('Cubo 6x6', '6x6 Cube');
+      return tr('Cubo 6x6', '6x6 Cube', 'Cubo 6x6');
     },
     short: '6x6',
     get subtitle() {
-      return tr('Centros grandes, arestas de 4 peças, paridades e fim como 3x3.', 'Big centers, 4-piece edges, parities, then like a 3x3.');
+      return tr('Centros grandes, arestas de 4 peças, paridades e fim como 3x3.', 'Big centers, 4-piece edges, parities, then like a 3x3.', 'Centros grandes, aristas de 4 piezas, paridades y después como un 3x3.');
     },
     available: true,
     methods: 2,
@@ -82,11 +82,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'cube7',
     slug: '7x7',
     get name() {
-      return tr('Cubo 7x7', '7x7 Cube');
+      return tr('Cubo 7x7', '7x7 Cube', 'Cubo 7x7');
     },
     short: '7x7',
     get subtitle() {
-      return tr('O maior de todos aqui. Centros, arestas e fim como 3x3.', 'The biggest one here. Centers, edges, then like a 3x3.');
+      return tr('O maior de todos aqui. Centros, arestas e fim como 3x3.', 'The biggest one here. Centers, edges, then like a 3x3.', 'El más grande de aquí. Centros, aristas y después como un 3x3.');
     },
     available: true,
     methods: 2,
@@ -97,11 +97,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'pyraminx',
     slug: 'pyraminx',
     get name() {
-      return tr('Pyraminx', 'Pyraminx');
+      return tr('Pyraminx', 'Pyraminx', 'Pyraminx');
     },
     short: 'Pyraminx',
     get subtitle() {
-      return tr('O triângulo. Iniciante ou solução ótima.', 'The triangle. Beginner or optimal solution.');
+      return tr('O triângulo. Iniciante ou solução ótima.', 'The triangle. Beginner or optimal solution.', 'El triángulo. Solución para principiantes u óptima.');
     },
     available: true,
     methods: 2,
@@ -112,11 +112,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'skewb',
     slug: 'skewb',
     get name() {
-      return tr('Skewb', 'Skewb');
+      return tr('Skewb', 'Skewb', 'Skewb');
     },
     short: 'Skewb',
     get subtitle() {
-      return tr('O cubo que gira pelos cantos. Iniciante ou solução ótima.', 'The cube that turns around its corners. Beginner or optimal solution.');
+      return tr('O cubo que gira pelos cantos. Iniciante ou solução ótima.', 'The cube that turns around its corners. Beginner or optimal solution.', 'El cubo que gira alrededor de las esquinas. Solución para principiantes u óptima.');
     },
     available: true,
     methods: 2,
@@ -127,11 +127,11 @@ export const PUZZLES: PuzzleDefinition[] = [
     id: 'megaminx',
     slug: 'megaminx',
     get name() {
-      return tr('Megaminx', 'Megaminx');
+      return tr('Megaminx', 'Megaminx', 'Megaminx');
     },
     short: 'Megaminx',
     get subtitle() {
-      return tr('Dodecaedro de 12 faces. Camada por camada.', '12-sided dodecahedron. Layer by layer.');
+      return tr('Dodecaedro de 12 faces. Camada por camada.', '12-sided dodecahedron. Layer by layer.', 'Dodecaedro de 12 caras. Capa por capa.');
     },
     available: true,
     methods: 2,

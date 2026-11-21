@@ -46,6 +46,23 @@ describe('títulos das páginas', () => {
   });
 });
 
+describe('sitemap', () => {
+  it('cada endereço do sitemap é uma página, nos três idiomas', async () => {
+    const { readFileSync } = await import('fs');
+    const xml = readFileSync('public/sitemap.xml', 'utf8');
+    const locs = [...xml.matchAll(/<loc>https:\/\/cuboguia\.pages\.dev([^<]*)<\/loc>/g)].map((m) => m[1] || '/');
+    expect(locs.filter((l) => l.startsWith('/es')).length).toBe(locs.filter((l) => l.startsWith('/en')).length);
+    for (const l of locs) {
+      const r = metaRoute(l)!;
+      expect(r.meta.page, l).not.toBe('notfound');
+      expect(r.lang, l).toBe(l.startsWith('/en') ? 'en' : l.startsWith('/es') ? 'es' : 'pt');
+    }
+    expect(pathInLang('/notacao/5x5', '', 'es')).toBe('/es/notacion/5x5');
+    expect(pathInLang('/es/preguntas', '', 'en')).toBe('/en/faq');
+    expect(parseRoute('/es/cronometro', '?p=cube2')).toMatchObject({ lang: 'es', page: 'timer' });
+  });
+});
+
 describe('trilha da página e dados para o Google', () => {
   it('a trilha aponta para páginas que existem, no mesmo idioma', () => {
     expect(breadcrumbs({ page: 'solve', id: 'cube3' }, 'pt')).toEqual([

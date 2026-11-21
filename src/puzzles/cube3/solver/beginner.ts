@@ -45,7 +45,7 @@ function solveCross(ctx: Ctx) {
       pushStep(
         ctx,
         'cross',
-        tr(`Aresta branco-${name}`, `White-${name} edge`),
+        tr(`Aresta branco-${name}`, `White-${name} edge`, `Arista blanco-${name}`),
         tr(
           `Leve a aresta <b>branco-${name}</b> para a face de baixo, com o branco virado para baixo e o ${name} alinhado com o centro ${name}. ` +
             (placed.length
@@ -55,8 +55,12 @@ function solveCross(ctx: Ctx) {
             (placed.length
               ? `The moves were chosen so they don’t break the cross ${placed.length === 1 ? 'edge' : 'edges'} already in place.`
               : 'This is the first edge: we just need to bring it to the right spot.'),
+          `Lleva la arista <b>blanco-${name}</b> a la cara de abajo, con el blanco hacia abajo y el ${name} alineado con el centro ${name}. ` +
+            (placed.length
+              ? `Los movimientos se eligieron para no romper ${placed.length === 1 ? 'la arista' : 'las aristas'} de la cruz que ya están en su lugar.`
+              : 'Esta es la primera arista: solo hay que llevarla al lugar correcto.'),
         ),
-        [{ label: tr('Movimentos', 'Moves'), moves }],
+        [{ label: tr('Movimentos', 'Moves', 'Movimientos'), moves }],
         focus,
       );
     }
@@ -110,7 +114,7 @@ function solveCorners(ctx: Ctx) {
         const done = allSolved(after, target);
         if (done) {
           return {
-            title: tr(`Canto ${name}`, `${name} corner`),
+            title: tr(`Canto ${name}`, `${name} corner`, `Esquina ${name}`),
             text:
               setupText(setup) +
               tr(
@@ -120,12 +124,15 @@ function solveCorners(ctx: Ctx) {
                 (setup.length ? `That puts the <b>${name}</b> corner right above its slot (between the ${pieceName(slot.colors.slice(1))} centers). ` : `The <b>${name}</b> corner is already in position to go in. `) +
                   `Now, with the <b>${vName}</b> face toward you, repeat <b>R U R' U'</b> ${n === 1 ? 'once' : `${n} times`}. ` +
                   `Each repetition twists the corner; it’s in when white faces down.`,
+                (setup.length ? `Así la esquina <b>${name}</b> queda justo encima de su lugar (entre los centros ${pieceName(slot.colors.slice(1))}). ` : `La esquina <b>${name}</b> ya está en posición para entrar. `) +
+                  `Ahora, con la cara <b>${vName}</b> hacia ti, repite <b>R U R' U'</b> ${n === 1 ? 'una vez' : `${n} veces`}. ` +
+                  `Cada repetición gira la esquina; entra cuando el blanco queda hacia abajo.`,
               ),
             algLabel: n === 1 ? "R U R' U'" : `(R U R' U') × ${n}`,
           };
         }
         return {
-          title: tr(`Retirar o canto ${name}`, `Take out the ${name} corner`),
+          title: tr(`Retirar o canto ${name}`, `Take out the ${name} corner`, `Saca la esquina ${name}`),
           text:
             setupText(setup) +
             tr(
@@ -133,6 +140,8 @@ function solveCorners(ctx: Ctx) {
                 `faça <b>R U R' U'</b> ${n === 1 ? 'uma vez' : `${n} vezes`} para levá-lo para a camada de cima.`,
               `The <b>${name}</b> corner is stuck in the bottom layer, in the wrong spot. With the <b>${vName}</b> face toward you, ` +
                 `do <b>R U R' U'</b> ${n === 1 ? 'once' : `${n} times`} to bring it up to the top layer.`,
+              `La esquina <b>${name}</b> está atascada en la capa de abajo, en el lugar equivocado. Con la cara <b>${vName}</b> hacia ti, ` +
+                `haz <b>R U R' U'</b> ${n === 1 ? 'una vez' : `${n} veces`} para subirla a la capa de arriba.`,
             ),
           algLabel: "R U R' U'",
         };
@@ -185,11 +194,11 @@ function solveMiddle(ctx: Ctx) {
       'middle',
       (m, setup, _b, after) => {
         const vName = cname([F, R, B, L][m.meta!.view as number]);
-        const side = m.meta!.side === 'right' ? tr('direita', 'right') : tr('esquerda', 'left');
+        const side = m.meta!.side === 'right' ? tr('direita', 'right', 'derecha') : tr('esquerda', 'left', 'izquierda');
         const alg = m.meta!.alg as string;
         if (allSolved(after, target)) {
           return {
-            title: tr(`Aresta ${name}`, `${name} edge`),
+            title: tr(`Aresta ${name}`, `${name} edge`, `Arista ${name}`),
             text:
               setupText(setup) +
               tr(
@@ -197,12 +206,14 @@ function solveMiddle(ctx: Ctx) {
                   `Ela precisa descer para a <b>${side}</b>. Olhando com a face <b>${vName}</b> de frente, aplique: <code>${alg}</code>.`,
                 `The <b>${name}</b> edge sits in the top layer making a “T” with the <b>${vName}</b> center (the edge’s front color matches the center). ` +
                   `It has to go down to the <b>${side}</b>. With the <b>${vName}</b> face toward you, apply: <code>${alg}</code>.`,
+                `La arista <b>${name}</b> está en la capa de arriba formando una “T” con el centro <b>${vName}</b> (el color del frente de la arista igual al centro). ` +
+                  `Tiene que bajar hacia la <b>${side}</b>. Con la cara <b>${vName}</b> hacia ti, aplica: <code>${alg}</code>.`,
               ),
-            algLabel: tr(`Algoritmo (${side})`, `Algorithm (${side})`),
+            algLabel: tr(`Algoritmo (${side})`, `Algorithm (${side})`, `Algoritmo (${side})`),
           };
         }
         return {
-          title: tr(`Retirar a aresta ${name}`, `Take out the ${name} edge`),
+          title: tr(`Retirar a aresta ${name}`, `Take out the ${name} edge`, `Saca la arista ${name}`),
           text:
             setupText(setup) +
             tr(
@@ -210,8 +221,10 @@ function solveMiddle(ctx: Ctx) {
                 `aplique <code>${alg}</code> para trocá-la por uma peça da camada de cima — assim ela sobe e depois pode ser encaixada.`,
               `The <b>${name}</b> edge is stuck in the middle layer (wrong slot or flipped). With the <b>${vName}</b> face toward you, ` +
                 `apply <code>${alg}</code> to swap it with a top-layer piece — that brings it up so it can be inserted afterwards.`,
+              `La arista <b>${name}</b> está atascada en la capa del medio (en el lugar equivocado o volteada). Con la cara <b>${vName}</b> hacia ti, ` +
+                `aplica <code>${alg}</code> para cambiarla por una pieza de la capa de arriba: así sube y después se puede colocar.`,
             ),
-          algLabel: tr('Retirar', 'Take out'),
+          algLabel: tr('Retirar', 'Take out', 'Sacar'),
         };
       },
       () => findEdge(ctx.s, slot),
@@ -248,13 +261,13 @@ function solveLastLayer(ctx: Ctx) {
       const up = [1, 3, 5, 7].map((f) => before[f] === U);
       // 1=trás 3=esq 5=dir 7=frente
       let shape: string;
-      if (n === 0) shape = tr('Só o centro está amarelo (um <b>ponto</b>). Aplique o algoritmo; depois aparecerá um “L” ou uma linha.', 'Only the center is yellow (a <b>dot</b>). Apply the algorithm; afterwards an “L” or a line will show up.');
-      else if (up[1] && up[2]) shape = tr('Há uma <b>linha</b> amarela na horizontal (esquerda–direita) — é a posição certa para o algoritmo.', 'There’s a horizontal yellow <b>line</b> (left–right) — the right position for the algorithm.');
-      else if (up[0] && up[3]) shape = tr('Há uma <b>linha</b> amarela; ela precisa estar na horizontal antes do algoritmo.', 'There’s a yellow <b>line</b>; it has to be horizontal before the algorithm.');
-      else shape = tr('Há um <b>“L”</b> amarelo (duas arestas vizinhas). Ele deve apontar para <b>trás e para a esquerda</b>, como os ponteiros às 9h e 12h.', 'There’s a yellow <b>“L”</b> (two neighboring edges). It must point <b>back and to the left</b>, like clock hands at 9 and 12.');
+      if (n === 0) shape = tr('Só o centro está amarelo (um <b>ponto</b>). Aplique o algoritmo; depois aparecerá um “L” ou uma linha.', 'Only the center is yellow (a <b>dot</b>). Apply the algorithm; afterwards an “L” or a line will show up.', 'Solo el centro es amarillo (un <b>punto</b>). Aplica el algoritmo; después aparecerá una “L” o una línea.');
+      else if (up[1] && up[2]) shape = tr('Há uma <b>linha</b> amarela na horizontal (esquerda–direita) — é a posição certa para o algoritmo.', 'There’s a horizontal yellow <b>line</b> (left–right) — the right position for the algorithm.', 'Hay una <b>línea</b> amarilla horizontal (de izquierda a derecha): la posición correcta para el algoritmo.');
+      else if (up[0] && up[3]) shape = tr('Há uma <b>linha</b> amarela; ela precisa estar na horizontal antes do algoritmo.', 'There’s a yellow <b>line</b>; it has to be horizontal before the algorithm.', 'Hay una <b>línea</b> amarilla; tiene que quedar horizontal antes del algoritmo.');
+      else shape = tr('Há um <b>“L”</b> amarelo (duas arestas vizinhas). Ele deve apontar para <b>trás e para a esquerda</b>, como os ponteiros às 9h e 12h.', 'There’s a yellow <b>“L”</b> (two neighboring edges). It must point <b>back and to the left</b>, like clock hands at 9 and 12.', 'Hay una <b>“L”</b> amarilla (dos aristas vecinas). Debe apuntar <b>hacia atrás y a la izquierda</b>, como las agujas del reloj a las 9 y a las 12.');
       return {
-        title: tr('Formar a cruz amarela', 'Make the yellow cross'),
-        text: setupText(setup) + shape + tr(` Com a face <b>verde</b> de frente, aplique <code>${OLL_EDGES}</code>.`, ` With the <b>green</b> face toward you, apply <code>${OLL_EDGES}</code>.`),
+        title: tr('Formar a cruz amarela', 'Make the yellow cross', 'Haz la cruz amarilla'),
+        text: setupText(setup) + shape + tr(` Com a face <b>verde</b> de frente, aplique <code>${OLL_EDGES}</code>.`, ` With the <b>green</b> face toward you, apply <code>${OLL_EDGES}</code>.`, ` Con la cara <b>verde</b> hacia ti, aplica <code>${OLL_EDGES}</code>.`),
         algLabel: OLL_EDGES,
       };
     },
@@ -272,13 +285,13 @@ function solveLastLayer(ctx: Ctx) {
       const n = yellowCornersUp(before);
       const hint =
         n === 1
-          ? tr('Há <b>um</b> canto com amarelo para cima (o “peixinho”): ele deve ficar na posição <b>frente-esquerda</b>.', 'There’s <b>one</b> corner with yellow facing up (the “fish”): it must be at the <b>front-left</b>.')
+          ? tr('Há <b>um</b> canto com amarelo para cima (o “peixinho”): ele deve ficar na posição <b>frente-esquerda</b>.', 'There’s <b>one</b> corner with yellow facing up (the “fish”): it must be at the <b>front-left</b>.', 'Hay <b>una</b> esquina con el amarillo hacia arriba (el “pez”): debe quedar <b>delante a la izquierda</b>.')
           : n === 0
-            ? tr('Nenhum canto tem amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>esquerda</b>.', 'No corner has yellow facing up: put a corner with yellow facing <b>left</b> at the <b>front-left</b>.')
-            : tr(`Há ${n} cantos com amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>frente</b>.`, `${n} corners have yellow facing up: put a corner with yellow facing the <b>front</b> at the <b>front-left</b>.`);
+            ? tr('Nenhum canto tem amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>esquerda</b>.', 'No corner has yellow facing up: put a corner with yellow facing <b>left</b> at the <b>front-left</b>.', 'Ninguna esquina tiene el amarillo hacia arriba: pon una esquina con el amarillo hacia la <b>izquierda</b> <b>delante a la izquierda</b>.')
+            : tr(`Há ${n} cantos com amarelo para cima: deixe na <b>frente-esquerda</b> um canto com o amarelo virado para a <b>frente</b>.`, `${n} corners have yellow facing up: put a corner with yellow facing the <b>front</b> at the <b>front-left</b>.`, `${n} esquinas tienen el amarillo hacia arriba: pon una esquina con el amarillo hacia el <b>frente</b> <b>delante a la izquierda</b>.`);
       return {
-        title: tr('Completar a face amarela', 'Finish the yellow face'),
-        text: setupText(setup) + hint + tr(` Com a face <b>verde</b> de frente, aplique o <b>Sune</b>: <code>${SUNE}</code>.`, ` With the <b>green</b> face toward you, apply the <b>Sune</b>: <code>${SUNE}</code>.`),
+        title: tr('Completar a face amarela', 'Finish the yellow face', 'Termina la cara amarilla'),
+        text: setupText(setup) + hint + tr(` Com a face <b>verde</b> de frente, aplique o <b>Sune</b>: <code>${SUNE}</code>.`, ` With the <b>green</b> face toward you, apply the <b>Sune</b>: <code>${SUNE}</code>.`, ` Con la cara <b>verde</b> hacia ti, aplica el <b>Sune</b>: <code>${SUNE}</code>.`),
         algLabel: 'Sune',
       };
     },
@@ -300,7 +313,7 @@ function solveLastLayer(ctx: Ctx) {
     (m, setup) => {
       const alg = m.meta!.inv ? A_PERM_INV : A_PERM;
       return {
-        title: tr('Posicionar os cantos amarelos', 'Place the yellow corners'),
+        title: tr('Posicionar os cantos amarelos', 'Place the yellow corners', 'Coloca las esquinas amarillas'),
         text:
           setupText(setup) +
           tr(
@@ -308,8 +321,10 @@ function solveLastLayer(ctx: Ctx) {
               `<code>${alg}</code>. Ele troca três cantos de lugar sem estragar a face amarela.`,
             `The corners have to match the side colors. With the <b>green</b> face toward you, apply the <b>A-perm</b>${m.meta!.inv ? ' (inverse version)' : ''}: ` +
               `<code>${alg}</code>. It cycles three corners without breaking the yellow face.`,
+            `Las esquinas tienen que coincidir con los colores de los lados. Con la cara <b>verde</b> hacia ti, aplica la <b>A-perm</b>${m.meta!.inv ? ' (versión inversa)' : ''}: ` +
+              `<code>${alg}</code>. Mueve tres esquinas sin romper la cara amarilla.`,
           ),
-        algLabel: m.meta!.inv ? tr('A-perm (inverso)', 'A-perm (inverse)') : 'A-perm',
+        algLabel: m.meta!.inv ? tr('A-perm (inverso)', 'A-perm (inverse)', 'A-perm (inversa)') : 'A-perm',
       };
     },
     llFocus,
@@ -332,7 +347,7 @@ function solveLastLayer(ctx: Ctx) {
       const backName = cname([F, R, B, L][(v + 2) % 4]);
       const alg = m.meta!.a ? U_PERM_A : U_PERM_B;
       return {
-        title: tr('Posicionar as arestas amarelas', 'Place the yellow edges'),
+        title: tr('Posicionar as arestas amarelas', 'Place the yellow edges', 'Coloca las aristas amarillas'),
         text:
           setupText(setup) +
           tr(
@@ -340,6 +355,8 @@ function solveLastLayer(ctx: Ctx) {
               `fica como está ou é a menos mexida) e aplique o <b>U-perm</b>: <code>${alg}</code>. Ele gira três arestas do topo.`,
             `The corners are right; only the edges are left. Hold the cube with the <b>${vName}</b> face toward you (the <b>${backName}</b> side, at the back, ` +
               `stays as is or is the least disturbed) and apply the <b>U-perm</b>: <code>${alg}</code>. It cycles three top edges.`,
+            `Las esquinas ya están bien; faltan las aristas. Sujeta el cubo con la cara <b>${vName}</b> hacia ti (el lado <b>${backName}</b>, atrás, ` +
+              `queda como está o es el menos movido) y aplica la <b>U-perm</b>: <code>${alg}</code>. Mueve tres aristas de arriba.`,
           ),
         algLabel: m.meta!.a ? 'U-perm (a)' : 'U-perm (b)',
       };
@@ -349,13 +366,13 @@ function solveLastLayer(ctx: Ctx) {
 }
 
 export const BEGINNER_STAGES = (): SolutionStage[] => [
-  { id: 'cross', name: tr('Cruz branca', 'White cross'), goal: tr('Montar uma cruz branca na face de baixo, com cada aresta combinando com o centro da lateral.', 'Build a white cross on the bottom face, with each edge matching its side center.') },
-  { id: 'corners', name: tr('Cantos brancos', 'White corners'), goal: tr('Completar a primeira camada colocando os 4 cantos brancos.', 'Finish the first layer by placing the 4 white corners.') },
-  { id: 'middle', name: tr('Segunda camada', 'Second layer'), goal: tr('Encaixar as 4 arestas do meio (sem amarelo).', 'Insert the 4 middle edges (the ones without yellow).') },
-  { id: 'ycross', name: tr('Cruz amarela', 'Yellow cross'), goal: tr('Formar uma cruz amarela no topo.', 'Make a yellow cross on top.') },
-  { id: 'oll', name: tr('Face amarela', 'Yellow face'), goal: tr('Deixar toda a face de cima amarela.', 'Make the whole top face yellow.') },
-  { id: 'cperm', name: tr('Cantos do topo', 'Top corners'), goal: tr('Colocar os cantos amarelos nos lugares certos.', 'Put the yellow corners in their right places.') },
-  { id: 'eperm', name: tr('Arestas do topo', 'Top edges'), goal: tr('Colocar as arestas amarelas no lugar e terminar o cubo.', 'Put the yellow edges in place and finish the cube.') },
+  { id: 'cross', name: tr('Cruz branca', 'White cross', 'Cruz blanca'), goal: tr('Montar uma cruz branca na face de baixo, com cada aresta combinando com o centro da lateral.', 'Build a white cross on the bottom face, with each edge matching its side center.', 'Haz una cruz blanca en la cara de abajo, con cada arista coincidiendo con el centro de su lado.') },
+  { id: 'corners', name: tr('Cantos brancos', 'White corners', 'Esquinas blancas'), goal: tr('Completar a primeira camada colocando os 4 cantos brancos.', 'Finish the first layer by placing the 4 white corners.', 'Termina la primera capa colocando las 4 esquinas blancas.') },
+  { id: 'middle', name: tr('Segunda camada', 'Second layer', 'Segunda capa'), goal: tr('Encaixar as 4 arestas do meio (sem amarelo).', 'Insert the 4 middle edges (the ones without yellow).', 'Coloca las 4 aristas del medio (las que no tienen amarillo).') },
+  { id: 'ycross', name: tr('Cruz amarela', 'Yellow cross', 'Cruz amarilla'), goal: tr('Formar uma cruz amarela no topo.', 'Make a yellow cross on top.', 'Haz una cruz amarilla arriba.') },
+  { id: 'oll', name: tr('Face amarela', 'Yellow face', 'Cara amarilla'), goal: tr('Deixar toda a face de cima amarela.', 'Make the whole top face yellow.', 'Haz toda la cara de arriba amarilla.') },
+  { id: 'cperm', name: tr('Cantos do topo', 'Top corners', 'Esquinas de arriba'), goal: tr('Colocar os cantos amarelos nos lugares certos.', 'Put the yellow corners in their right places.', 'Pon las esquinas amarillas en su lugar.') },
+  { id: 'eperm', name: tr('Arestas do topo', 'Top edges', 'Aristas de arriba'), goal: tr('Colocar as arestas amarelas no lugar e terminar o cubo.', 'Put the yellow edges in place and finish the cube.', 'Pon las aristas amarillas en su lugar y termina el cubo.') },
 ];
 
 export function solveBeginner(state: PuzzleState): Solution {
@@ -367,5 +384,5 @@ export function solveBeginner(state: PuzzleState): Solution {
   solveMiddle(ctx);
   solveLastLayer(ctx);
   if (!allSolved(ctx.s, ALL_FACELETS)) throw new Error('O solucionador não terminou o cubo — estado inválido?');
-  return { method: tr('Método de iniciante (camada por camada)', 'Beginner method (layer by layer)'), stages: BEGINNER_STAGES(), steps: ctx.steps };
+  return { method: tr('Método de iniciante (camada por camada)', 'Beginner method (layer by layer)', 'Método para principiantes (capa por capa)'), stages: BEGINNER_STAGES(), steps: ctx.steps };
 }

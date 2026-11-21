@@ -219,7 +219,7 @@ export const edgeFaceletsOf = (colors: number[]) => findEdge(solvedS, colors);
 export const solvedS = Uint8Array.from({ length: 54 }, (_, i) => (i / 9) | 0);
 
 export function setupText(setup: string[]) {
-  return setup.length ? tr(`Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. `, `First turn the top layer: <b>${setup.join(' ')}</b>. `) : '';
+  return setup.length ? tr(`Primeiro gire a camada de cima: <b>${setup.join(' ')}</b>. `, `First turn the top layer: <b>${setup.join(' ')}</b>. `, `Primero gira la capa de arriba: <b>${setup.join(' ')}</b>. `) : '';
 }
 
 export function stepsFromMacros(
@@ -245,7 +245,7 @@ export function stepsFromMacros(
       d.title,
       d.text,
       [
-        { label: tr('Ajuste do topo', 'Top adjustment'), moves: setup },
+        { label: tr('Ajuste do topo', 'Top adjustment', 'Ajuste de arriba'), moves: setup },
         { label: d.algLabel, moves: m.moves },
       ],
       focusFn(before),
@@ -256,9 +256,9 @@ export function stepsFromMacros(
     pushStep(
       ctx,
       stageId,
-      tr('Ajuste da camada de cima', 'Top layer adjustment'),
-      tr('Gire a camada de cima para alinhar as peças com os centros.', 'Turn the top layer to line the pieces up with the centers.'),
-      [{ label: tr('Ajuste do topo', 'Top adjustment'), moves: setup }],
+      tr('Ajuste da camada de cima', 'Top layer adjustment', 'Ajuste de la capa de arriba'),
+      tr('Gire a camada de cima para alinhar as peças com os centros.', 'Turn the top layer to line the pieces up with the centers.', 'Gira la capa de arriba para alinear las piezas con los centros.'),
+      [{ label: tr('Ajuste do topo', 'Top adjustment', 'Ajuste de arriba'), moves: setup }],
       focusFn(ctx.s),
     );
   }

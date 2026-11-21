@@ -116,24 +116,24 @@ export function buildPyraScan(_colors: ColorInfo[]): ScanFace[] {
       poly,
       center: [(poly[0][0] + poly[1][0] + poly[2][0]) / 3, (poly[0][1] + poly[1][1] + poly[2][1]) / 3] as [number, number],
     }));
-    const hints = (): [string, string][] => [
-      ['<b>Qualquer face</b> de frente, uma ponta para cima', '<b>Any face</b> toward you, one tip pointing up'],
-      ['Gire ⅓ de volta para a <b>esquerda</b> (a ponta de cima fica parada): a face da direita vem para a frente', 'Turn ⅓ to the <b>left</b> (the top tip stays put): the right face comes to the front'],
-      ['Mais ⅓ para a <b>esquerda</b>, do mesmo jeito', 'Another ⅓ to the <b>left</b>, the same way'],
-      ['Volte à 1ª face e <b>tombe o pyraminx para trás</b>: a base fica de frente, com a 1ª face em cima', 'Go back to the 1st face and <b>tip the Pyraminx backward</b>: the bottom faces you, with the 1st face on top'],
+    const hints = (): [string, string, string][] => [
+      ['<b>Qualquer face</b> de frente, uma ponta para cima', '<b>Any face</b> toward you, one tip pointing up', '<b>Cualquier cara</b> hacia ti, con una punta hacia arriba'],
+      ['Gire ⅓ de volta para a <b>esquerda</b> (a ponta de cima fica parada): a face da direita vem para a frente', 'Turn ⅓ to the <b>left</b> (the top tip stays put): the right face comes to the front', 'Gira ⅓ hacia la <b>izquierda</b> (la punta de arriba no se mueve): la cara de la derecha pasa al frente'],
+      ['Mais ⅓ para a <b>esquerda</b>, do mesmo jeito', 'Another ⅓ to the <b>left</b>, the same way', 'Otro ⅓ hacia la <b>izquierda</b>, de la misma forma'],
+      ['Volte à 1ª face e <b>tombe o pyraminx para trás</b>: a base fica de frente, com a 1ª face em cima', 'Go back to the 1st face and <b>tip the Pyraminx backward</b>: the bottom faces you, with the 1st face on top', 'Vuelve a la 1.ª cara e <b>inclina el Pyraminx hacia atrás</b>: la base queda hacia ti, con la 1.ª cara arriba'],
     ];
     return {
       face: fk,
       grid: [Array.from({ length: 9 }, (_, s) => f * 9 + s)],
       get title() {
-        return tr(['1ª face', '2ª face', '3ª face', 'Base'][i], ['1st face', '2nd face', '3rd face', 'Bottom'][i]);
+        return tr(['1ª face', '2ª face', '3ª face', 'Base'][i], ['1st face', '2nd face', '3rd face', 'Bottom'][i], ['1.ª cara', '2.ª cara', '3.ª cara', 'Base'][i]);
       },
       faceColor: '',
       get hint() {
         return tr(...hints()[i]);
       },
       get upLabel() {
-        return fk === 'D' ? tr('1ª FACE PARA CIMA', '1ST FACE UP') : tr('PONTA DE CIMA', 'TOP TIP');
+        return fk === 'D' ? tr('1ª FACE PARA CIMA', '1ST FACE UP', '1.ª CARA ARRIBA') : tr('PONTA DE CIMA', 'TOP TIP', 'PUNTA DE ARRIBA');
       },
       arrow: fk === 'D' ? '▲' : i === 0 ? '▲' : '↶',
       edges: { up: [], down: [], left: [], right: [] },

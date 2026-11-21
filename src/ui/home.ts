@@ -1,4 +1,4 @@
-import { getLang, tr } from '../core/i18n';
+import { LOCALE, getLang, tr } from '../core/i18n';
 import { clearProgress, listProgress, type Progress } from '../core/progress';
 import { PUZZLES, loadPuzzle } from '../core/registry';
 import { algsPath, faqPath, homePath, notationPath, patternsPath, puzzlePath, solvePath, timerPath } from '../core/router';
@@ -70,37 +70,37 @@ function afterCards(): { href: string; icon: IconName; title: string; text: stri
     {
       href: notationPath(),
       icon: 'info',
-      title: tr('Aprenda a notação', 'Learn the notation'),
-      text: tr("O que significam R, U', F2 e as outras letras, cada movimento animado no 3D.", "What R, U', F2 and the other letters mean, each move animated in 3D."),
-      go: tr('Ver os movimentos', 'See the moves'),
+      title: tr('Aprenda a notação', 'Learn the notation', 'Aprende la notación'),
+      text: tr("O que significam R, U', F2 e as outras letras, cada movimento animado no 3D.", "What R, U', F2 and the other letters mean, each move animated in 3D.", "Qué significan R, U', F2 y las demás letras, cada movimiento animado en 3D."),
+      go: tr('Ver os movimentos', 'See the moves', 'Ver los movimientos'),
     },
     {
       href: timerPath(),
       icon: 'history',
-      title: tr('Cronômetro', 'Timer'),
-      text: tr('Estilo competição, com embaralho, médias, recordes e gráfico da sua evolução.', 'Competition style, with scrambles, averages, records and a progress chart.'),
-      go: tr('Cronometrar', 'Start timing'),
+      title: tr('Cronômetro', 'Timer', 'Cronómetro'),
+      text: tr('Estilo competição, com embaralho, médias, recordes e gráfico da sua evolução.', 'Competition style, with scrambles, averages, records and a progress chart.', 'Estilo competición, con mezclas, medias, récords y un gráfico de tu evolución.'),
+      go: tr('Cronometrar', 'Start timing', 'Cronometrar'),
     },
     {
       href: algsPath(),
       icon: 'sparkles',
-      title: tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms'),
-      text: tr('Os algoritmos do CFOP para ficar rápido, com animação e modo treino.', 'The CFOP algorithms to get fast, with animation and a practice mode.'),
-      go: tr('Ver os algoritmos', 'See the algorithms'),
+      title: tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms', 'Algoritmos OLL y PLL'),
+      text: tr('Os algoritmos do CFOP para ficar rápido, com animação e modo treino.', 'The CFOP algorithms to get fast, with animation and a practice mode.', 'Los algoritmos del CFOP para ser rápido, con animación y modo de práctica.'),
+      go: tr('Ver os algoritmos', 'See the algorithms', 'Ver los algoritmos'),
     },
     {
       href: patternsPath(),
       icon: 'pattern',
-      title: tr('Padrões bonitos', 'Cube patterns'),
-      text: tr('Xadrez, cubo dentro do cubo, cruz e outras figuras para montar no cubo resolvido.', 'Checkerboard, cube in a cube, cross and other pictures to make on a solved cube.'),
-      go: tr('Ver os padrões', 'See the patterns'),
+      title: tr('Padrões bonitos', 'Cube patterns', 'Patrones bonitos'),
+      text: tr('Xadrez, cubo dentro do cubo, cruz e outras figuras para montar no cubo resolvido.', 'Checkerboard, cube in a cube, cross and other pictures to make on a solved cube.', 'Ajedrez, cubo dentro del cubo, cruz y otras figuras para hacer en el cubo resuelto.'),
+      go: tr('Ver os padrões', 'See the patterns', 'Ver los patrones'),
     },
     {
       href: timerPath(),
       icon: 'trophy',
-      title: tr('Desafie um amigo', 'Challenge a friend'),
-      text: tr('Resolva no cronômetro e mande o link: o amigo recebe o mesmo embaralho para tentar bater o seu tempo.', 'Solve on the timer and send the link: your friend gets the same scramble to try to beat your time.'),
-      go: tr('Criar um desafio', 'Create a challenge'),
+      title: tr('Desafie um amigo', 'Challenge a friend', 'Reta a un amigo'),
+      text: tr('Resolva no cronômetro e mande o link: o amigo recebe o mesmo embaralho para tentar bater o seu tempo.', 'Solve on the timer and send the link: your friend gets the same scramble to try to beat your time.', 'Resuelve en el cronómetro y envía el enlace: tu amigo recibe la misma mezcla para intentar superar tu tiempo.'),
+      go: tr('Criar um desafio', 'Create a challenge', 'Crear un reto'),
     },
   ];
 }
@@ -108,10 +108,10 @@ function afterCards(): { href: string; icon: IconName; title: string; text: stri
 /** "há 2 horas" / "2 hours ago" */
 function ago(t: number): string {
   const s = (t - Date.now()) / 1000;
-  const rtf = new Intl.RelativeTimeFormat(getLang() === 'en' ? 'en' : 'pt-BR', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(LOCALE[getLang()], { numeric: 'auto' });
   const units: [Intl.RelativeTimeFormatUnit, number][] = [['day', 86400], ['hour', 3600], ['minute', 60]];
   for (const [u, n] of units) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
-  return tr('agora há pouco', 'just now');
+  return tr('agora há pouco', 'just now', 'ahora mismo');
 }
 
 /** a tela inicial mostra o mais recente; os outros (até 3, o que fica guardado) ficam em "+ N outros" */
@@ -123,11 +123,11 @@ function resumeRow(p: Progress): string {
   return `<div class="resume-row" data-key="${resumeKey(p)}">
     <a class="resume-item" href="${solvePath(p.puzzle, p.method, p.state)}">
       <span class="resume-icon" aria-hidden="true">${def.icon}</span>
-      <span class="resume-text"><b>${def.name}</b><small>${tr(`Passo ${p.step + 1} de ${p.steps}`, `Step ${p.step + 1} of ${p.steps}`)} · ${ago(p.t)}</small>
+      <span class="resume-text"><b>${def.name}</b><small>${tr(`Passo ${p.step + 1} de ${p.steps}`, `Step ${p.step + 1} of ${p.steps}`, `Paso ${p.step + 1} de ${p.steps}`)} · ${ago(p.t)}</small>
         <span class="resume-bar"><span style="width:${Math.round((p.pos / p.total) * 100)}%"></span></span></span>
       <span class="resume-go">${icon('play')}</span>
     </a>
-    <button type="button" class="resume-x" data-forget="${resumeKey(p)}" aria-label="${tr(`Esquecer o tutorial do ${def.short}`, `Forget the ${def.short} tutorial`)}" title="${tr('Esquecer este tutorial', 'Forget this tutorial')}">${icon('close')}</button>
+    <button type="button" class="resume-x" data-forget="${resumeKey(p)}" aria-label="${tr(`Esquecer o tutorial do ${def.short}`, `Forget the ${def.short} tutorial`, `Olvidar el tutorial del ${def.short}`)}" title="${tr('Esquecer este tutorial', 'Forget this tutorial', 'Olvidar este tutorial')}">${icon('close')}</button>
   </div>`;
 }
 
@@ -139,11 +139,11 @@ function resumeHtml(cls = '', open = false): string {
   if (!list.length) return '';
   const [first, ...rest] = list;
   return `<div class="resume-home ${cls}">
-    <span class="resume-home-title">${icon('history')}${tr('Continue de onde parou', 'Pick up where you left off')}</span>
+    <span class="resume-home-title">${icon('history')}${tr('Continue de onde parou', 'Pick up where you left off', 'Sigue donde lo dejaste')}</span>
     ${resumeRow(first)}
     ${
       rest.length
-        ? `<details class="resume-more" ${open ? 'open' : ''}><summary>${icon('chevronDown')}<span>${tr(`+ ${rest.length} ${rest.length > 1 ? 'outros' : 'outro'}`, `+ ${rest.length} more`)}</span></summary>${rest.map(resumeRow).join('')}</details>`
+        ? `<details class="resume-more" ${open ? 'open' : ''}><summary>${icon('chevronDown')}<span>${tr(`+ ${rest.length} ${rest.length > 1 ? 'outros' : 'outro'}`, `+ ${rest.length} more`, `+ ${rest.length} más`)}</span></summary>${rest.map(resumeRow).join('')}</details>`
         : ''
     }
   </div>`;
@@ -164,21 +164,21 @@ export function renderHome(app: HTMLElement) {
     <div class="page hero">
       ${resumeHtml('resume-top')}
       <div class="hero-text">
-        <span class="eyebrow">${tr('Tutorial interativo em 3D', 'Interactive 3D tutorial')}</span>
-        <h1>${tr('Resolva o <em>seu</em> cubo mágico, passo a passo.', 'Solve <em>your</em> Rubik’s cube, step by step.')}</h1>
+        <span class="eyebrow">${tr('Tutorial interativo em 3D', 'Interactive 3D tutorial', 'Tutorial interactivo en 3D')}</span>
+        <h1>${tr('Resolva o <em>seu</em> cubo mágico, passo a passo.', 'Solve <em>your</em> Rubik’s cube, step by step.', 'Resuelve <em>tu</em> cubo de Rubik, paso a paso.')}</h1>
         <p class="lead">${tr(
           'Mostre como o seu puzzle está — pintando as cores no modelo 3D ou apontando a câmera — e receba um tutorial animado, no seu ritmo: do método de iniciante até o CFOP dos speedcubers.',
-          'Show how your puzzle looks — by painting the colors on the 3D model or pointing your camera at it — and get an animated tutorial at your own pace: from the beginner method to the speedcubers’ CFOP.',
+          'Show how your puzzle looks — by painting the colors on the 3D model or pointing your camera at it — and get an animated tutorial at your own pace: from the beginner method to the speedcubers’ CFOP.', 'Muestra cómo está tu puzzle (pintando los colores en el modelo 3D o apuntándole con la cámara) y recibe un tutorial animado a tu ritmo: del método para principiantes al CFOP de los speedcubers.',
         )}</p>
         <div class="hero-cta">
-          <a class="btn primary big" id="hero-go" href="${puzzlePath('cube3')}">${tr('Resolver meu', 'Solve my')} <span id="hero-go-name">3x3</span></a>
-          <a class="btn ghost big" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
+          <a class="btn primary big" id="hero-go" href="${puzzlePath('cube3')}">${tr('Resolver meu', 'Solve my', 'Resolver mi')} <span id="hero-go-name">3x3</span></a>
+          <a class="btn ghost big" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works', 'Cómo funciona')}</a>
         </div>
         ${resumeHtml('resume-side')}
         <ul class="hero-badges">
-          <li>${icon('palette')}${tr('Pinte ou use a câmera', 'Paint or use the camera')}</li>
-          <li>${icon('levels')}${tr('Iniciante e avançado', 'Beginner and advanced')}</li>
-          <li>${icon('heart')}${tr('100% grátis', '100% free')}</li>
+          <li>${icon('palette')}${tr('Pinte ou use a câmera', 'Paint or use the camera', 'Pinta o usa la cámara')}</li>
+          <li>${icon('levels')}${tr('Iniciante e avançado', 'Beginner and advanced', 'Principiante y avanzado')}</li>
+          <li>${icon('heart')}${tr('100% grátis', '100% free', '100% gratis')}</li>
         </ul>
       </div>
       <div class="showcase">
@@ -192,33 +192,33 @@ export function renderHome(app: HTMLElement) {
 
   <section class="page stats reveal">
     <div class="stat"><b data-count="${available.length}">0</b><span>puzzles</span></div>
-    <div class="stat"><b data-count="" id="stat-methods">0</b><span>${tr('métodos de solução', 'solving methods')}</span></div>
-    <div class="stat"><b data-count="2">0</b><span>${tr('jeitos de informar as cores', 'ways to enter the colors')}</span></div>
-    <div class="stat"><b data-count="100" data-suffix="%">0</b><span>${tr('grátis, direto no navegador', 'free, right in your browser')}</span></div>
+    <div class="stat"><b data-count="" id="stat-methods">0</b><span>${tr('métodos de solução', 'solving methods', 'métodos de solución')}</span></div>
+    <div class="stat"><b data-count="2">0</b><span>${tr('jeitos de informar as cores', 'ways to enter the colors', 'formas de indicar los colores')}</span></div>
+    <div class="stat"><b data-count="100" data-suffix="%">0</b><span>${tr('grátis, direto no navegador', 'free, right in your browser', 'gratis, directo en el navegador')}</span></div>
   </section>
 
   <section class="page" id="como-funciona">
-    <h2 class="section-title reveal">${tr('Como funciona', 'How it works')}</h2>
+    <h2 class="section-title reveal">${tr('Como funciona', 'How it works', 'Cómo funciona')}</h2>
     <div class="how">
       <div class="how-card reveal">
         <div class="how-art art-paint" aria-hidden="true">
           <div class="mini-face">${Array.from({ length: 9 }, (_, i) => `<i style="--d:${i}"></i>`).join('')}</div>
           <div class="brush">${icon('brush')}</div>
         </div>
-        <b>1</b><h3>${tr('Informe as cores', 'Enter the colors')}</h3>
+        <b>1</b><h3>${tr('Informe as cores', 'Enter the colors', 'Indica los colores')}</h3>
         <p>${tr(
           'Pinte os adesivos no modelo 3D ou na planificação — ou aponte a câmera do celular/computador para ler cada face.',
-          'Paint the stickers on the 3D model or on the flat layout — or point your phone/computer camera to read each face.',
+          'Paint the stickers on the 3D model or on the flat layout — or point your phone/computer camera to read each face.', 'Pinta las pegatinas en el modelo 3D o en el plano, o apunta la cámara del móvil u ordenador para leer cada cara.',
         )}</p>
       </div>
       <div class="how-card reveal">
         <div class="how-art art-scan" aria-hidden="true">
           <div class="phone"><div class="grid3">${'<i></i>'.repeat(9)}</div><div class="scanline"></div></div>
         </div>
-        <b>2</b><h3>${tr('Validamos o puzzle', 'We check the puzzle')}</h3>
+        <b>2</b><h3>${tr('Validamos o puzzle', 'We check the puzzle', 'Revisamos el puzzle')}</h3>
         <p>${tr(
           'Conferimos se a combinação existe num puzzle real e apontamos onde pode estar o erro — antes de montar a solução.',
-          'We check that the combination can exist on a real puzzle and point out where a mistake may be — before building the solution.',
+          'We check that the combination can exist on a real puzzle and point out where a mistake may be — before building the solution.', 'Comprobamos que la combinación puede existir en un puzzle real y señalamos dónde puede haber un error, antes de armar la solución.',
         )}</p>
       </div>
       <div class="how-card reveal">
@@ -226,32 +226,32 @@ export function renderHome(app: HTMLElement) {
           <div class="play">${icon('play')}</div>
           <div class="steps">${'<i></i>'.repeat(6)}</div>
         </div>
-        <b>3</b><h3>${tr('Siga o tutorial', 'Follow the tutorial')}</h3>
+        <b>3</b><h3>${tr('Siga o tutorial', 'Follow the tutorial', 'Sigue el tutorial')}</h3>
         <p>${tr(
           'Cada passo tem explicação, os movimentos e a animação. Avance, volte e repita no seu ritmo, no iniciante ou no avançado.',
-          'Every step has an explanation, the moves and an animation. Go forward, back and repeat at your own pace, beginner or advanced.',
+          'Every step has an explanation, the moves and an animation. Go forward, back and repeat at your own pace, beginner or advanced.', 'Cada paso tiene explicación, movimientos y animación. Avanza, retrocede y repite a tu ritmo, en principiante o avanzado.',
         )}</p>
       </div>
     </div>
   </section>
 
   <section class="page" id="puzzles">
-    <h2 class="section-title reveal">${tr('Escolha o puzzle', 'Choose your puzzle')}</h2>
+    <h2 class="section-title reveal">${tr('Escolha o puzzle', 'Choose your puzzle', 'Elige tu puzzle')}</h2>
     <div class="puzzles">
       ${[...available, ...PUZZLES.filter((p) => !p.available)].map(
         (p) => `
         <${p.available ? `a href="${puzzlePath(p.id)}"` : 'div'} class="pz-card reveal ${p.available ? '' : 'soon'}">
           ${p.icon}
           <div><h3>${p.name}</h3><p>${p.subtitle}</p></div>
-          ${p.available ? `<span class="tag ok">${tr('Disponível', 'Available')}</span>` : `<span class="tag">${tr('Em breve', 'Coming soon')}</span>`}
+          ${p.available ? `<span class="tag ok">${tr('Disponível', 'Available', 'Disponible')}</span>` : `<span class="tag">${tr('Em breve', 'Coming soon', 'Muy pronto')}</span>`}
         </${p.available ? 'a' : 'div'}>`,
       ).join('')}
     </div>
   </section>
 
   <section class="page after" id="depois">
-    <h2 class="section-title reveal">${tr('Depois de resolver', 'After you solve it')}</h2>
-    <p class="after-sub reveal">${tr('Resolveu o primeiro? Agora dá para aprender a ler os movimentos, ficar mais rápido e desafiar os amigos.', 'Solved your first one? Now you can learn to read the moves, get faster and challenge your friends.')}</p>
+    <h2 class="section-title reveal">${tr('Depois de resolver', 'After you solve it', 'Después de resolverlo')}</h2>
+    <p class="after-sub reveal">${tr('Resolveu o primeiro? Agora dá para aprender a ler os movimentos, ficar mais rápido e desafiar os amigos.', 'Solved your first one? Now you can learn to read the moves, get faster and challenge your friends.', '¿Resolviste el primero? Ahora puedes aprender a leer los movimientos, ser más rápido y retar a tus amigos.')}</p>
     <div class="after-grid">
       ${afterCards()
         .map(
@@ -264,7 +264,7 @@ export function renderHome(app: HTMLElement) {
         )
         .join('')}
     </div>
-    <p class="after-faq reveal">${tr('Ficou com alguma dúvida?', 'Got a question?')} <a href="${faqPath()}">${tr('Veja as perguntas frequentes', 'See the FAQ')} →</a></p>
+    <p class="after-faq reveal">${tr('Ficou com alguma dúvida?', 'Got a question?', '¿Tienes alguna duda?')} <a href="${faqPath()}">${tr('Veja as perguntas frequentes', 'See the FAQ', 'Ver las preguntas frecuentes')} →</a></p>
   </section>`;
 
   // ---------------------------------------------------------------- esquecer um tutorial em andamento (o X)

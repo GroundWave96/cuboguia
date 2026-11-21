@@ -6,7 +6,24 @@
  * importa o registro dos puzzles (que traria o 3D junto): os nomes ficam aqui, e
  * tests/meta.test.ts confere que batem com o registro e com o roteador.
  */
-export type MetaLang = 'pt' | 'en';
+export type MetaLang = 'pt' | 'en' | 'es';
+
+/** prefixo de cada idioma no endereço */
+export const LANG_PREFIX: Record<MetaLang, string> = { pt: '', en: '/en', es: '/es' };
+/** nome de cada página no endereço, por idioma (o roteador do site usa os mesmos) */
+export const SEGMENTS = {
+  timer: { pt: 'cronometro', en: 'timer', es: 'cronometro' },
+  faq: { pt: 'perguntas', en: 'faq', es: 'preguntas' },
+  algs: { pt: 'algoritmos', en: 'algorithms', es: 'algoritmos' },
+  notation: { pt: 'notacao', en: 'notation', es: 'notacion' },
+  patterns: { pt: 'padroes', en: 'patterns', es: 'patrones' },
+} as const;
+export type Segment = keyof typeof SEGMENTS;
+/** a página de um pedaço do endereço (aceita o nome em qualquer idioma: links antigos continuam valendo) */
+export const segmentOf = (part: string): Segment | undefined =>
+  (Object.keys(SEGMENTS) as Segment[]).find((k) => Object.values(SEGMENTS[k]).includes(part as never));
+/** o idioma pelo começo do endereço */
+export const langOfParts = (parts: string[]): MetaLang => (parts[0] === 'en' ? 'en' : parts[0] === 'es' ? 'es' : 'pt');
 export type MetaPage = { page: 'home' } | { page: 'timer' } | { page: 'faq' } | { page: 'notfound' } | { page: 'input' | 'solve' | 'algs' | 'notation' | 'patterns'; id: string };
 
 /** id → [nome pt, nome en, nome curto] */
@@ -27,95 +44,95 @@ const PATTERN_IDS = ['cube3', 'cube4', 'cube5'];
 const SITE = 'CuboGuia';
 
 export function pageMeta(p: MetaPage, lang: MetaLang): { title: string; description: string } {
-  const t = (pt: string, en: string) => (lang === 'en' ? en : pt);
+  const t = (pt: string, en: string, es: string) => (lang === 'en' ? en : lang === 'es' ? es : pt);
   const home = t(
     'Informe as cores do seu cubo mágico (pintando em 3D ou pela câmera) e siga um tutorial animado, passo a passo, para resolvê-lo.',
-    'Enter your Rubik’s cube colors (painting in 3D or with the camera) and follow an animated step-by-step tutorial to solve it.',
+    'Enter your Rubik’s cube colors (painting in 3D or with the camera) and follow an animated step-by-step tutorial to solve it.', 'Indica los colores de tu cubo de Rubik (pintando en 3D o con la cámara) y sigue un tutorial animado, paso a paso, para resolverlo.',
   );
-  if (p.page === 'home') return { title: t(`${SITE} — resolva seu cubo mágico passo a passo`, `${SITE} — solve your Rubik’s cube step by step`), description: home };
+  if (p.page === 'home') return { title: t(`${SITE} — resolva seu cubo mágico passo a passo`, `${SITE} — solve your Rubik’s cube step by step`, `${SITE}: resuelve tu cubo de Rubik paso a paso`), description: home };
   if (p.page === 'faq')
     return {
-      title: t(`Perguntas frequentes sobre o cubo mágico — ${SITE}`, `Rubik’s cube FAQ — ${SITE}`),
+      title: t(`Perguntas frequentes sobre o cubo mágico — ${SITE}`, `Rubik’s cube FAQ — ${SITE}`, `Preguntas frecuentes sobre el cubo de Rubik — ${SITE}`),
       description: t(
         'Cubo "impossível", quanto tempo leva para aprender, iniciante ou CFOP, como usar a câmera, qual cubo comprar e como ficar mais rápido.',
-        'An “impossible” cube, how long it takes to learn, beginner or CFOP, using the camera, which cube to buy and how to get faster.',
+        'An “impossible” cube, how long it takes to learn, beginner or CFOP, using the camera, which cube to buy and how to get faster.', 'Cubo “imposible”, cuánto se tarda en aprender, principiante o CFOP, cómo usar la cámara, qué cubo comprar y cómo ser más rápido.',
       ),
     };
-  if (p.page === 'notfound') return { title: t(`Página não encontrada — ${SITE}`, `Page not found — ${SITE}`), description: home };
+  if (p.page === 'notfound') return { title: t(`Página não encontrada — ${SITE}`, `Page not found — ${SITE}`, `Página no encontrada — ${SITE}`), description: home };
   if (p.page === 'timer')
     return {
-      title: t(`Cronômetro de cubo mágico (estilo competição) — ${SITE}`, `Rubik’s cube timer (competition style) — ${SITE}`),
+      title: t(`Cronômetro de cubo mágico (estilo competição) — ${SITE}`, `Rubik’s cube timer (competition style) — ${SITE}`, `Cronómetro para cubo de Rubik (estilo competición) — ${SITE}`),
       description: t(
         'Cronômetro de speedcubing no navegador: dois dedos no celular, inspeção de 15 s, embaralhos oficiais, média de 5 e de 12, recordes, gráfico e desafios com amigos.',
-        'Speedcubing timer in your browser: two-finger start on phones, 15 s inspection, official-style scrambles, ao5 and ao12, records, a chart and challenges with friends.',
+        'Speedcubing timer in your browser: two-finger start on phones, 15 s inspection, official-style scrambles, ao5 and ao12, records, a chart and challenges with friends.', 'Cronómetro de speedcubing en el navegador: inicio con dos dedos en el móvil, inspección de 15 s, mezclas oficiales, ao5 y ao12, récords, gráfico y retos con amigos.',
       ),
     };
   const pz = META_PUZZLES[p.id] ?? META_PUZZLES.cube3;
-  const name = t(pz.pt, pz.en);
+  const name = t(pz.pt, pz.en, pz.pt);
   if (p.page === 'algs') {
     if (p.id === 'cube2')
       return {
-        title: t(`Algoritmos do 2x2 (Ortega), com animação 3D — ${SITE}`, `2x2 algorithms (Ortega), with 3D animation — ${SITE}`),
+        title: t(`Algoritmos do 2x2 (Ortega), com animação 3D — ${SITE}`, `2x2 algorithms (Ortega), with 3D animation — ${SITE}`, `Algoritmos del 2x2 (Ortega), con animación 3D — ${SITE}`),
         description: t(
           'Método Ortega do 2x2: os 7 casos da face amarela e os 6 da PBL, com desenho, animação 3D, como montar o caso e modo treino.',
-          'The 2x2 Ortega method: the 7 yellow-face cases and the 6 PBL cases, with pictures, 3D animation, how to set them up and a practice mode.',
+          'The 2x2 Ortega method: the 7 yellow-face cases and the 6 PBL cases, with pictures, 3D animation, how to set them up and a practice mode.', 'El método Ortega del 2x2: los 7 casos de la cara amarilla y los 6 de PBL, con dibujo, animación 3D, cómo preparar el caso y modo de práctica.',
         ),
       };
     if (p.id === 'pyraminx')
       return {
-        title: t(`Algoritmos do Pyraminx, com animação 3D — ${SITE}`, `Pyraminx algorithms, with 3D animation — ${SITE}`),
+        title: t(`Algoritmos do Pyraminx, com animação 3D — ${SITE}`, `Pyraminx algorithms, with 3D animation — ${SITE}`, `Algoritmos del Pyraminx, con animación 3D — ${SITE}`),
         description: t(
           'Os 5 casos da última camada do Pyraminx (as 3 arestas de cima), com desenho, animação 3D, como montar o caso e modo treino.',
-          'The 5 Pyraminx last-layer cases (the 3 top edges), with pictures, 3D animation, how to set them up and a practice mode.',
+          'The 5 Pyraminx last-layer cases (the 3 top edges), with pictures, 3D animation, how to set them up and a practice mode.', 'Los 5 casos de la última capa del Pyraminx (las 3 aristas de arriba), con dibujo, animación 3D, cómo preparar el caso y modo de práctica.',
         ),
       };
     return {
-      title: t(`Algoritmos OLL e PLL do cubo mágico, com animação 3D — ${SITE}`, `OLL and PLL algorithms for the Rubik’s cube, with 3D animation — ${SITE}`),
+      title: t(`Algoritmos OLL e PLL do cubo mágico, com animação 3D — ${SITE}`, `OLL and PLL algorithms for the Rubik’s cube, with 3D animation — ${SITE}`, `Algoritmos OLL y PLL del cubo de Rubik, con animación 3D — ${SITE}`),
       description: t(
         'OLL em 2 etapas, OLL completa (57) e PLL completa (21) do CFOP: desenho de cada caso, o algoritmo animado em 3D, como montar o caso no seu cubo e um modo treino.',
-        'CFOP 2-look OLL, full OLL (57) and full PLL (21): a picture of each case, the algorithm animated in 3D, how to set it up on your cube, and a practice mode.',
+        'CFOP 2-look OLL, full OLL (57) and full PLL (21): a picture of each case, the algorithm animated in 3D, how to set it up on your cube, and a practice mode.', 'OLL en 2 pasos, OLL completa (57) y PLL completa (21) del CFOP: el dibujo de cada caso, el algoritmo animado en 3D, cómo prepararlo en tu cubo y modo de práctica.',
       ),
     };
   }
   if (p.page === 'patterns')
     return {
-      title: t(`Padrões bonitos para o ${pz.short} (xadrez, cubo dentro do cubo…) — ${SITE}`, `${pz.short} cube patterns (checkerboard, cube in a cube…) — ${SITE}`),
+      title: t(`Padrões bonitos para o ${pz.short} (xadrez, cubo dentro do cubo…) — ${SITE}`, `${pz.short} cube patterns (checkerboard, cube in a cube…) — ${SITE}`, `Patrones bonitos para el ${pz.short} (ajedrez, cubo dentro del cubo…) — ${SITE}`),
       description: t(
         `Figuras para montar no ${name} resolvido: xadrez, cubo dentro do cubo, cruz e outras, com os movimentos animados em 3D.`,
-        `Pictures to make on a solved ${name}: checkerboard, cube in a cube, cross and more, with the moves animated in 3D.`,
+        `Pictures to make on a solved ${name}: checkerboard, cube in a cube, cross and more, with the moves animated in 3D.`, `Figuras para hacer en el ${name} resuelto: ajedrez, cubo dentro del cubo, cruz y otras, con los movimientos animados en 3D.`,
       ),
     };
   if (p.page === 'notation') {
     if (p.id === 'cube3')
       return {
-        title: t(`Notação do cubo mágico (R, U', F2…) animada em 3D — ${SITE}`, `Rubik’s cube notation (R, U', F2…) animated in 3D — ${SITE}`),
+        title: t(`Notação do cubo mágico (R, U', F2…) animada em 3D — ${SITE}`, `Rubik’s cube notation (R, U', F2…) animated in 3D — ${SITE}`, `Notación del cubo de Rubik (R, U', F2…) animada en 3D — ${SITE}`),
         description: t(
           'Aprenda o que quer dizer cada letra dos algoritmos e tutoriais de cubo mágico: faces, sentido, duas camadas, fatias do meio e giros do cubo inteiro, cada um animado em 3D.',
-          'Learn what each letter in Rubik’s cube algorithms and tutorials means: faces, direction, two layers, middle slices and whole-cube rotations, each animated in 3D.',
+          'Learn what each letter in Rubik’s cube algorithms and tutorials means: faces, direction, two layers, middle slices and whole-cube rotations, each animated in 3D.', 'Aprende qué significa cada letra de los algoritmos y tutoriales del cubo de Rubik: caras, sentido, dos capas, capas del medio y giros del cubo entero, cada uno animado en 3D.',
         ),
       };
-    const label = p.id === 'cube5' ? t('dos cubos grandes (4x4 a 7x7)', 'for big cubes (4x4 to 7x7)') : t(`do ${pz.short}`, `for the ${pz.short}`);
+    const label = p.id === 'cube5' ? t('dos cubos grandes (4x4 a 7x7)', 'for big cubes (4x4 to 7x7)', 'para cubos grandes (4x4 a 7x7)') : t(`do ${pz.short}`, `for the ${pz.short}`, `del ${pz.short}`);
     return {
-      title: t(`Notação ${label} animada em 3D — ${SITE}`, `Notation ${label} animated in 3D — ${SITE}`),
+      title: t(`Notação ${label} animada em 3D — ${SITE}`, `Notation ${label} animated in 3D — ${SITE}`, `Notación ${label} animada en 3D — ${SITE}`),
       description: t(
         `O que quer dizer cada movimento ${label}, com animação 3D de cada um.`,
-        `What each move ${label} means, with a 3D animation of each one.`,
+        `What each move ${label} means, with a 3D animation of each one.`, `Qué significa cada movimiento ${label}, con una animación 3D de cada uno.`,
       ),
     };
   }
   if (p.page === 'solve')
     return {
-      title: t(`Tutorial: resolvendo o ${name} passo a passo — ${SITE}`, `Tutorial: solving the ${name} step by step — ${SITE}`),
+      title: t(`Tutorial: resolvendo o ${name} passo a passo — ${SITE}`, `Tutorial: solving the ${name} step by step — ${SITE}`, `Tutorial: resolviendo el ${name} paso a paso — ${SITE}`),
       description: t(
         `Tutorial animado em 3D para resolver o ${pz.short}, passo a passo, a partir das cores do seu puzzle.`,
-        `Animated 3D tutorial to solve the ${pz.short}, step by step, from your puzzle’s colors.`,
+        `Animated 3D tutorial to solve the ${pz.short}, step by step, from your puzzle’s colors.`, `Tutorial animado en 3D para resolver el ${pz.short}, paso a paso, a partir de los colores de tu puzzle.`,
       ),
     };
   return {
-    title: t(`Como resolver o ${name} — tutorial passo a passo em 3D | ${SITE}`, `How to solve the ${name} — step-by-step 3D tutorial | ${SITE}`),
+    title: t(`Como resolver o ${name} — tutorial passo a passo em 3D | ${SITE}`, `How to solve the ${name} — step-by-step 3D tutorial | ${SITE}`, `Cómo resolver el ${name}: tutorial paso a paso en 3D | ${SITE}`),
     description: t(
       `Aprenda a resolver o ${pz.short}: informe as cores do seu ${pz.short} (pintando em 3D ou pela câmera) e siga um tutorial animado, do iniciante ao avançado. Grátis.`,
-      `Learn to solve the ${pz.short}: enter your ${pz.short}’s colors (painting in 3D or with the camera) and follow an animated tutorial, from beginner to advanced. Free.`,
+      `Learn to solve the ${pz.short}: enter your ${pz.short}’s colors (painting in 3D or with the camera) and follow an animated tutorial, from beginner to advanced. Free.`, `Aprende a resolver el ${pz.short}: indica los colores de tu ${pz.short} (pintando en 3D o con la cámara) y sigue un tutorial animado, de principiante a avanzado. Gratis.`,
     ),
   };
 }
@@ -129,27 +146,28 @@ export function metaRoute(pathname: string): { lang: MetaLang; meta: MetaPage } 
       return s;
     }
   });
-  const lang: MetaLang = parts[0] === 'en' ? 'en' : 'pt';
-  if (lang === 'en') parts = parts.slice(1);
+  const lang = langOfParts(parts);
+  if (lang !== 'pt') parts = parts.slice(1);
+  const seg = segmentOf(parts[0] ?? '');
   const bySlug = (slug: string) => Object.keys(META_PUZZLES).find((id) => META_PUZZLES[id].slug === slug.toLowerCase());
   if (!parts.length) return { lang, meta: { page: 'home' } };
   // arquivos (com extensão) não são páginas
   if (parts[parts.length - 1].includes('.')) return null;
-  if ((parts[0] === 'cronometro' || parts[0] === 'timer') && parts.length === 1) return { lang, meta: { page: 'timer' } };
-  if ((parts[0] === 'perguntas' || parts[0] === 'faq') && parts.length === 1) return { lang, meta: { page: 'faq' } };
-  if (parts[0] === 'algoritmos' || parts[0] === 'algorithms') {
+  if (seg === 'timer' && parts.length === 1) return { lang, meta: { page: 'timer' } };
+  if (seg === 'faq' && parts.length === 1) return { lang, meta: { page: 'faq' } };
+  if (seg === 'algs') {
     if (parts.length === 1) return { lang, meta: { page: 'algs', id: 'cube3' } };
     const id = bySlug(parts[1]);
     if (parts.length === 2 && id && id !== 'cube3' && ALG_IDS.includes(id)) return { lang, meta: { page: 'algs', id } };
     return { lang, meta: { page: 'notfound' } };
   }
-  if (parts[0] === 'padroes' || parts[0] === 'patterns') {
+  if (seg === 'patterns') {
     if (parts.length === 1) return { lang, meta: { page: 'patterns', id: 'cube3' } };
     const id = bySlug(parts[1]);
     if (parts.length === 2 && id && id !== 'cube3' && PATTERN_IDS.includes(id)) return { lang, meta: { page: 'patterns', id } };
     return { lang, meta: { page: 'notfound' } };
   }
-  if (parts[0] === 'notacao' || parts[0] === 'notation') {
+  if (seg === 'notation') {
     if (parts.length === 1) return { lang, meta: { page: 'notation', id: 'cube3' } };
     const id = bySlug(parts[1]);
     if (parts.length === 2 && id && id !== 'cube3' && NOTATION_IDS.includes(id)) return { lang, meta: { page: 'notation', id } };
@@ -162,24 +180,20 @@ export function metaRoute(pathname: string): { lang: MetaLang; meta: MetaPage } 
 }
 
 /** endereço de uma página (sem o roteador do site, que traria o registro dos puzzles) */
-function metaPath(p: MetaPage, lang: MetaLang): string {
-  const en = lang === 'en';
+export function metaPath(p: MetaPage, lang: MetaLang): string {
   const slug = 'id' in p ? (META_PUZZLES[p.id]?.slug ?? '3x3') : '';
-  const pre = en ? '/en' : '';
+  const pre = LANG_PREFIX[lang];
   switch (p.page) {
     case 'home':
     case 'notfound':
-      return en ? '/en' : '/';
+      return pre || '/';
     case 'timer':
-      return en ? '/en/timer' : '/cronometro';
     case 'faq':
-      return en ? '/en/faq' : '/perguntas';
+      return `${pre}/${SEGMENTS[p.page][lang]}`;
     case 'algs':
-      return (en ? '/en/algorithms' : '/algoritmos') + (p.id === 'cube3' ? '' : `/${slug}`);
     case 'notation':
-      return (en ? '/en/notation' : '/notacao') + (p.id === 'cube3' ? '' : `/${slug}`);
     case 'patterns':
-      return (en ? '/en/patterns' : '/padroes') + (p.id === 'cube3' ? '' : `/${slug}`);
+      return `${pre}/${SEGMENTS[p.page][lang]}` + (p.id === 'cube3' ? '' : `/${slug}`);
     case 'input':
       return `${pre}/${slug}`;
     case 'solve':
@@ -189,22 +203,22 @@ function metaPath(p: MetaPage, lang: MetaLang): string {
 
 /** a "trilha" da página (Início › Cubo 3x3 › Tutorial), como o Google mostra no resultado */
 export function breadcrumbs(p: MetaPage, lang: MetaLang): { name: string; path: string }[] {
-  const t = (pt: string, en: string) => (lang === 'en' ? en : pt);
+  const t = (pt: string, en: string, es: string) => (lang === 'en' ? en : lang === 'es' ? es : pt);
   if (p.page === 'home' || p.page === 'notfound') return [];
-  const out = [{ name: t('Início', 'Home'), path: metaPath({ page: 'home' }, lang) }];
+  const out = [{ name: t('Início', 'Home', 'Inicio'), path: metaPath({ page: 'home' }, lang) }];
   const pz = 'id' in p ? META_PUZZLES[p.id] : undefined;
-  const name = pz ? t(pz.pt, pz.en) : '';
-  if (p.page === 'timer') out.push({ name: t('Cronômetro', 'Timer'), path: metaPath(p, lang) });
-  else if (p.page === 'faq') out.push({ name: t('Perguntas frequentes', 'FAQ'), path: metaPath(p, lang) });
+  const name = pz ? t(pz.pt, pz.en, pz.pt) : '';
+  if (p.page === 'timer') out.push({ name: t('Cronômetro', 'Timer', 'Cronómetro'), path: metaPath(p, lang) });
+  else if (p.page === 'faq') out.push({ name: t('Perguntas frequentes', 'FAQ', 'Preguntas frecuentes'), path: metaPath(p, lang) });
   else if (p.page === 'algs' || p.page === 'notation' || p.page === 'patterns') {
     const top = { page: p.page, id: 'cube3' } as MetaPage;
-    const label = { algs: t('Algoritmos', 'Algorithms'), notation: t('Notação', 'Notation'), patterns: t('Padrões', 'Patterns') }[p.page];
+    const label = { algs: t('Algoritmos', 'Algorithms', 'Algoritmos'), notation: t('Notação', 'Notation', 'Notación'), patterns: t('Padrões', 'Patterns', 'Patrones') }[p.page];
     out.push({ name: label, path: metaPath(top, lang) });
     if (p.id !== 'cube3') out.push({ name: pz!.short, path: metaPath(p, lang) });
   } else if (p.page === 'input') out.push({ name, path: metaPath(p, lang) });
   else if (p.page === 'solve') {
     out.push({ name, path: metaPath({ page: 'input', id: p.id }, lang) });
-    out.push({ name: t('Tutorial', 'Tutorial'), path: metaPath(p, lang) });
+    out.push({ name: t('Tutorial', 'Tutorial', 'Tutorial'), path: metaPath(p, lang) });
   }
   return out;
 }
@@ -214,7 +228,7 @@ export function structuredData(p: MetaPage, lang: MetaLang, origin: string): str
   const crumbs = breadcrumbs(p, lang);
   const data =
     p.page === 'home'
-      ? { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE, url: origin + metaPath(p, lang), inLanguage: lang === 'en' ? 'en' : 'pt-BR' }
+      ? { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE, url: origin + metaPath(p, lang), inLanguage: { pt: 'pt-BR', en: 'en', es: 'es' }[lang] }
       : crumbs.length
         ? {
             '@context': 'https://schema.org',

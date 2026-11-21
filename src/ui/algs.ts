@@ -58,13 +58,13 @@ const PUZZLES: AlgPuzzle[] = [
     intro: () =>
       tr(
         'No CFOP, a última camada sai em duas partes: a <b>OLL</b> deixa o topo todo amarelo e a <b>PLL</b> coloca as peças no lugar. Comece pela OLL em 2 etapas (10 algoritmos), aprenda a PLL completa (21) e depois a OLL completa (57). Segure o cubo com o <b>amarelo em cima</b>.',
-        'In CFOP, the last layer is done in two parts: <b>OLL</b> makes the whole top yellow and <b>PLL</b> puts the pieces in place. Start with 2-look OLL (10 algorithms), learn the full PLL (21), then the full OLL (57). Hold the cube with <b>yellow on top</b>.',
+        'In CFOP, the last layer is done in two parts: <b>OLL</b> makes the whole top yellow and <b>PLL</b> puts the pieces in place. Start with 2-look OLL (10 algorithms), learn the full PLL (21), then the full OLL (57). Hold the cube with <b>yellow on top</b>.', 'En el CFOP, la última capa se hace en dos partes: la <b>OLL</b> deja toda la cara de arriba amarilla y la <b>PLL</b> pone las piezas en su lugar. Empieza por la OLL en 2 pasos (10 algoritmos), aprende la PLL completa (21) y después la OLL completa (57). Sujeta el cubo con el <b>amarillo arriba</b>.',
       ),
     extraNotation: () => `
-      <li><code>M</code> ${tr('fatia do meio, entre R e L, no sentido do L', 'middle slice, between R and L, turning like L')}</li>
-      <li><code>S</code> ${tr('fatia do meio, entre F e B, no sentido do F', 'middle slice, between F and B, turning like F')}</li>
-      <li><code>r l f d</code> ${tr('letra minúscula: a face e a camada do meio juntas', 'lowercase: the face and the middle layer together')}</li>
-      <li><code>x y</code> ${tr('girar o cubo inteiro na mão: x como o R, y como o U', 'turn the whole cube in your hands: x like R, y like U')}</li>`,
+      <li><code>M</code> ${tr('fatia do meio, entre R e L, no sentido do L', 'middle slice, between R and L, turning like L', 'capa del medio, entre R y L, en el sentido de L')}</li>
+      <li><code>S</code> ${tr('fatia do meio, entre F e B, no sentido do F', 'middle slice, between F and B, turning like F', 'capa del medio, entre F y B, en el sentido de F')}</li>
+      <li><code>r l f d</code> ${tr('letra minúscula: a face e a camada do meio juntas', 'lowercase: the face and the middle layer together', 'minúscula: la cara y la capa del medio juntas')}</li>
+      <li><code>x y</code> ${tr('girar o cubo inteiro na mão: x como o R, y como o U', 'turn the whole cube in your hands: x like R, y like U', 'gira el cubo entero en las manos: x como R, y como U')}</li>`,
   },
   {
     id: 'cube2',
@@ -80,9 +80,9 @@ const PUZZLES: AlgPuzzle[] = [
     intro: () =>
       tr(
         'O método <b>Ortega</b> resolve o 2x2 em 3 partes: a face branca (sem se preocupar com as laterais), a <b>face amarela</b> (7 casos) e a <b>PBL</b>, que coloca as duas camadas no lugar de uma vez (6 casos). Segure com a <b>face branca embaixo</b>.',
-        'The <b>Ortega</b> method solves the 2x2 in 3 parts: the white face (without caring about the sides), the <b>yellow face</b> (7 cases) and <b>PBL</b>, which puts both layers in place at once (6 cases). Hold it with the <b>white face on the bottom</b>.',
+        'The <b>Ortega</b> method solves the 2x2 in 3 parts: the white face (without caring about the sides), the <b>yellow face</b> (7 cases) and <b>PBL</b>, which puts both layers in place at once (6 cases). Hold it with the <b>white face on the bottom</b>.', 'El método <b>Ortega</b> resuelve el 2x2 en 3 partes: la cara blanca (sin preocuparse por los lados), la <b>cara amarilla</b> (7 casos) y la <b>PBL</b>, que pone las dos capas en su lugar de una vez (6 casos). Sujétalo con la <b>cara blanca abajo</b>.',
       ),
-    extraNotation: () => `<li><code>x2</code> ${tr('virar o cubo inteiro de cabeça para baixo (como o R, duas vezes)', 'turn the whole cube upside down (like R, twice)')}</li>`,
+    extraNotation: () => `<li><code>x2</code> ${tr('virar o cubo inteiro de cabeça para baixo (como o R, duas vezes)', 'turn the whole cube upside down (like R, twice)', 'da la vuelta al cubo entero (como R, dos veces)')}</li>`,
   },
   {
     id: 'pyraminx',
@@ -97,7 +97,7 @@ const PUZZLES: AlgPuzzle[] = [
     intro: () =>
       tr(
         'Depois das pontas, dos centros e da base amarela, sobram só as <b>3 arestas de cima</b>. São 5 casos, todos com algoritmos curtos. Segure com a <b>base amarela embaixo</b> e a face verde de frente.',
-        'After the tips, the centers and the yellow bottom, only the <b>3 top edges</b> are left. There are 5 cases, all with short algorithms. Hold it with the <b>yellow bottom down</b> and the green face in front.',
+        'After the tips, the centers and the yellow bottom, only the <b>3 top edges</b> are left. There are 5 cases, all with short algorithms. Hold it with the <b>yellow bottom down</b> and the green face in front.', 'Después de las puntas, los centros y la base amarilla, solo quedan las <b>3 aristas de arriba</b>. Son 5 casos, todos con algoritmos cortos. Sujétalo con la <b>base amarilla abajo</b> y la cara verde al frente.',
       ),
     extraNotation: () => '',
   },
@@ -190,8 +190,8 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
   app.innerHTML = `
   <section class="page algs-page">
     <div class="al-head">
-      <span class="eyebrow">${tr('Algoritmos', 'Algorithms')}</span>
-      <h1>${pz.id === 'cube3' ? tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms') : tr(`Algoritmos do ${pz.label}`, `${pz.label} algorithms`)}</h1>
+      <span class="eyebrow">${tr('Algoritmos', 'Algorithms', 'Algoritmos')}</span>
+      <h1>${pz.id === 'cube3' ? tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms', 'Algoritmos OLL y PLL') : tr(`Algoritmos do ${pz.label}`, `${pz.label} algorithms`, `Algoritmos del ${pz.label}`)}</h1>
       <nav class="al-puzzles" aria-label="Puzzle">
         ${PUZZLES.map((p) => `<a href="${algsPath(undefined, p.id)}" class="${p.id === pz.id ? 'on' : ''}" ${p.id === pz.id ? 'aria-current="page"' : ''}>${p.label}</a>`).join('')}
       </nav>
@@ -199,12 +199,12 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
       <div class="al-bar">
         <div class="al-tabs" role="tablist">
           ${pz.sets.map((s) => `<button role="tab" data-tab="${s.id}">${s.name()}<small>${pz.cases.filter((c) => c.set === s.id).length}</small></button>`).join('')}
-          <button role="tab" data-tab="train">${icon('shuffle')}${tr('Treino', 'Practice')}</button>
+          <button role="tab" data-tab="train">${icon('shuffle')}${tr('Treino', 'Practice', 'Práctica')}</button>
         </div>
         <span class="al-count"></span>
       </div>
       <details class="notation al-notation">
-        <summary>${tr('Como ler os algoritmos?', 'How to read the algorithms?')}</summary>
+        <summary>${tr('Como ler os algoritmos?', 'How to read the algorithms?', '¿Cómo leer los algoritmos?')}</summary>
         ${notationHtml(impl, pz.id)}
         ${pz.extraNotation() ? `<ul class="notation-list">${pz.extraNotation()}</ul>` : ''}
       </details>
@@ -214,17 +214,17 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
       <div class="al-viewer-box card" role="dialog" aria-modal="true" aria-labelledby="al-v-title">
         <div class="al-v-head">
           <h2 id="al-v-title"></h2>
-          <button class="icon-btn" data-v="close" aria-label="${tr('Fechar', 'Close')}" title="${tr('Fechar', 'Close')}">${icon('close')}</button>
+          <button class="icon-btn" data-v="close" aria-label="${tr('Fechar', 'Close', 'Cerrar')}" title="${tr('Fechar', 'Close', 'Cerrar')}">${icon('close')}</button>
         </div>
         <div class="al-v-grid">
           <div class="al-v-3d"></div>
           <div class="al-v-side">
             <div class="al-v-alg"></div>
             <div class="controls al-v-ctl">
-              <button class="ctl" data-v="restart" aria-label="${tr('Voltar ao começo', 'Back to the start')}" title="${tr('Voltar ao começo', 'Back to the start')}">${icon('stepPrev')}</button>
-              <button class="ctl" data-v="prev" aria-label="${tr('Desfazer movimento', 'Undo move')}" title="${tr('Desfazer movimento', 'Undo move')}">${icon('movePrev')}</button>
+              <button class="ctl" data-v="restart" aria-label="${tr('Voltar ao começo', 'Back to the start', 'Volver al inicio')}" title="${tr('Voltar ao começo', 'Back to the start', 'Volver al inicio')}">${icon('stepPrev')}</button>
+              <button class="ctl" data-v="prev" aria-label="${tr('Desfazer movimento', 'Undo move', 'Deshacer movimiento')}" title="${tr('Desfazer movimento', 'Undo move', 'Deshacer movimiento')}">${icon('movePrev')}</button>
               <button class="ctl main" data-v="play"></button>
-              <button class="ctl" data-v="next" aria-label="${tr('Próximo movimento', 'Next move')}" title="${tr('Próximo movimento', 'Next move')}">${icon('moveNext')}</button>
+              <button class="ctl" data-v="next" aria-label="${tr('Próximo movimento', 'Next move', 'Siguiente movimiento')}" title="${tr('Próximo movimento', 'Next move', 'Siguiente movimiento')}">${icon('moveNext')}</button>
             </div>
             <p class="al-v-move" aria-live="polite"></p>
             <div class="al-v-setup"></div>
@@ -242,11 +242,11 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
       const all = pz.cases.filter((c) => c.set === s.id);
       return `${s.name()} ${all.filter((c) => learned.has(c.id)).length}/${all.length}`;
     });
-    count.innerHTML = `${icon('checkCircle')}${tr('Aprendidos', 'Learned')}: ${parts.join(' · ')}`;
+    count.innerHTML = `${icon('checkCircle')}${tr('Aprendidos', 'Learned', 'Aprendido')}: ${parts.join(' · ')}`;
   }
 
   const learnBtn = (c: AlgCase) =>
-    `<button class="al-learn ${learned.has(c.id) ? 'on' : ''}" data-learn="${c.id}" aria-pressed="${learned.has(c.id)}">${icon('check')}${tr('Aprendido', 'Learned')}</button>`;
+    `<button class="al-learn ${learned.has(c.id) ? 'on' : ''}" data-learn="${c.id}" aria-pressed="${learned.has(c.id)}">${icon('check')}${tr('Aprendido', 'Learned', 'Aprendido')}</button>`;
 
   function renderList(set: string) {
     const style = setOf(set).style;
@@ -263,11 +263,11 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
               .map(
                 (c) => `
               <article class="al-card ${learned.has(c.id) ? 'learned' : ''}" data-case="${c.id}">
-                <button class="al-pic" data-open="${c.id}" aria-label="${tr(`Ver o caso ${caseName(c)} em 3D`, `See the ${caseName(c)} case in 3D`)}">${caseSvg(pz, impl, pz.caseState(c.alg), style)}<span class="al-play">${icon('play')}</span></button>
+                <button class="al-pic" data-open="${c.id}" aria-label="${tr(`Ver o caso ${caseName(c)} em 3D`, `See the ${caseName(c)} case in 3D`, `Ver el caso ${caseName(c)} en 3D`)}">${caseSvg(pz, impl, pz.caseState(c.alg), style)}<span class="al-play">${icon('play')}</span></button>
                 <div class="al-info">
                   <h3>${caseName(c)}</h3>
                   <div class="al-alg">${algHtml(c.alg)}</div>
-                  ${c.alt ? `<div class="al-alt"><span>${tr('ou', 'or')}</span> ${c.alt}</div>` : ''}
+                  ${c.alt ? `<div class="al-alt"><span>${tr('ou', 'or', 'o')}</span> ${c.alt}</div>` : ''}
                   ${learnBtn(c)}
                 </div>
               </article>`,
@@ -305,23 +305,23 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
     body.innerHTML = `
       <div class="al-train card">
         <div class="al-train-opts">
-          ${pz.sets.length > 1 ? `<span class="tc-range" role="group" aria-label="${tr('Quais casos', 'Which cases')}">${opt('all', tr('Todos', 'All'))}${pz.sets.map((s) => opt(s.id, s.name())).join('')}</span>` : ''}
-          <label class="al-check"><input type="checkbox" data-tnew ${train.onlyNew ? 'checked' : ''}> ${tr('Só os que ainda não aprendi', 'Only the ones I haven’t learned')}</label>
+          ${pz.sets.length > 1 ? `<span class="tc-range" role="group" aria-label="${tr('Quais casos', 'Which cases', 'Qué casos')}">${opt('all', tr('Todos', 'All', 'Todos'))}${pz.sets.map((s) => opt(s.id, s.name())).join('')}</span>` : ''}
+          <label class="al-check"><input type="checkbox" data-tnew ${train.onlyNew ? 'checked' : ''}> ${tr('Só os que ainda não aprendi', 'Only the ones I haven’t learned', 'Solo los que aún no aprendí')}</label>
         </div>
         <div class="al-train-main">
           <div class="al-train-pic">${caseSvg(pz, impl, state, set.style, 220)}</div>
           <div class="al-train-side">
-            <p class="al-train-q">${tr(`Caso ${train.seen} · qual é este caso (${set.name()})?`, `Case ${train.seen} · which case is this (${set.name()})?`)}</p>
+            <p class="al-train-q">${tr(`Caso ${train.seen} · qual é este caso (${set.name()})?`, `Case ${train.seen} · which case is this (${set.name()})?`, `Caso ${train.seen} · ¿qué caso es este (${set.name()})?`)}</p>
             ${
               train.revealed
                 ? `<h3>${caseName(c)}</h3>
-                   ${fix ? `<p class="al-auf">${tr(`Antes, ajuste o topo: <b>${fix}</b> (ou olhe de outro lado)`, `First adjust the top: <b>${fix}</b> (or look from another side)`)}</p>` : ''}
+                   ${fix ? `<p class="al-auf">${tr(`Antes, ajuste o topo: <b>${fix}</b> (ou olhe de outro lado)`, `First adjust the top: <b>${fix}</b> (or look from another side)`, `Primero ajusta la parte de arriba: <b>${fix}</b> (o míralo desde otro lado)`)}</p>` : ''}
                    <div class="al-alg big">${algHtml(c.alg)}</div>
-                   <div class="row-actions">${learnBtn(c)}<button class="btn ghost sm" data-open="${c.id}">${icon('play')}${tr('Ver em 3D', 'See in 3D')}</button></div>`
-                : `<button class="btn primary" data-treveal>${tr('Mostrar a resposta', 'Show the answer')}</button>`
+                   <div class="row-actions">${learnBtn(c)}<button class="btn ghost sm" data-open="${c.id}">${icon('play')}${tr('Ver em 3D', 'See in 3D', 'Ver en 3D')}</button></div>`
+                : `<button class="btn primary" data-treveal>${tr('Mostrar a resposta', 'Show the answer', 'Mostrar la respuesta')}</button>`
             }
-            <p class="al-setup">${tr('Para treinar no seu puzzle, monte o caso a partir dele resolvido:', 'To practice on your puzzle, set up the case starting from solved:')}<code>${setupFor(c.alg, train.auf)}</code></p>
-            <button class="btn ghost" data-tnext>${tr('Próximo caso', 'Next case')} ${icon('stepNext')}</button>
+            <p class="al-setup">${tr('Para treinar no seu puzzle, monte o caso a partir dele resolvido:', 'To practice on your puzzle, set up the case starting from solved:', 'Para practicar en tu puzzle, prepara el caso a partir del puzzle resuelto:')}<code>${setupFor(c.alg, train.auf)}</code></p>
+            <button class="btn ghost" data-tnext>${tr('Próximo caso', 'Next case', 'Siguiente caso')} ${icon('stepNext')}</button>
           </div>
         </div>
       </div>`;
@@ -357,9 +357,9 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
   function vRender() {
     vAlg.innerHTML = algHtml(vCase!.alg, vPos);
     vPlay.innerHTML = vPlaying ? icon('pause') : icon('play');
-    vPlay.setAttribute('aria-label', vPlaying ? tr('Pausar', 'Pause') : tr('Animar', 'Play'));
+    vPlay.setAttribute('aria-label', vPlaying ? tr('Pausar', 'Pause', 'Pausa') : tr('Animar', 'Play', 'Reproducir'));
     vPlay.title = vPlay.getAttribute('aria-label')!;
-    vMove.textContent = vPos < vMoves.length ? `${tr('Próximo', 'Next')}: ${vMoves[vPos]} · ${describe(vMoves[vPos])}` : tr('Pronto! O caso foi resolvido.', 'Done! The case is solved.');
+    vMove.textContent = vPos < vMoves.length ? `${tr('Próximo', 'Next', 'Siguiente')}: ${vMoves[vPos]} · ${describe(vMoves[vPos])}` : tr('Pronto! O caso foi resolvido.', 'Done! The case is solved.', '¡Listo! El caso está resuelto.');
   }
   async function vStep(dir: 1 | -1) {
     if (vBusy) return;
@@ -404,7 +404,7 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
     view.setState(vStart);
     view.resetCamera();
     viewer.querySelector('#al-v-title')!.textContent = `${setOf(c.set).name()} · ${caseName(c)}`;
-    viewer.querySelector('.al-v-setup')!.innerHTML = `${tr('Montar no seu puzzle (a partir do resolvido):', 'Set it up on your puzzle (from solved):')}<code>${setupFor(c.alg)}</code>`;
+    viewer.querySelector('.al-v-setup')!.innerHTML = `${tr('Montar no seu puzzle (a partir do resolvido):', 'Set it up on your puzzle (from solved):', 'Prepáralo en tu puzzle (a partir del resuelto):')}<code>${setupFor(c.alg)}</code>`;
     vRender();
     vPlay.focus();
   }

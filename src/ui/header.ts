@@ -3,7 +3,7 @@
  * Com muitos puzzles o menu continua do mesmo tamanho; no celular vira um botão ☰.
  * Os textos dependem do idioma: o cabeçalho (e o rodapé) é remontado quando o idioma muda.
  */
-import { getLang, tr, type Lang } from '../core/i18n';
+import { LOCALE, getLang, tr, type Lang } from '../core/i18n';
 import { PUZZLES } from '../core/registry';
 import { FEEDBACK_EMAIL, feedbackLabel, wireFeedback } from './feedback';
 import { algsPath, faqPath, homePath, notationPath, patternsPath, pathInLang, puzzlePath, timerPath } from '../core/router';
@@ -12,7 +12,7 @@ import { refreshInstall } from './pwa';
 import { toggleTheme } from './theme';
 
 /** botão do tema: mostra o sol no escuro (vai para o claro) e a lua no claro */
-const themeLabel = () => tr('Trocar entre tema claro e escuro', 'Switch between light and dark theme');
+const themeLabel = () => tr('Trocar entre tema claro e escuro', 'Switch between light and dark theme', 'Cambiar entre tema claro y oscuro');
 
 export function mountHeader() {
   const nav = document.getElementById('main-nav')!;
@@ -22,13 +22,13 @@ export function mountHeader() {
   const card = (p: (typeof PUZZLES)[number]) =>
     p.available
       ? `<a class="mm-item" href="${puzzlePath(p.id)}" data-nav="${p.id}">${p.icon}<span><b>${p.name}</b><small>${p.subtitle}</small></span></a>`
-      : `<div class="mm-item soon" aria-disabled="true">${p.icon}<span><b>${p.name}</b><small>${tr('Em breve', 'Coming soon')}</small></span></div>`;
+      : `<div class="mm-item soon" aria-disabled="true">${p.icon}<span><b>${p.name}</b><small>${tr('Em breve', 'Coming soon', 'Muy pronto')}</small></span></div>`;
 
   /** PT | EN: leva para a mesma página no outro idioma */
   const langSwitch = (cls: string) => {
     const link = (l: Lang, label: string, title: string) =>
-      `<a href="${pathInLang(location.pathname, location.search, l)}" hreflang="${l === 'en' ? 'en' : 'pt-BR'}" lang="${l === 'en' ? 'en' : 'pt-BR'}" data-lang="${l}" title="${title}" class="${getLang() === l ? 'on' : ''}" ${getLang() === l ? 'aria-current="true"' : ''}>${label}</a>`;
-    return `<span class="lang-switch ${cls}" role="group" aria-label="${tr('Idioma', 'Language')}">${link('pt', 'PT', 'Português')}${link('en', 'EN', 'English')}</span>`;
+      `<a href="${pathInLang(location.pathname, location.search, l)}" hreflang="${LOCALE[l]}" lang="${LOCALE[l]}" data-lang="${l}" title="${title}" class="${getLang() === l ? 'on' : ''}" ${getLang() === l ? 'aria-current="true"' : ''}>${label}</a>`;
+    return `<span class="lang-switch ${cls}" role="group" aria-label="${tr('Idioma', 'Language', 'Idioma')}">${link('pt', 'PT', 'Português')}${link('en', 'EN', 'English')}${link('es', 'ES', 'Español')}</span>`;
   };
 
   // menu do celular (gaveta)
@@ -47,66 +47,66 @@ export function mountHeader() {
   function render() {
     renderedLang = getLang();
     nav.innerHTML = `
-      <a href="${homePath()}" data-nav="home">${tr('Início', 'Home')}</a>
+      <a href="${homePath()}" data-nav="home">${tr('Início', 'Home', 'Inicio')}</a>
       <div class="nav-dd">
         <button type="button" class="nav-dd-btn" aria-haspopup="true" aria-expanded="false" aria-controls="puzzle-menu">
           <span class="nav-dd-label">Puzzles</span><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </button>
         <div class="mega" id="puzzle-menu" role="menu" hidden>
-          <div class="mega-title">${tr('Escolha o seu puzzle', 'Choose your puzzle')}</div>
+          <div class="mega-title">${tr('Escolha o seu puzzle', 'Choose your puzzle', 'Elige tu puzzle')}</div>
           <div class="mega-grid">${available.map(card).join('')}</div>
-          ${soon.length ? `<div class="mega-title soon-title">${tr('Em breve', 'Coming soon')}</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
+          ${soon.length ? `<div class="mega-title soon-title">${tr('Em breve', 'Coming soon', 'Muy pronto')}</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
         </div>
       </div>
-      <a href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
-      <a href="${algsPath()}" data-nav="algs">${tr('Algoritmos', 'Algorithms')}</a>
-      <a href="${notationPath()}" data-nav="notation">${tr('Notação', 'Notation')}</a>
-      <a href="${homePath()}" data-scroll="como-funciona" class="nav-extra">${tr('Como funciona', 'How it works')}</a>
-      <button type="button" class="nav-install" data-install hidden title="${tr('Instalar o CuboGuia como app (funciona sem internet)', 'Install CuboGuia as an app (works offline)')}">${icon('download')}<span class="nav-install-txt">${tr('Instalar app', 'Install app')}</span></button>
+      <a href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer', 'Cronómetro')}</a>
+      <a href="${algsPath()}" data-nav="algs">${tr('Algoritmos', 'Algorithms', 'Algoritmos')}</a>
+      <a href="${notationPath()}" data-nav="notation">${tr('Notação', 'Notation', 'Notación')}</a>
+      <a href="${homePath()}" data-scroll="como-funciona" class="nav-extra">${tr('Como funciona', 'How it works', 'Cómo funciona')}</a>
+      <button type="button" class="nav-install" data-install hidden title="${tr('Instalar o CuboGuia como app (funciona sem internet)', 'Install CuboGuia as an app (works offline)', 'Instalar CuboGuia como app (funciona sin internet)')}">${icon('download')}<span class="nav-install-txt">${tr('Instalar app', 'Install app', 'Instalar app')}</span></button>
       <button type="button" class="theme-btn" data-theme-toggle aria-label="${themeLabel()}" title="${themeLabel()}">${icon('sun', 'when-dark')}${icon('moon', 'when-light')}</button>
       ${langSwitch('nav-lang')}`;
     drawer.innerHTML = `
       <div class="drawer-panel" role="dialog" aria-label="Menu">
         ${langSwitch('drawer-lang')}
-        <a class="drawer-link" href="${homePath()}" data-nav="home">${tr('Início', 'Home')}</a>
-        <a class="drawer-link" href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer')}</a>
-        <a class="drawer-link" href="${algsPath()}" data-nav="algs">${tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms')}</a>
-        <a class="drawer-link" href="${notationPath()}" data-nav="notation">${tr("Notação (o que é R, U', F2…)", "Notation (what R, U', F2… mean)")}</a>
-        <a class="drawer-link" href="${patternsPath()}" data-nav="patterns">${tr('Padrões bonitos', 'Cube patterns')}</a>
-        <a class="drawer-link" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works')}</a>
-        <a class="drawer-link" href="${faqPath()}" data-nav="faq">${tr('Perguntas frequentes', 'FAQ')}</a>
-        <button type="button" class="drawer-link drawer-theme" data-theme-toggle><span class="when-dark">${icon('sun')}${tr('Tema claro', 'Light theme')}</span><span class="when-light">${icon('moon')}${tr('Tema escuro', 'Dark theme')}</span></button>
-        <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}${tr('Instalar app (funciona sem internet)', 'Install app (works offline)')}</button>
+        <a class="drawer-link" href="${homePath()}" data-nav="home">${tr('Início', 'Home', 'Inicio')}</a>
+        <a class="drawer-link" href="${timerPath()}" data-nav="timer">${tr('Cronômetro', 'Timer', 'Cronómetro')}</a>
+        <a class="drawer-link" href="${algsPath()}" data-nav="algs">${tr('Algoritmos OLL e PLL', 'OLL and PLL algorithms', 'Algoritmos OLL y PLL')}</a>
+        <a class="drawer-link" href="${notationPath()}" data-nav="notation">${tr("Notação (o que é R, U', F2…)", "Notation (what R, U', F2… mean)", "Notación (qué significan R, U', F2…)")}</a>
+        <a class="drawer-link" href="${patternsPath()}" data-nav="patterns">${tr('Padrões bonitos', 'Cube patterns', 'Patrones bonitos')}</a>
+        <a class="drawer-link" href="${homePath()}" data-scroll="como-funciona">${tr('Como funciona', 'How it works', 'Cómo funciona')}</a>
+        <a class="drawer-link" href="${faqPath()}" data-nav="faq">${tr('Perguntas frequentes', 'FAQ', 'Preguntas frecuentes')}</a>
+        <button type="button" class="drawer-link drawer-theme" data-theme-toggle><span class="when-dark">${icon('sun')}${tr('Tema claro', 'Light theme', 'Tema claro')}</span><span class="when-light">${icon('moon')}${tr('Tema escuro', 'Dark theme', 'Tema oscuro')}</span></button>
+        <button type="button" class="drawer-link drawer-install" data-install hidden>${icon('download')}${tr('Instalar app (funciona sem internet)', 'Install app (works offline)', 'Instalar app (funciona sin internet)')}</button>
         <div class="mega-title">Puzzles</div>
         <div class="mega-grid">${available.map(card).join('')}</div>
         <a class="drawer-link drawer-feedback" data-feedback href="mailto:${FEEDBACK_EMAIL}">${icon('mail')}${feedbackLabel()}</a>
-        ${soon.length ? `<div class="mega-title soon-title">${tr('Em breve', 'Coming soon')}</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
+        ${soon.length ? `<div class="mega-title soon-title">${tr('Em breve', 'Coming soon', 'Muy pronto')}</div><div class="mega-grid">${soon.map(card).join('')}</div>` : ''}
       </div>`;
-    menuBtn.setAttribute('aria-label', tr('Abrir menu', 'Open menu'));
+    menuBtn.setAttribute('aria-label', tr('Abrir menu', 'Open menu', 'Abrir menú'));
     // partes fixas do index.html (marca, botão e rodapé)
     const brand = document.querySelector<HTMLAnchorElement>('.topbar .brand');
     if (brand) {
       brand.href = homePath();
-      brand.setAttribute('aria-label', tr('CuboGuia, início', 'CuboGuia, home'));
+      brand.setAttribute('aria-label', tr('CuboGuia, início', 'CuboGuia, home', 'CuboGuia, inicio'));
     }
     const tag = document.querySelector('.brand-tag');
-    if (tag) tag.textContent = tr('tutoriais de cubo mágico em 3D', '3D Rubik’s cube tutorials');
+    if (tag) tag.textContent = tr('tutoriais de cubo mágico em 3D', '3D Rubik’s cube tutorials', 'tutoriales de cubo de Rubik en 3D');
     const cta = document.querySelector<HTMLAnchorElement>('.nav-cta');
     if (cta) {
       cta.href = puzzlePath('cube3');
-      cta.textContent = tr('Resolver agora', 'Solve now');
+      cta.textContent = tr('Resolver agora', 'Solve now', 'Resolver ahora');
     }
     const sub = document.querySelector('.footer-sub');
-    if (sub) sub.textContent = tr('Aprenda a resolver o cubo mágico, passo a passo.', 'Learn to solve the Rubik’s cube, step by step.');
+    if (sub) sub.textContent = tr('Aprenda a resolver o cubo mágico, passo a passo.', 'Learn to solve the Rubik’s cube, step by step.', 'Aprende a resolver el cubo de Rubik, paso a paso.');
     const fb = document.querySelector('.footer-feedback');
     if (fb) fb.innerHTML = `${icon('mail')}${feedbackLabel()}`;
     const faq = document.querySelector<HTMLAnchorElement>('.footer-faq');
     if (faq) {
       faq.href = faqPath();
-      faq.innerHTML = `${icon('info')}${tr('Perguntas frequentes', 'FAQ')}`;
+      faq.innerHTML = `${icon('info')}${tr('Perguntas frequentes', 'FAQ', 'Preguntas frecuentes')}`;
     }
     const credit = document.querySelector('.footer-credit');
-    if (credit?.firstChild?.nodeType === Node.TEXT_NODE) credit.firstChild.textContent = tr('\n          Desenvolvido por\n          ', '\n          Made by\n          ');
+    if (credit?.firstChild?.nodeType === Node.TEXT_NODE) credit.firstChild.textContent = tr('\n          Desenvolvido por\n          ', '\n          Made by\n          ', '\n          Hecho por\n          ');
     refreshInstall();
   }
 

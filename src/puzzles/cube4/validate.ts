@@ -57,7 +57,7 @@ export function validateCube4(state: PuzzleState): ValidationResult {
       errors.push(
         tr(
           `A ponta de aresta ${pairText} aparece mais de uma vez — cada aresta tem duas pontas, uma de cada lado; confira se alguma ficou com as cores ao contrário.`,
-          `The ${pairText} edge wing appears more than once — every edge has two wings, one on each side; check whether one has its colors reversed.`,
+          `The ${pairText} edge wing appears more than once — every edge has two wings, one on each side; check whether one has its colors reversed.`, `La mitad de arista ${pairText} aparece más de una vez; cada arista tiene dos mitades, una de cada lado: revisa si alguna tiene los colores invertidos.`,
         ),
       );
     seenWing.add(w);

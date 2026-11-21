@@ -26,20 +26,20 @@ export function validateCube5(state: PuzzleState): ValidationResult {
   }
   if (errors.length) return { ok: false, errors };
 
-  const countIn = (ids: number[], label: [string, string]) => {
+  const countIn = (ids: number[], label: [string, string, string]) => {
     for (const f of FACES5) {
       const n = ids.filter((i) => state[i] === f).length;
       if (n !== 4)
         errors.push(
           tr(
             `Nos centros ${label[0]}, a cor ${name(f)} aparece ${n} ${n === 1 ? 'vez' : 'vezes'} — cada cor tem 4 peças desse tipo.`,
-            `Among the ${label[1]} centers, the color ${name(f)} appears ${n} ${n === 1 ? 'time' : 'times'} — each color has 4 pieces of this kind.`,
+            `Among the ${label[1]} centers, the color ${name(f)} appears ${n} ${n === 1 ? 'time' : 'times'} — each color has 4 pieces of this kind.`, `Entre los centros ${label[2]}, el color ${name(f)} aparece ${n} ${n === 1 ? 'vez' : 'veces'}; cada color tiene 4 piezas de este tipo.`,
           ),
         );
     }
   };
-  countIn(X_CENTERS, ['em X (as 4 quinas do miolo de cada face)', 'X (the 4 corners of each face’s middle)']);
-  countIn(T_CENTERS, ['em cruz (os 4 vizinhos do centro fixo)', 'cross-shaped (the 4 neighbors of the fixed center)']);
+  countIn(X_CENTERS, ['em X (as 4 quinas do miolo de cada face)', 'X (the 4 corners of each face’s middle)', 'en X (las 4 esquinas del centro de cada cara)']);
+  countIn(T_CENTERS, ['em cruz (os 4 vizinhos do centro fixo)', 'cross-shaped (the 4 neighbors of the fixed center)', 'en cruz (los 4 vecinos del centro fijo)']);
 
   const valid = new Set(WINGS.map(([a, b]) => FACES5[faceOf5(a)] + FACES5[faceOf5(b)]));
   const seen = new Map<string, number>();
@@ -51,11 +51,11 @@ export function validateCube5(state: PuzzleState): ValidationResult {
         opposite
           ? tr(
               `Existe uma ponta de aresta ${name(state[a])}-${name(state[b])} virada ao contrário — no 5x5 essas peças não viram no lugar; confira as cores dela.`,
-              `There’s a ${name(state[a])}-${name(state[b])} edge wing flipped the wrong way — on a 5x5 these pieces can’t flip in place; check its colors.`,
+              `There’s a ${name(state[a])}-${name(state[b])} edge wing flipped the wrong way — on a 5x5 these pieces can’t flip in place; check its colors.`, `Hay una mitad de arista ${name(state[a])}-${name(state[b])} volteada al revés; en el 5x5 estas piezas no se voltean en su sitio: revisa sus colores.`,
             )
           : tr(
               `Existe uma ponta de aresta com as cores ${name(state[a])}-${name(state[b])}, que não existe num cubo real.`,
-              `There’s an edge wing with the colors ${name(state[a])}-${name(state[b])}, which doesn’t exist on a real cube.`,
+              `There’s an edge wing with the colors ${name(state[a])}-${name(state[b])}, which doesn’t exist on a real cube.`, `Hay una mitad de arista con los colores ${name(state[a])}-${name(state[b])}, que no existe en un cubo real.`,
             ),
       );
       continue;
@@ -67,7 +67,7 @@ export function validateCube5(state: PuzzleState): ValidationResult {
       errors.push(
         tr(
           `A ponta de aresta ${name(k[0])}-${name(k[1])} aparece ${n} vezes — provavelmente duas cores estão trocadas.`,
-          `The ${name(k[0])}-${name(k[1])} edge wing appears ${n} times — two colors are probably swapped.`,
+          `The ${name(k[0])}-${name(k[1])} edge wing appears ${n} times — two colors are probably swapped.`, `La mitad de arista ${name(k[0])}-${name(k[1])} aparece ${n} veces; probablemente hay dos colores intercambiados.`,
         ),
       );
   if (errors.length) return { ok: false, errors };
@@ -77,7 +77,7 @@ export function validateCube5(state: PuzzleState): ValidationResult {
   const flipped = msg.flippedEdge();
   const flipped5 = tr(
     'Uma aresta (adesivo do meio) está invertida — confira as cores das arestas (peças de 2 cores).',
-    'An edge (middle sticker) is flipped — check the edge colors (the 2-color pieces).',
+    'An edge (middle sticker) is flipped — check the edge colors (the 2-color pieces).', 'Una arista (pegatina del medio) está volteada: revisa los colores de las aristas (las piezas de 2 colores).',
   );
   return { ok: r3.ok, errors: r3.errors.map((e) => (e === flipped ? flipped5 : e)) };
 }

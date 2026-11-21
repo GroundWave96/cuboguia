@@ -44,14 +44,14 @@ export function createTimeChart(host: HTMLElement): TimeChart {
   let cursor = -1;
   host.innerHTML = `
     <div class="tc-head">
-      <span class="tm-label">${tr('Evolução', 'Progress')}</span>
+      <span class="tm-label">${tr('Evolução', 'Progress', 'Evolución')}</span>
       <span class="tc-legend">
-        <span><i class="tc-key-dot" style="background:${C_SOLVE}"></i>${tr('Tempo', 'Time')}</span>
-        <span><i class="tc-key-line" style="background:${C_AVG}"></i>${tr('Média de 5', 'Ao5')}</span>
+        <span><i class="tc-key-dot" style="background:${C_SOLVE}"></i>${tr('Tempo', 'Time', 'Tiempo')}</span>
+        <span><i class="tc-key-line" style="background:${C_AVG}"></i>${tr('Média de 5', 'Ao5', 'Ao5')}</span>
       </span>
-      <span class="tc-range" role="group" aria-label="${tr('Período', 'Range')}">
-        <button data-range="last" class="on">${tr(`Últimos ${RANGE}`, `Last ${RANGE}`)}</button>
-        <button data-range="all">${tr('Todos', 'All')}</button>
+      <span class="tc-range" role="group" aria-label="${tr('Período', 'Range', 'Rango')}">
+        <button data-range="last" class="on">${tr(`Últimos ${RANGE}`, `Last ${RANGE}`, `Últimos ${RANGE}`)}</button>
+        <button data-range="all">${tr('Todos', 'All', 'Todos')}</button>
       </span>
     </div>
     <div class="tc-plot">
@@ -80,7 +80,7 @@ export function createTimeChart(host: HTMLElement): TimeChart {
     svg.setAttribute('height', String(H));
     svg.setAttribute(
       'aria-label',
-      tr(`Gráfico dos últimos ${n} tempos e da média de 5`, `Chart of the last ${n} times and the average of 5`),
+      tr(`Gráfico dos últimos ${n} tempos e da média de 5`, `Chart of the last ${n} times and the average of 5`, `Gráfico de los últimos ${n} tiempos y la media de 5`),
     );
     if (!finite.length) {
       svg.innerHTML = '';
@@ -140,7 +140,7 @@ export function createTimeChart(host: HTMLElement): TimeChart {
       <path d="${path}" fill="none" stroke="${C_AVG}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
       <g class="tc-dots">${dots}</g>
       <circle cx="${bx}" cy="${by}" r="${r + 3.5}" fill="none" stroke="var(--text)" stroke-width="1.5"/>
-      <text class="tc-best" x="${bx + (labelLeft ? -(r + 7) : r + 7)}" y="${by + 4}" text-anchor="${labelLeft ? 'end' : 'start'}">${tr('Recorde', 'Best')} ${fmt(bestV)}</text>
+      <text class="tc-best" x="${bx + (labelLeft ? -(r + 7) : r + 7)}" y="${by + 4}" text-anchor="${labelLeft ? 'end' : 'start'}">${tr('Recorde', 'Best', 'Mejor')} ${fmt(bestV)}</text>
       <line class="tc-cross" x1="0" x2="0" y1="${top}" y2="${bottom}" visibility="hidden"/>
       <circle class="tc-hl" r="${r + 2}" fill="${C_SOLVE}" visibility="hidden"/>`;
     geo = { x0, dx, first, n, xs, ys: vals.map((v) => (Number.isFinite(v) ? y(v) : null)), avg: avgAll, top, bottom };
@@ -170,7 +170,7 @@ export function createTimeChart(host: HTMLElement): TimeChart {
       hl.setAttribute('visibility', 'visible');
     } else hl.setAttribute('visibility', 'hidden');
     const avg = geo.avg[i];
-    const when = new Date(s.at).toLocaleString(tr('pt-BR', 'en-US'), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const when = new Date(s.at).toLocaleString(tr('pt-BR', 'en-US', 'es-ES'), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     tip.replaceChildren();
     const row = (val: string, label: string, color: string) => {
       const d = document.createElement('div');
@@ -187,8 +187,8 @@ export function createTimeChart(host: HTMLElement): TimeChart {
     const head = document.createElement('div');
     head.className = 'tc-tip-head';
     head.textContent = `#${geo.first + i + 1} · ${when}`;
-    tip.append(head, row(fmt(value(s)) + (s.pen === 2 ? '+' : ''), tr('tempo', 'time'), C_SOLVE));
-    if (avg !== null) tip.append(row(fmt(avg), tr('média de 5', 'ao5'), C_AVG));
+    tip.append(head, row(fmt(value(s)) + (s.pen === 2 ? '+' : ''), tr('tempo', 'time', 'tiempo'), C_SOLVE));
+    if (avg !== null) tip.append(row(fmt(avg), tr('média de 5', 'ao5', 'ao5'), C_AVG));
     tip.hidden = false;
     // tooltip ao lado do ponto, sem sair do gráfico
     const box = svg.getBoundingClientRect();

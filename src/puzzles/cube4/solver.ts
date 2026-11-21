@@ -192,14 +192,14 @@ interface Ctx {
 }
 
 /** rótulos dos trechos (guardados em português na biblioteca; traduzidos ao mostrar) */
-const SEG_LABELS: Record<string, [string, string]> = {
-  Posicionar: ['Posicionar', 'Setup'],
-  Gatilho: ['Gatilho', 'Trigger'],
-  'Comutador de centros': ['Comutador de centros', 'Center commutator'],
-  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle'],
-  'Paridade das arestas': ['Paridade das arestas', 'Edge parity'],
-  'Paridade OLL': ['Paridade OLL', 'OLL parity'],
-  'Paridade PLL': ['Paridade PLL', 'PLL parity'],
+const SEG_LABELS: Record<string, [string, string, string]> = {
+  Posicionar: ['Posicionar', 'Setup', 'Preparar'],
+  Gatilho: ['Gatilho', 'Trigger', 'Truco'],
+  'Comutador de centros': ['Comutador de centros', 'Center commutator', 'Conmutador de centros'],
+  'Ciclo de 3 pontas': ['Ciclo de 3 pontas', '3-wing cycle', 'Ciclo de 3 piezas'],
+  'Paridade das arestas': ['Paridade das arestas', 'Edge parity', 'Paridad de aristas'],
+  'Paridade OLL': ['Paridade OLL', 'OLL parity', 'Paridad de OLL'],
+  'Paridade PLL': ['Paridade PLL', 'PLL parity', 'Paridad de PLL'],
 };
 const segLabel = (l: string) => (SEG_LABELS[l] ? tr(...SEG_LABELS[l]) : l);
 
@@ -249,19 +249,19 @@ function solveCenters(ctx: Ctx) {
       push(
         ctx,
         stage,
-        tr(`Centro ${cname(f)}: ${ready} de 4`, `${cap(cname(f))} center: ${ready} of 4`),
+        tr(`Centro ${cname(f)}: ${ready} de 4`, `${cap(cname(f))} center: ${ready} of 4`, `Centro ${cname(f)}: ${ready} de 4`),
         order === 0
           ? tr(
               `Junte os 4 adesivos ${cname(f)} no centro da face de baixo. No 4x4 nenhum centro é fixo: a cor de cada face é decidida aqui.`,
-              `Gather the 4 ${cname(f)} stickers in the center of the bottom face. On a 4x4 no center is fixed: this is where each face’s color is decided.`,
+              `Gather the 4 ${cname(f)} stickers in the center of the bottom face. On a 4x4 no center is fixed: this is where each face’s color is decided.`, `Junta las 4 pegatinas de color ${cname(f)} en el centro de la cara de abajo. En el 4x4 ningún centro es fijo: aquí se decide el color de cada cara.`,
             )
           : order === 1
-            ? tr(`Monte o centro ${cname(f)} em cima, sem desmanchar o centro branco.`, `Build the ${cname(f)} center on top, without breaking the white center.`)
+            ? tr(`Monte o centro ${cname(f)} em cima, sem desmanchar o centro branco.`, `Build the ${cname(f)} center on top, without breaking the white center.`, `Arma el centro ${cname(f)} arriba, sin romper el centro blanco.`)
             : order < 5
-              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`)
+              ? tr(`Monte o centro ${cname(f)} sem desmanchar os centros que já estão prontos.`, `Build the ${cname(f)} center without breaking the centers that are already done.`, `Arma el centro ${cname(f)} sin romper los centros que ya están hechos.`)
               : tr(
                   `Os dois últimos centros (${cname(5)} e ${cname(4)}) se montam juntos, trocando peças entre eles.`,
-                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`,
+                  `The last two centers (${cname(5)} and ${cname(4)}) are built together, swapping pieces between them.`, `Los dos últimos centros (${cname(5)} y ${cname(4)}) se arman juntos, intercambiando piezas entre ellos.`,
                 ),
         path,
         FACE_CENTERS[f],
@@ -381,12 +381,14 @@ function pairEdges(ctx: Ctx) {
     push(
       ctx,
       'edges',
-      bestGain > 1 ? tr(`Arestas ${names.join(' e ')}`, `${names.join(' and ')} edges`) : tr(`Aresta ${names[0]}`, `${names[0]} edge`),
+      bestGain > 1 ? tr(`Arestas ${names.join(' e ')}`, `${names.join(' and ')} edges`, `Aristas ${names.join(' y ')}`) : tr(`Aresta ${names[0]}`, `${names[0]} edge`, `Arista ${names[0]}`),
       tr(
         `Um ciclo de 3 pontas junta ${bestGain > 1 ? 'as duas pontas de cada uma dessas arestas' : 'as duas pontas dessa aresta'} no mesmo lugar. ` +
           `Só essas 3 pontas se mexem — os centros e o resto saem do lugar no meio do algoritmo e voltam no fim. (${pairedBefore} de 12 arestas prontas antes deste passo.)`,
         `A 3-wing cycle brings ${bestGain > 1 ? 'both wings of each of these edges' : 'both wings of this edge'} together. ` +
           `Only these 3 wings move — the centers and everything else leave their spots during the algorithm and come back at the end. (${pairedBefore} of 12 edges done before this step.)`,
+        `Un ciclo de 3 piezas junta ${bestGain > 1 ? 'las dos mitades de cada una de estas aristas' : 'las dos mitades de esta arista'} en el mismo lugar. ` +
+          `Solo se mueven estas 3 piezas; los centros y todo lo demás salen de su sitio durante el algoritmo y vuelven al final. (${pairedBefore} de 12 aristas hechas antes de este paso.)`,
       ),
       [m],
       best.p.flatMap((x) => [x, partner(x)]),
@@ -444,10 +446,10 @@ function fixParities(ctx: Ctx) {
     push(
       ctx,
       'parity',
-      tr('Paridade OLL: uma aresta virada', 'OLL parity: one flipped edge'),
+      tr('Paridade OLL: uma aresta virada', 'OLL parity: one flipped edge', 'Paridad de OLL: una arista volteada'),
       tr(
         'Sobrou uma aresta "virada sozinha" — isso nunca acontece num 3x3, só no 4x4. Este algoritmo troca as duas pontas da <b>aresta da frente de cima</b> (vira essa aresta); os centros se mexem no meio e voltam no fim. Depois o resto se resolve como um 3x3.',
-        'One edge is "flipped on its own" — that never happens on a 3x3, only on a 4x4. This algorithm swaps the two wings of the <b>top front edge</b> (flipping that edge); the centers move along the way and come back at the end. After that, the rest is solved like a 3x3.',
+        'One edge is "flipped on its own" — that never happens on a 3x3, only on a 4x4. This algorithm swaps the two wings of the <b>top front edge</b> (flipping that edge); the centers move along the way and come back at the end. After that, the rest is solved like a 3x3.', 'Una arista quedó "volteada sola": eso nunca pasa en un 3x3, solo en un 4x4. Este algoritmo intercambia las dos mitades de la <b>arista de arriba al frente</b> (volteando esa arista); los centros se mueven por el camino y vuelven al final. Después, el resto se resuelve como un 3x3.',
       ),
       [m],
       uf.flatMap((x) => [x, partner(x)]),
@@ -460,10 +462,10 @@ function fixParities(ctx: Ctx) {
     push(
       ctx,
       'parity',
-      tr('Paridade PLL: duas arestas trocadas', 'PLL parity: two swapped edges'),
+      tr('Paridade PLL: duas arestas trocadas', 'PLL parity: two swapped edges', 'Paridad de PLL: dos aristas intercambiadas'),
       tr(
         'Duas arestas estão trocadas de um jeito que um 3x3 não consegue resolver — outra coisa que só acontece no 4x4. Este algoritmo troca a <b>aresta da frente de cima</b> com a <b>de trás de cima</b>; o resto volta ao lugar.',
-        'Two edges are swapped in a way a 3x3 can’t solve — another thing that only happens on a 4x4. This algorithm swaps the <b>top front edge</b> with the <b>top back edge</b>; everything else goes back in place.',
+        'Two edges are swapped in a way a 3x3 can’t solve — another thing that only happens on a 4x4. This algorithm swaps the <b>top front edge</b> with the <b>top back edge</b>; everything else goes back in place.', 'Dos aristas están intercambiadas de una forma que un 3x3 no resuelve; otra cosa que solo pasa en un 4x4. Este algoritmo intercambia la <b>arista de arriba al frente</b> con la <b>arista de arriba atrás</b>; todo lo demás vuelve a su lugar.',
       ),
       [m],
       [...uf, ...ub].flatMap((x) => [x, partner(x)]),
@@ -473,11 +475,11 @@ function fixParities(ctx: Ctx) {
 
 // ---------------------------------------------------------------------------
 export const CUBE4_STAGES = (): SolutionStage[] => [
-  { id: 'c-white', name: tr('Centro branco', 'White center'), goal: tr('Juntar os 4 adesivos brancos no centro da face de baixo.', 'Gather the 4 white stickers in the center of the bottom face.') },
-  { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center'), goal: tr('Montar o centro amarelo em cima, do lado oposto ao branco.', 'Build the yellow center on top, opposite the white one.') },
-  { id: 'c-sides', name: tr('Centros laterais', 'Side centers'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.') },
-  { id: 'edges', name: tr('Arestas', 'Edges'), goal: tr('Juntar as duas pontas de cada aresta no mesmo lugar, formando 12 arestas inteiras.', 'Bring the two wings of each edge together, forming 12 complete edges.') },
-  { id: 'parity', name: tr('Paridades', 'Parities'), goal: tr('Corrigir as situações que só existem no 4x4: uma aresta virada sozinha ou duas arestas trocadas.', 'Fix the cases that only exist on a 4x4: one edge flipped on its own or two swapped edges.') },
+  { id: 'c-white', name: tr('Centro branco', 'White center', 'Centro blanco'), goal: tr('Juntar os 4 adesivos brancos no centro da face de baixo.', 'Gather the 4 white stickers in the center of the bottom face.', 'Junta las 4 pegatinas blancas en el centro de la cara de abajo.') },
+  { id: 'c-yellow', name: tr('Centro amarelo', 'Yellow center', 'Centro amarillo'), goal: tr('Montar o centro amarelo em cima, do lado oposto ao branco.', 'Build the yellow center on top, opposite the white one.', 'Arma el centro amarillo arriba, opuesto al blanco.') },
+  { id: 'c-sides', name: tr('Centros laterais', 'Side centers', 'Centros de los lados'), goal: tr('Montar os 4 centros dos lados sem desmanchar os que já estão prontos.', 'Build the 4 side centers without breaking the ones already done.', 'Arma los 4 centros de los lados sin romper los que ya están hechos.') },
+  { id: 'edges', name: tr('Arestas', 'Edges', 'Aristas'), goal: tr('Juntar as duas pontas de cada aresta no mesmo lugar, formando 12 arestas inteiras.', 'Bring the two wings of each edge together, forming 12 complete edges.', 'Junta las dos mitades de cada arista, formando 12 aristas completas.') },
+  { id: 'parity', name: tr('Paridades', 'Parities', 'Paridades'), goal: tr('Corrigir as situações que só existem no 4x4: uma aresta virada sozinha ou duas arestas trocadas.', 'Fix the cases that only exist on a 4x4: one edge flipped on its own or two swapped edges.', 'Corrige los casos que solo existen en el 4x4: una arista volteada sola o dos aristas intercambiadas.') },
 ];
 
 export function solveCube4(state: PuzzleState, method: 'beginner' | 'cfop' = 'beginner'): Solution {
@@ -500,8 +502,8 @@ export function solveCube4(state: PuzzleState, method: 'beginner' | 'cfop' = 'be
     })),
   ];
   return {
-    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)'),
-    stages: [...CUBE4_STAGES(), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`) }))],
+    method: method === 'cfop' ? tr('Redução + CFOP', 'Reduction + CFOP', 'Reducción + CFOP') : tr('Redução (iniciante)', 'Reduction (beginner)', 'Reducción (principiante)'),
+    stages: [...CUBE4_STAGES(), ...sol3.stages.map((sg) => ({ ...sg, id: '3x3-' + sg.id, name: tr(`Como 3x3: ${sg.name}`, `As a 3x3: ${sg.name}`, `Como un 3x3: ${sg.name}`) }))],
     steps,
   };
 }

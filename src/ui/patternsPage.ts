@@ -36,7 +36,7 @@ export async function renderPatterns(app: HTMLElement, puzzleId = 'cube3') {
 
   const card = (p: Pattern) => `
     <article class="pt-card card" data-p="${p.id}" id="${p.id}">
-      <button type="button" class="pt-pic" data-play="${p.id}" aria-label="${tr(`Montar o padrão ${p.name()} no 3D`, `Build the ${p.name()} pattern in 3D`)}">${patternIcon(impl, n, p.alg)}<span class="al-play">${icon('play')}</span></button>
+      <button type="button" class="pt-pic" data-play="${p.id}" aria-label="${tr(`Montar o padrão ${p.name()} no 3D`, `Build the ${p.name()} pattern in 3D`, `Hacer el patrón ${p.name()} en 3D`)}">${patternIcon(impl, n, p.alg)}<span class="al-play">${icon('play')}</span></button>
       <div class="pt-body">
         <h3>${p.name()}</h3>
         <p>${p.about()}</p>
@@ -44,37 +44,37 @@ export async function renderPatterns(app: HTMLElement, puzzleId = 'cube3') {
           .split(' ')
           .map((m, i) => `<span data-i="${i}">${m}</span>`)
           .join(' ')}</div>
-        <span class="pt-count">${tr(`${p.alg.split(' ').length} movimentos`, `${p.alg.split(' ').length} moves`)}</span>
+        <span class="pt-count">${tr(`${p.alg.split(' ').length} movimentos`, `${p.alg.split(' ').length} moves`, `${p.alg.split(' ').length} movimientos`)}</span>
       </div>
     </article>`;
 
   app.innerHTML = `
   <section class="page workspace notation-page patterns-page">
     <div class="ws-header nt-head">
-      <span class="eyebrow">${tr('Padrões', 'Patterns')}</span>
-      <h1>${tr('Padrões bonitos', 'Cube patterns')}</h1>
+      <span class="eyebrow">${tr('Padrões', 'Patterns', 'Patrones')}</span>
+      <h1>${tr('Padrões bonitos', 'Cube patterns', 'Patrones bonitos')}</h1>
       <nav class="al-puzzles" aria-label="Puzzle">
         ${PATTERN_PUZZLES.map((p) => `<a href="${patternsPath(undefined, p)}" class="${p === id ? 'on' : ''}" ${p === id ? 'aria-current="page"' : ''}>${short(p)}</a>`).join('')}
       </nav>
       <p class="lead">${tr(
         `Comece com o cubo <b>resolvido</b>, com o <b>amarelo em cima</b> e o <b>verde de frente</b>, e faça os movimentos: o cubo vira uma figura. Toque num padrão para ver ele sendo montado no 3D. Não sabe ler as letras? Veja a <a href="${notationPath(undefined, id === 'cube3' ? 'cube3' : 'cube5')}">notação</a>.`,
-        `Start with a <b>solved</b> cube, <b>yellow on top</b> and <b>green in front</b>, and do the moves: the cube turns into a picture. Tap a pattern to watch it being built in 3D. Can’t read the letters? See the <a href="${notationPath(undefined, id === 'cube3' ? 'cube3' : 'cube5')}">notation</a>.`,
+        `Start with a <b>solved</b> cube, <b>yellow on top</b> and <b>green in front</b>, and do the moves: the cube turns into a picture. Tap a pattern to watch it being built in 3D. Can’t read the letters? See the <a href="${notationPath(undefined, id === 'cube3' ? 'cube3' : 'cube5')}">notation</a>.`, `Empieza con el cubo <b>resuelto</b>, con el <b>amarillo arriba</b> y el <b>verde al frente</b>, y haz los movimientos: el cubo se convierte en una figura. Toca un patrón para verlo armarse en 3D. ¿No sabes leer las letras? Mira la <a href="${notationPath(undefined, id === 'cube3' ? 'cube3' : 'cube5')}">notación</a>.`,
       )}</p>
     </div>
     <div class="ws-grid">
       <div class="ws-view card">
         <div class="view-host" id="pt-view"></div>
         <div class="move-badge" aria-live="polite"><strong></strong><span></span></div>
-        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view')}">${icon('resetView')}</button>
+        <button class="icon-btn view-reset" title="${tr('Voltar à vista inicial', 'Reset the view', 'Volver a la vista inicial')}" aria-label="${tr('Voltar à vista inicial', 'Reset the view', 'Volver a la vista inicial')}">${icon('resetView')}</button>
         <div class="pt-tools" hidden>
-          <button type="button" class="btn ghost sm" data-again>${icon('play')}${tr('Montar de novo', 'Build again')}</button>
-          <button type="button" class="btn ghost sm" data-undo>${icon('movePrev')}${tr('Desfazer o padrão', 'Undo the pattern')}</button>
+          <button type="button" class="btn ghost sm" data-again>${icon('play')}${tr('Montar de novo', 'Build again', 'Hacerlo otra vez')}</button>
+          <button type="button" class="btn ghost sm" data-undo>${icon('movePrev')}${tr('Desfazer o padrão', 'Undo the pattern', 'Deshacer el patrón')}</button>
         </div>
       </div>
       <div class="pt-list">
         ${list.map(card).join('')}
         <div class="row-actions">
-          <a class="btn primary" href="${puzzlePath(id)}">${tr(`Resolver meu ${short(id)}`, `Solve my ${short(id)}`)}</a>
+          <a class="btn primary" href="${puzzlePath(id)}">${tr(`Resolver meu ${short(id)}`, `Solve my ${short(id)}`, `Resolver mi ${short(id)}`)}</a>
         </div>
       </div>
     </div>
@@ -135,7 +135,7 @@ export async function renderPatterns(app: HTMLElement, puzzleId = 'cube3') {
     const strong = badge.querySelector('strong')!;
     strong.innerHTML = icon('check');
     strong.classList.add('ok');
-    badge.querySelector('span')!.textContent = undo ? tr('De volta ao resolvido', 'Back to solved') : tr(`${p.name()}: pronto!`, `${p.name()}: done!`);
+    badge.querySelector('span')!.textContent = undo ? tr('De volta ao resolvido', 'Back to solved', 'De vuelta al resuelto') : tr(`${p.name()}: pronto!`, `${p.name()}: done!`, `${p.name()}: ¡listo!`);
     badge.classList.remove('active');
     tools.hidden = false;
   }
