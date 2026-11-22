@@ -145,7 +145,7 @@ function polyNormal(f: V3[]): V3 {
 
 type MorphPieces = {
   pieces: { faces: V3[][]; stickers: number[] }[];
-  stickers: { index: number; poly: V3[]; normal: V3; facets: V3[][] }[];
+  stickers: { index: number; poly: V3[]; normal: V3; facets: V3[][]; walls: V3[][] }[];
   core: V3[][];
 };
 let PIECES: MorphPieces | null = null;
@@ -164,11 +164,21 @@ export function morphPieces(): MorphPieces {
     const c = centroidOf(fs.flat());
     const shrink = (q: V3): V3 => scale([c[0] + (q[0] - c[0]) * GAP, c[1] + (q[1] - c[1]) * GAP, c[2] + (q[2] - c[2]) * GAP], MORPH_SCALE);
     const facets = new Map<number, V3[][]>(mine.map((s) => [s.face, []]));
+    const walls = new Map<number, V3[][]>(mine.map((s) => [s.face, []]));
     for (const f of fs) {
       const n = polyNormal(f);
       const fc = centroidOf(f);
       // corte do 3x3: escuro
-      if ([0, 1, 2].some((a) => Math.abs(Math.abs(n[a]) - 1) < 1e-6 && Math.abs(Math.abs(fc[a]) - C) < 1e-6)) continue;
+      if ([0, 1, 2].some((a) => Math.abs(Math.abs(n[a]) - 1) < 1e-6 && Math.abs(Math.abs(fc[a]) - C) < 1e-6)) {
+        // parede de corte: o plástico da peça é colorido, então a parede tem a cor da peça
+        // (nas de 2 ou 3 cores, dividida pelos mesmos planos que separam as cores da ponta)
+        for (const i of facets.keys()) {
+          let part = f;
+          for (const j of facets.keys()) if (j !== i) part = clipPolygon(part, sub(SPHERES[i].n, SPHERES[j].n));
+          if (part.length >= 3) walls.get(i)!.push(part.map(shrink));
+        }
+        continue;
+      }
       // de fora: a face cuja calota o pedacinho toca
       const face = SPHERES.findIndex((sp, i) => facets.has(i) && Math.abs(dot(n, fc) - dot(n, sp.O) - sp.rho) < 1e-6);
       if (face >= 0) {
@@ -186,7 +196,7 @@ export function morphPieces(): MorphPieces {
     for (const st of mine) {
       const fsx = facets.get(st.face)!;
       if (!fsx.length) throw new Error(`Mastermorphix: adesivo ${st.index} sem superfície`);
-      stickers.push({ index: st.index, poly: fsx.flat(), normal: SPHERES[st.face].n, facets: fsx });
+      stickers.push({ index: st.index, poly: fsx.flat(), normal: SPHERES[st.face].n, facets: fsx, walls: walls.get(st.face)! });
     }
     return { faces: shrinkPolyhedron(fs, GAP).map((f) => f.map((q) => scale(q, MORPH_SCALE))), stickers: mine.map((s) => s.index) };
   });

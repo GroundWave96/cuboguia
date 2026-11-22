@@ -12,7 +12,8 @@ function listPublic(dir: string, root = dir): string[] {
     const p = join(dir, f);
     if (statSync(p).isDirectory()) return listPublic(p, root);
     const rel = relative(root, p).replace(/\\/g, '/');
-    return SKIP_PUBLIC.has(rel) ? [] : [rel];
+    // as imagens de prévia dos links (og/) só servem para o WhatsApp e afins: fora do modo offline
+    return SKIP_PUBLIC.has(rel) || rel.startsWith('og/') ? [] : [rel];
   });
 }
 

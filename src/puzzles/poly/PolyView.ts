@@ -19,9 +19,10 @@ export interface PolyMoveInfo {
 export interface PolyViewOptions {
   /**
    * `poly` é o adesivo plano; adesivos curvos (Mastermorphix) trazem também `facets`, os
-   * pedacinhos planos que formam a superfície (desenhados com sombreado suave)
+   * pedacinhos planos que formam a superfície (desenhados com sombreado suave) e `walls`, as
+   * paredes de corte da peça na mesma cor (peças de plástico colorido, sem adesivo)
    */
-  stickers: { index: number; poly: V3[]; normal: V3; facets?: V3[][] }[];
+  stickers: { index: number; poly: V3[]; normal: V3; facets?: V3[][]; walls?: V3[][] }[];
   bodyFaces: V3[][];
   palette: Record<string, string>;
   solved: PuzzleState;
@@ -70,7 +71,7 @@ function polyGeometry(points: THREE.Vector3[]): THREE.BufferGeometry {
 }
 
 /** superfície curva feita de polígonos planos: vértices iguais unidos para o sombreado ficar suave */
-function curvedGeometry(facets: V3[][], lift: number): THREE.BufferGeometry {
+function curvedGeometry(facets: V3[][], lift: number, walls: V3[][] = []): THREE.BufferGeometry {
   const pos: number[] = [];
   for (const f of facets) for (let i = 1; i < f.length - 1; i++) pos.push(...f[0], ...f[i], ...f[i + 1]);
   const g = new THREE.BufferGeometry();
@@ -80,7 +81,24 @@ function curvedGeometry(facets: V3[][], lift: number): THREE.BufferGeometry {
   // um tiquinho para fora, para não brigar com o corpo da peça
   const p = merged.getAttribute('position'), n = merged.getAttribute('normal');
   for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) + n.getX(i) * lift, p.getY(i) + n.getY(i) * lift, p.getZ(i) + n.getZ(i) * lift);
-  return merged;
+  if (!walls.length) return merged;
+  // paredes planas (sombra reta, sem misturar com a curva): cada triângulo com a sua normal
+  const smooth = merged.toNonIndexed();
+  const sp = Array.from(smooth.getAttribute('position').array as Float32Array);
+  const sn = Array.from(smooth.getAttribute('normal').array as Float32Array);
+  for (const f of walls) {
+    const a = new THREE.Vector3(...f[0]), b = new THREE.Vector3(...f[1]), c = new THREE.Vector3(...f[2]);
+    const nn = new THREE.Vector3().crossVectors(b.clone().sub(a), c.clone().sub(a)).normalize();
+    for (let i = 1; i < f.length - 1; i++)
+      for (const q of [f[0], f[i], f[i + 1]]) {
+        sp.push(q[0] + nn.x * lift, q[1] + nn.y * lift, q[2] + nn.z * lift);
+        sn.push(nn.x, nn.y, nn.z);
+      }
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(sn, 3));
+  return out;
 }
 
 /** adesivo com cantos arredondados, desenhado no plano da face (frame u, w, n) */
@@ -216,7 +234,7 @@ export class PolyView implements PuzzleView {
       let mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
       if (st.facets) {
         // superfície curva: os pedacinhos juntos, com os vértices compartilhados (sombra suave)
-        mesh = new THREE.Mesh(curvedGeometry(st.facets, o.radius * 0.004), mat);
+        mesh = new THREE.Mesh(curvedGeometry(st.facets, o.radius * 0.004, st.walls), mat);
       } else if (o.stickerRound) {
         const r = roundedSticker(pts, n, 0.9, o.stickerRound);
         mesh = new THREE.Mesh(r.geo, mat);

@@ -8,7 +8,7 @@
  * Arquivos (js, css, imagens) nem passam por aqui: veja public/_routes.json.
  */
 import { PREVIEW_NAMES, challengePreview, readChallenge } from '../src/core/challenge';
-import { metaPath, metaRoute, pageMeta, structuredData } from '../src/core/meta';
+import { META_PUZZLES, metaPath, metaRoute, pageMeta, structuredData } from '../src/core/meta';
 
 /** o pedaço do HTMLRewriter do Cloudflare que usamos */
 interface RewriterElement {
@@ -36,7 +36,8 @@ export async function pagePreview(ctx: PagesContext): Promise<Response> {
   // "Página não encontrada"; o código 404 avisa o Google que não é uma página de verdade
   if (!route) return new Response(res.body, { status: 404, headers: res.headers });
   let { title, description } = pageMeta(route.meta, route.lang);
-  let image = `${url.origin}/og.png`;
+  // a página e o tutorial de um puzzle: a imagem daquele puzzle
+  let image = 'id' in route.meta && (route.meta.page === 'input' || route.meta.page === 'solve') ? `${url.origin}/og/${META_PUZZLES[route.meta.id].slug}.png` : `${url.origin}/og.png`;
   let ogUrl = url.origin + url.pathname;
   if (route.meta.page === 'timer') {
     const c = readChallenge(url.searchParams, Object.keys(PREVIEW_NAMES));

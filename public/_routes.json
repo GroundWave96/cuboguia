@@ -12,6 +12,7 @@
     "/icon-512.png",
     "/apple-touch-icon.png",
     "/og.png",
+    "/og/*",
     "/og-desafio.png",
     "/site.webmanifest",
     "/robots.txt",

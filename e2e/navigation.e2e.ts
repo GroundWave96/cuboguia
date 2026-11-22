@@ -166,6 +166,10 @@ test('prévia dos links: cada página com o título e o idioma dela', async ({ r
   expect((await meta('/en/timer?p=cube2&e=R%20U&t=4560&n=Sam')).title).toBe('Sam challenged you: 4.56 on the 2x2');
   expect((await meta('/cronometro?p=cube3&e=R&t=dnf')).image).toMatch(/og-desafio\.png$/);
   expect((await meta('/en')).image).toMatch(/og\.png$/);
+  // página e tutorial de um puzzle: a imagem daquele puzzle
+  expect((await meta('/pyraminx')).image).toMatch(/\/og\/pyraminx\.png$/);
+  expect((await meta('/es/mastermorphix/tutorial?m=cfop&s=1')).image).toMatch(/\/og\/mastermorphix\.png$/);
+  expect((await request.get('/og/mastermorphix.png')).headers()['content-type']).toContain('image/png');
   // dados para o Google: nome do site na inicial e a trilha nas outras páginas
   const ld = async (path: string) => JSON.parse((await (await request.get(path)).text()).match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
   expect(await ld('/')).toMatchObject({ '@type': 'WebSite', name: 'CuboGuia' });

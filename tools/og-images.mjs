@@ -1,6 +1,7 @@
 /**
- * Gera as imagens de prévia dos links (1200×630): public/og.png (o site) e public/og-desafio.png
- * (link de desafio do cronômetro). Sem texto em português ou inglês: servem para as duas versões.
+ * Gera as imagens de prévia dos links (1200×630): public/og.png (o site), public/og-desafio.png
+ * (link de desafio do cronômetro) e public/og/<puzzle>.png (a página e o tutorial de cada puzzle).
+ * Sem texto em português, inglês ou espanhol: servem para os três idiomas.
  *
  * Uso: npm run build && npx wrangler pages dev dist --port 8788   (em outro terminal)
  *      node tools/og-images.mjs
@@ -36,7 +37,7 @@ await page.setContent(
   shell(`<div style="position:absolute;left:84px;top:110px">
       <div class="brand">${logo}<span class="word">Cubo<b>Guia</b></span></div>
       <div style="width:520px;height:6px;border-radius:6px;margin:34px 0 52px;background:linear-gradient(90deg,#ffd500,#ff6a13,#d0192d,#00a651,#0a5bd6)"></div>
-      <div class="row">${['2x2', '3x3', '4x4', '5x5', 'pyraminx', 'skewb', 'megaminx'].map((k) => icons[k]).join('')}</div>
+      <div class="row" style="gap:14px">${Object.keys(icons).map((k) => icons[k].replace('<svg', '<svg style="width:64px;height:64px"')).join('')}</div>
     </div>
     <div style="position:absolute;right:-40px;top:70px;transform:rotate(-8deg)">${icons['3x3'].replace('<svg', '<svg style="width:400px;height:400px;filter:drop-shadow(0 30px 40px rgba(0,0,0,.55))"')}</div>`),
 );
@@ -60,5 +61,24 @@ await page.setContent(
 );
 await page.waitForTimeout(300);
 await page.screenshot({ path: 'public/og-desafio.png' });
+// ---- um por puzzle: o nome grande e o ícone dele (a página do puzzle e o tutorial)
+const NAMES = { pyraminx: 'Pyraminx', skewb: 'Skewb', megaminx: 'Megaminx', mastermorphix: 'Mastermorphix' };
+const { mkdirSync } = await import('fs');
+mkdirSync('public/og', { recursive: true });
+for (const [slug, svg] of Object.entries(icons)) {
+  const name = NAMES[slug] ?? slug;
+  const big = svg.replace('<svg', '<svg style="width:430px;height:430px;filter:drop-shadow(0 30px 40px rgba(0,0,0,.55))"');
+  await page.setContent(
+    shell(`<div style="position:absolute;left:84px;top:96px;width:620px">
+        <div class="brand" style="gap:14px">${logo.replace('<svg', '<svg style="width:60px;height:60px"')}<span class="word" style="font-size:52px">Cubo<b>Guia</b></span></div>
+        <div style="font-size:${name.length > 9 ? 84 : name.length > 6 ? 104 : 150}px;font-weight:700;letter-spacing:-0.03em;line-height:1;margin:64px 0 34px">${name}</div>
+        <div style="width:420px;height:6px;border-radius:6px;background:linear-gradient(90deg,#ffd500,#ff6a13,#d0192d,#00a651,#0a5bd6)"></div>
+        <div style="display:flex;gap:16px;margin-top:40px">${[1, 2, 3, 4, 5].map((n) => `<span style="width:54px;height:54px;border-radius:14px;display:grid;place-items:center;font-size:28px;font-weight:700;background:${n === 1 ? 'linear-gradient(135deg,#7c8cff,#3fd0c9)' : 'rgba(255,255,255,0.08)'};color:${n === 1 ? '#fff' : '#9aa3b8'}">${n}</span>`).join('')}</div>
+      </div>
+      <div style="position:absolute;right:40px;top:100px;transform:rotate(-6deg)">${big}</div>`),
+  );
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: `public/og/${slug}.png` });
+}
 await browser.close();
-console.log('ok: public/og.png e public/og-desafio.png');
+console.log('ok: public/og.png, public/og-desafio.png e public/og/*.png');
