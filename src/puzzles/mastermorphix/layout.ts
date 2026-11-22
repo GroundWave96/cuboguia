@@ -6,6 +6,7 @@ import { tr } from '../../core/i18n';
 import { neighborMarks } from '../../core/scanmarks';
 import type { PuzzleImpl, ScanFace } from '../../core/types';
 import { clipPolyhedron, shrinkPolyhedron } from '../poly/clip';
+import { BULGE, faceRegions } from './face2d';
 import { CUBIES, FACE_VERTS, NORMALS, STICKERS, VERTEX, type V3 } from './model';
 
 type P = [number, number];
@@ -67,38 +68,6 @@ export function stickerCentroids(): V3[] {
   return morphPieces().stickers.map((s) => s.poly.reduce((a, q) => [a[0] + q[0] / s.poly.length, a[1] + q[1] / s.poly.length, a[2] + q[2] / s.poly.length] as V3, [0, 0, 0] as V3));
 }
 
-// ---------------------------------------------------------------------------
-// Desenho 2D de uma face: proporções parecidas com as do puzzle de verdade (fotos)
-const E = 0.33; // onde a ponta termina na aresta
-const K = 0.76; // onde a ponta encontra a pipa, no meio
-const TT = 0.42; // vértices do triângulo do centro
-
-/** as 10 regiões de uma face (mesma ordem dos adesivos), dados os vértices A, B, C */
-export function faceRegions(A: P, B: P, Cv: P): { poly: P[]; sample: P }[] {
-  const at = (a: number, b: number, c: number): P => [a * A[0] + b * B[0] + c * Cv[0], a * A[1] + b * B[1] + c * Cv[1]];
-  const vA = at(1, 0, 0), vB = at(0, 1, 0), vC = at(0, 0, 1);
-  const abA = at(1 - E, E, 0), abB = at(E, 1 - E, 0);
-  const bcB = at(0, 1 - E, E), bcC = at(0, E, 1 - E);
-  const caC = at(E, 0, 1 - E), caA = at(1 - E, 0, E);
-  const kA = at(K, (1 - K) / 2, (1 - K) / 2), kB = at((1 - K) / 2, K, (1 - K) / 2), kC = at((1 - K) / 2, (1 - K) / 2, K);
-  const tAB = at(TT, TT, 1 - 2 * TT), tBC = at(1 - 2 * TT, TT, TT), tCA = at(TT, 1 - 2 * TT, TT);
-  // onde a câmera lê cada região (o meio de cada uma nas fotos)
-  const tip = (a: number, b: number, c: number) => at(0.84 * a + 0.08 * b + 0.08 * c, 0.84 * b + 0.08 * a + 0.08 * c, 0.84 * c + 0.08 * a + 0.08 * b);
-  const kite = (a: number, b: number, c: number) => at(0.62 * a + 0.19 * (b + c), 0.62 * b + 0.19 * (a + c), 0.62 * c + 0.19 * (a + b));
-  return [
-    { poly: [vA, abA, kA, caA], sample: tip(1, 0, 0) },
-    { poly: [kA, abA, tAB, tCA, caA], sample: kite(1, 0, 0) },
-    { poly: [abA, abB, tAB], sample: at(0.45, 0.45, 0.1) },
-    { poly: [caC, caA, tCA], sample: at(0.45, 0.1, 0.45) },
-    { poly: [tAB, tBC, tCA], sample: at(1 / 3, 1 / 3, 1 / 3) },
-    { poly: [kB, bcB, tBC, tAB, abB], sample: kite(0, 1, 0) },
-    { poly: [kC, caC, tCA, tBC, bcC], sample: kite(0, 0, 1) },
-    { poly: [vB, bcB, kB, abB], sample: tip(0, 1, 0) },
-    { poly: [bcB, bcC, tBC], sample: at(0.1, 0.45, 0.45) },
-    { poly: [vC, caC, kC, bcC], sample: tip(0, 0, 1) },
-  ];
-}
-
 /** vista de uma face "de frente" com uma direção para cima */
 function faceFrame(f: number, upHint: V3) {
   const n = norm(NORMALS[f]);
@@ -134,7 +103,7 @@ export function buildMorphNet(): NonNullable<PuzzleImpl['netSvg']> {
   const tx = (p: P): P => [(p[0] - minX) * S + 4, (-p[1] - minY) * S + 4];
   const stickers: { index: number; points: string }[] = [];
   faces.forEach((V, f) => {
-    faceRegions(tx(V[0]), tx(V[1]), tx(V[2])).forEach((r, k) => stickers.push({ index: f * 10 + k, points: r.poly.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' ') }));
+    faceRegions(tx(V[0]), tx(V[1]), tx(V[2]), { bulge: [0, 0, 0] }).forEach((r, k) => stickers.push({ index: f * 10 + k, points: r.poly.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' ') }));
   });
   return { viewBox: `0 0 ${((maxX - minX) * S + 8).toFixed(0)} ${((maxY - minY) * S + 8).toFixed(0)}`, stickers };
 }
@@ -172,6 +141,8 @@ export function buildMorphScan(): ScanFace[] {
     const toBox = (p: P): [number, number] => [0.5 + (p[0] - cx) * k, 0.56 - (p[1] - cy) * k];
     const Vb = V.map(toBox);
     const cells = faceRegions(Vb[0], Vb[1], Vb[2]).map((r) => ({ poly: r.poly as [number, number][], center: r.sample as [number, number] }));
+    // a aresta incha para fora: as marcas das faces vizinhas ficam além da curva
+    const side = Math.hypot(Vb[0][0] - Vb[1][0], Vb[0][1] - Vb[1][1]);
     const hints = (): [string, string, string][] => [
       ['<b>Qualquer face</b> de frente, uma ponta para cima', '<b>Any face</b> toward you, one tip pointing up', '<b>Cualquier cara</b> hacia ti, con una punta hacia arriba'],
       ['Gire ⅓ de volta para a <b>esquerda</b> (a ponta de cima fica parada): a face da direita vem para a frente', 'Turn ⅓ to the <b>left</b> (the top tip stays put): the right face comes to the front', 'Gira ⅓ hacia la <b>izquierda</b> (la punta de arriba no se mueve): la cara de la derecha pasa al frente'],
@@ -205,6 +176,8 @@ export function buildMorphScan(): ScanFace[] {
           const g = FACE_VERTS.findIndex((w, gi) => gi !== f && w.includes(a) && w.includes(b));
           return STICKERS.filter((s) => s.face === g).map((s) => ({ index: s.index, centroid: scale(centroids[s.index], 1 / MORPH_SCALE) }));
         },
+        3,
+        0.035 + BULGE * side,
       ),
     };
   });
