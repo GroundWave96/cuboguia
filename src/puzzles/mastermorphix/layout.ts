@@ -1,5 +1,5 @@
 /**
- * Mastermorphix: peças 3D (o tetraedro cortado pelos planos do 3x3), rede 2D para pintar
+ * Mastermorphix: peças 3D (o sólido arredondado cortado pelos planos do 3x3), rede 2D para pintar
  * e moldes da câmera (10 regiões por face).
  */
 import { tr } from '../../core/i18n';
@@ -18,20 +18,79 @@ const norm = (a: V3): V3 => scale(a, 1 / Math.hypot(...a));
 
 /** meia largura da peça do meio (cortes do 3x3 em ±C) e distância das faces do tetraedro */
 const C = 0.5;
-const T = 0.2; // C / D: tamanho do triângulo do centro e dos meios de aresta
+/** C / D: largura dos meios de aresta (nas fotos, ~⅓ da aresta) */
+const T = 0.3;
 const D = C / T;
-/** escala para o tetraedro caber numa esfera de raio 1 */
-export const MORPH_SCALE = 1 / (D * Math.sqrt(3));
+/** quanto o meio de cada face incha (fração do raio do círculo da face), como no puzzle de verdade */
+const SAG = 0.12;
+/** as pontas são aparadas por uma esfera deste tamanho (fração da distância do vértice) */
+const TIP_ROUND = 0.9;
+/** escala para o puzzle caber numa esfera de raio 1 */
+export const MORPH_SCALE = 1 / (D * Math.sqrt(3) * TIP_ROUND);
 const GAP = 0.965;
 
 /** vértices do tetraedro (escala do cubo) */
 const TV: V3[] = VERTEX.map((v) => scale(v, D));
 const FACE_POLY = (f: number): V3[] => FACE_VERTS[f].map((j) => TV[j]);
+/** o tetraedro plano (só para o caso de o 3D precisar do corpo inteiro) */
 export const tetraFaces = (): V3[][] => [0, 1, 2, 3].map((f) => FACE_POLY(f).map((p) => scale(p, MORPH_SCALE)));
 
-/** o sólido de cada peça: o tetraedro cortado pela célula da peça no 3x3 */
+/**
+ * Cada face é uma calota de esfera que passa pelos 3 vértices e sobe SAG no meio; as arestas
+ * viram curvas (o encontro de duas calotas). A esfera é aproximada por planos tangentes.
+ */
+const SPHERES = NORMALS.map((N) => {
+  const n = norm(N);
+  const rc = D * Math.sqrt(8 / 3); // raio do círculo que passa pelos vértices da face
+  const h = SAG * rc;
+  const rho = (rc * rc + h * h) / (2 * h);
+  const F = scale(n, D / Math.sqrt(3)); // centro da face plana
+  const O: V3 = [F[0] + n[0] * (h - rho), F[1] + n[1] * (h - rho), F[2] + n[2] * (h - rho)];
+  return { n, O, rho, alpha: Math.asin(rc / rho) };
+});
+
+/** direções espalhadas numa calota (anéis em volta do eixo) */
+function capDirections(axis: V3, maxAngle: number, rings: number): V3[] {
+  const a = norm(axis);
+  const ref: V3 = Math.abs(a[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+  const u = norm(cross(a, ref)), w = cross(a, u);
+  const out: V3[] = [a];
+  for (let k = 1; k <= rings; k++) {
+    const th = (maxAngle * k) / rings;
+    const m = 6 * k;
+    for (let j = 0; j < m; j++) {
+      const ph = (2 * Math.PI * (j + (k % 2) * 0.5)) / m;
+      const s = Math.sin(th), c = Math.cos(th);
+      out.push(norm([a[0] * c + (u[0] * Math.cos(ph) + w[0] * Math.sin(ph)) * s, a[1] * c + (u[1] * Math.cos(ph) + w[1] * Math.sin(ph)) * s, a[2] * c + (u[2] * Math.cos(ph) + w[2] * Math.sin(ph)) * s]));
+    }
+  }
+  return out;
+}
+
+/** o sólido inteiro: 4 calotas (planos tangentes) e as pontas aparadas */
+let SOLID: V3[][] | null = null;
+function solid(): V3[][] {
+  if (SOLID) return SOLID;
+  const B = 3 * D;
+  let fs: V3[][] = [
+    [[B, -B, -B], [B, B, -B], [B, B, B], [B, -B, B]],
+    [[-B, -B, -B], [-B, -B, B], [-B, B, B], [-B, B, -B]],
+    [[-B, B, -B], [-B, B, B], [B, B, B], [B, B, -B]],
+    [[-B, -B, -B], [B, -B, -B], [B, -B, B], [-B, -B, B]],
+    [[-B, -B, B], [B, -B, B], [B, B, B], [-B, B, B]],
+    [[-B, -B, -B], [-B, B, -B], [B, B, -B], [B, -B, -B]],
+  ];
+  for (const sp of SPHERES)
+    for (const u of capDirections(sp.n, sp.alpha * 1.12, 7)) fs = clipPolyhedron(fs, u, dot(u, sp.O) + sp.rho, -1);
+  const rv = D * Math.sqrt(3) * TIP_ROUND;
+  for (const v of VERTEX) for (const u of capDirections(v, 0.5, 4)) fs = clipPolyhedron(fs, u, rv, -1);
+  SOLID = fs;
+  return fs;
+}
+
+/** a peça: o sólido cortado pela célula dela no 3x3 */
 function pieceSolid(p: V3): V3[][] {
-  let fs: V3[][] = [0, 1, 2, 3].map(FACE_POLY);
+  let fs = solid();
   for (let a = 0; a < 3; a++) {
     const e: V3 = [a === 0 ? 1 : 0, a === 1 ? 1 : 0, a === 2 ? 1 : 0];
     if (p[a] < 0) fs = clipPolyhedron(fs, e, -C, -1);
@@ -41,26 +100,62 @@ function pieceSolid(p: V3): V3[][] {
   return fs;
 }
 
-export function morphPieces() {
-  const stickers: { index: number; poly: V3[]; normal: V3 }[] = [];
+const centroidOf = (pts: V3[]): V3 => pts.reduce((a, q) => [a[0] + q[0] / pts.length, a[1] + q[1] / pts.length, a[2] + q[2] / pts.length] as V3, [0, 0, 0] as V3);
+/** normal de um polígono (Newell) */
+function polyNormal(f: V3[]): V3 {
+  const n: V3 = [0, 0, 0];
+  f.forEach((a, i) => {
+    const b = f[(i + 1) % f.length];
+    n[0] += (a[1] - b[1]) * (a[2] + b[2]);
+    n[1] += (a[2] - b[2]) * (a[0] + b[0]);
+    n[2] += (a[0] - b[0]) * (a[1] + b[1]);
+  });
+  return norm(n);
+}
+
+type MorphPieces = {
+  pieces: { faces: V3[][]; stickers: number[] }[];
+  stickers: { index: number; poly: V3[]; normal: V3; facets: V3[][] }[];
+  core: V3[][];
+};
+let PIECES: MorphPieces | null = null;
+
+/**
+ * As 26 peças com a superfície curva. Cada pedacinho de fora vira parte do adesivo da face
+ * cuja calota ele toca (as pontas arredondadas vão para a face mais próxima); as faces de
+ * corte (planos do 3x3) ficam escuras. O puzzle não tem adesivos: a cor vai até a borda.
+ */
+export function morphPieces(): MorphPieces {
+  if (PIECES) return PIECES;
+  const stickers: MorphPieces['stickers'] = [];
   const pieces = CUBIES.map((p, ci) => {
-    const fs = pieceSolid(p).map((f) => f.map((q) => scale(q, MORPH_SCALE)));
-    const pts = fs.flat();
-    const c = pts.reduce((a, q) => [a[0] + q[0] / pts.length, a[1] + q[1] / pts.length, a[2] + q[2] / pts.length] as V3, [0, 0, 0] as V3);
+    const fs = pieceSolid(p);
     const mine = STICKERS.filter((s) => s.cubie === ci);
-    for (const st of mine) {
-      const n = norm(NORMALS[st.face]);
-      // a face do sólido que fica no plano desta face do tetraedro
-      const poly = fs.find((f) => f.every((q) => Math.abs(dot(q, NORMALS[st.face]) - D * MORPH_SCALE) < 1e-6));
-      if (!poly) throw new Error(`Mastermorphix: adesivo ${st.index} sem face`);
-      stickers.push({ index: st.index, poly: poly.map((q) => [c[0] + (q[0] - c[0]) * GAP, c[1] + (q[1] - c[1]) * GAP, c[2] + (q[2] - c[2]) * GAP] as V3), normal: n });
+    const c = centroidOf(fs.flat());
+    const shrink = (q: V3): V3 => scale([c[0] + (q[0] - c[0]) * GAP, c[1] + (q[1] - c[1]) * GAP, c[2] + (q[2] - c[2]) * GAP], MORPH_SCALE);
+    const facets = new Map<number, V3[][]>(mine.map((s) => [s.face, []]));
+    for (const f of fs) {
+      const n = polyNormal(f);
+      const fc = centroidOf(f);
+      // corte do 3x3: escuro
+      if ([0, 1, 2].some((a) => Math.abs(Math.abs(n[a]) - 1) < 1e-6 && Math.abs(Math.abs(fc[a]) - C) < 1e-6)) continue;
+      // de fora: a face cuja calota o pedacinho toca; senão (ponta arredondada) a mais próxima
+      let face = SPHERES.findIndex((sp) => Math.abs(dot(n, fc) - dot(n, sp.O) - sp.rho) < 1e-6 && facets.has(SPHERES.indexOf(sp)));
+      if (face < 0) face = [...facets.keys()].sort((x, y) => dot(n, SPHERES[y].n) - dot(n, SPHERES[x].n))[0];
+      facets.get(face)!.push(f.map(shrink));
     }
-    return { faces: shrinkPolyhedron(fs, GAP), stickers: mine.map((s) => s.index) };
+    for (const st of mine) {
+      const fsx = facets.get(st.face)!;
+      if (!fsx.length) throw new Error(`Mastermorphix: adesivo ${st.index} sem superfície`);
+      stickers.push({ index: st.index, poly: fsx.flat(), normal: SPHERES[st.face].n, facets: fsx });
+    }
+    return { faces: shrinkPolyhedron(fs, GAP).map((f) => f.map((q) => scale(q, MORPH_SCALE))), stickers: mine.map((s) => s.index) };
   });
   stickers.sort((a, b) => a.index - b.index);
   // núcleo: a peça do meio (abaixo de todos os cortes)
-  const core = shrinkPolyhedron(pieceSolid([0, 0, 0]).map((f) => f.map((q) => scale(q, MORPH_SCALE))), 0.99);
-  return { pieces, stickers, stickerRound: 0.15, pieceRound: 0.02, core };
+  const core = shrinkPolyhedron(pieceSolid([0, 0, 0]), 0.99).map((f) => f.map((q) => scale(q, MORPH_SCALE)));
+  PIECES = { pieces, stickers, core };
+  return PIECES;
 }
 
 /** centro de cada adesivo em 3D (para as marcas da câmera) */

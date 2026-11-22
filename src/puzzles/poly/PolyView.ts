@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { PuzzleState, PuzzleView } from '../../core/types';
 import { roundedPolyhedron } from './rounded';
 import { MoveArrow, arrowFor } from '../movearrow';
@@ -16,7 +17,11 @@ export interface PolyMoveInfo {
 }
 
 export interface PolyViewOptions {
-  stickers: { index: number; poly: V3[]; normal: V3 }[];
+  /**
+   * `poly` é o adesivo plano; adesivos curvos (Mastermorphix) trazem também `facets`, os
+   * pedacinhos planos que formam a superfície (desenhados com sombreado suave)
+   */
+  stickers: { index: number; poly: V3[]; normal: V3; facets?: V3[][] }[];
   bodyFaces: V3[][];
   palette: Record<string, string>;
   solved: PuzzleState;
@@ -62,6 +67,20 @@ function polyGeometry(points: THREE.Vector3[]): THREE.BufferGeometry {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.computeVertexNormals();
   return g;
+}
+
+/** superfície curva feita de polígonos planos: vértices iguais unidos para o sombreado ficar suave */
+function curvedGeometry(facets: V3[][], lift: number): THREE.BufferGeometry {
+  const pos: number[] = [];
+  for (const f of facets) for (let i = 1; i < f.length - 1; i++) pos.push(...f[0], ...f[i], ...f[i + 1]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const merged = mergeVertices(g, 1e-5);
+  merged.computeVertexNormals();
+  // um tiquinho para fora, para não brigar com o corpo da peça
+  const p = merged.getAttribute('position'), n = merged.getAttribute('normal');
+  for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) + n.getX(i) * lift, p.getY(i) + n.getY(i) * lift, p.getZ(i) + n.getZ(i) * lift);
+  return merged;
 }
 
 /** adesivo com cantos arredondados, desenhado no plano da face (frame u, w, n) */
@@ -195,7 +214,10 @@ export class PolyView implements PuzzleView {
       const pts = st.poly.map(v3);
       const mat = new THREE.MeshStandardMaterial({ color: UNKNOWN_HEX, roughness: 0.32, metalness: 0.02, side: THREE.DoubleSide });
       let mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
-      if (o.stickerRound) {
+      if (st.facets) {
+        // superfície curva: os pedacinhos juntos, com os vértices compartilhados (sombra suave)
+        mesh = new THREE.Mesh(curvedGeometry(st.facets, o.radius * 0.004), mat);
+      } else if (o.stickerRound) {
         const r = roundedSticker(pts, n, 0.9, o.stickerRound);
         mesh = new THREE.Mesh(r.geo, mat);
         mesh.position.copy(r.center.clone().add(n.clone().multiplyScalar(o.radius * 0.004)));

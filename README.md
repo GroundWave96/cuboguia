@@ -111,6 +111,8 @@ centro (os outros 4 cantos).
   pelo CFOP do 3x3. No fim, algoritmos que só giram centros acertam os meios de aresta
   (`centerFix` em `solver.ts`, conferidos nos testes).
 - O 3D é o `PolyView` com o modo `morph`: cada peça leva o próprio formato e as próprias cores.
+  O sólido é arredondado como o de verdade (cada face é uma calota de esfera e as pontas são
+  aparadas, `layout.ts`), cortado pelos planos do 3x3; a cor vai até a borda de cada peça.
 - O site resolve a partir da forma de pirâmide; o embaralho do site (e do cronômetro) usa só
   meias voltas para não deformar.
 - As fotos de `tests/cube images/mastermorphix` treinam a câmera (`tools/extract-camera-samples.py`)

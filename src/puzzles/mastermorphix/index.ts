@@ -155,7 +155,7 @@ const mastermorphix: PuzzleImpl = {
       // de frente, um pouco de cima e da direita (como o cubo)
       defaultDir: [-0.55, 0.75, 1],
       viewDirs: [...NORMALS, ...VERTEX, [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [0.62, 0.5, 1]],
-      radius: 0.9,
+      radius: 1.08,
       morph: {
         layout: (s) => (isPieces(s) ? { rots: rotsOf(s).map((r) => ROTS[r]), colors: pieceColors(s) } : null),
         moving: (s, m) => movingPieces(isPieces(s) ? s : solvedPieces(), m),
