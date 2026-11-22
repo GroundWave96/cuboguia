@@ -23,10 +23,10 @@ const T = 0.3;
 const D = C / T;
 /** quanto o meio de cada face incha (fração do raio do círculo da face), como no puzzle de verdade */
 const SAG = 0.12;
-/** as pontas são aparadas por uma esfera deste tamanho (fração da distância do vértice) */
-const TIP_ROUND = 0.9;
-/** escala para o puzzle caber numa esfera de raio 1 */
-export const MORPH_SCALE = 1 / (D * Math.sqrt(3) * TIP_ROUND);
+/** raio do arredondamento das pontas (uma bolinha encaixada na quina) */
+const TIP_R = 0.24 * D;
+/** escala para o puzzle caber numa esfera de raio 1 (a ponta, mesmo arredondada, é o mais longe) */
+export const MORPH_SCALE = 1 / (D * Math.sqrt(3));
 const GAP = 0.965;
 
 /** vértices do tetraedro (escala do cubo) */
@@ -81,9 +81,24 @@ function solid(): V3[][] {
     [[-B, -B, -B], [-B, B, -B], [B, B, -B], [B, -B, -B]],
   ];
   for (const sp of SPHERES)
-    for (const u of capDirections(sp.n, sp.alpha * 1.12, 7)) fs = clipPolyhedron(fs, u, dot(u, sp.O) + sp.rho, -1);
-  const rv = D * Math.sqrt(3) * TIP_ROUND;
-  for (const v of VERTEX) for (const u of capDirections(v, 0.5, 4)) fs = clipPolyhedron(fs, u, rv, -1);
+    for (const u of capDirections(sp.n, sp.alpha * 1.12, 6)) fs = clipPolyhedron(fs, u, dot(u, sp.O) + sp.rho, -1);
+  // pontas: arredondadas por uma bolinha encaixada na quina (tocando as 3 faces), com planos
+  // tangentes a ela das direções entre o eixo da ponta e as faces
+  VERTEX.forEach((v, l) => {
+    const vn = norm(v);
+    const V = scale(v, D);
+    // as 3 calotas chegam na ponta com estes planos tangentes; a bolinha encosta neles, e só
+    // as direções entre eles cortam (assim o arredondamento mexe só na ponta)
+    const fn = [0, 1, 2, 3].filter((i) => i !== l).map((i) => norm(sub(V, SPHERES[i].O)));
+    const q = (dot(fn[0], V) - TIP_R) / dot(fn[0], vn);
+    const Q = scale(vn, q);
+    const inCone = (u: V3) => {
+      const det = dot(fn[0], cross(fn[1], fn[2]));
+      const a = dot(u, cross(fn[1], fn[2])) / det, b = dot(fn[0], cross(u, fn[2])) / det, c = dot(fn[0], cross(fn[1], u)) / det;
+      return a > 1e-6 && b > 1e-6 && c > 1e-6;
+    };
+    for (const u of capDirections(vn, 1.24, 10)) if (inCone(u)) fs = clipPolyhedron(fs, u, dot(u, Q) + TIP_R, -1);
+  });
   SOLID = fs;
   return fs;
 }
@@ -98,6 +113,21 @@ function pieceSolid(p: V3): V3[][] {
     else fs = clipPolyhedron(clipPolyhedron(fs, e, -C, 1), e, C, -1);
   }
   return fs;
+}
+
+/** parte de um polígono plano do lado dot(p, n) >= 0 */
+function clipPolygon(poly: V3[], n: V3): V3[] {
+  const out: V3[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const sa = dot(a, n), sb = dot(b, n);
+    if (sa >= -1e-9) out.push(a);
+    if ((sa > 1e-9 && sb < -1e-9) || (sa < -1e-9 && sb > 1e-9)) {
+      const t = sa / (sa - sb);
+      out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+    }
+  }
+  return out;
 }
 
 const centroidOf = (pts: V3[]): V3 => pts.reduce((a, q) => [a[0] + q[0] / pts.length, a[1] + q[1] / pts.length, a[2] + q[2] / pts.length] as V3, [0, 0, 0] as V3);
@@ -139,10 +169,19 @@ export function morphPieces(): MorphPieces {
       const fc = centroidOf(f);
       // corte do 3x3: escuro
       if ([0, 1, 2].some((a) => Math.abs(Math.abs(n[a]) - 1) < 1e-6 && Math.abs(Math.abs(fc[a]) - C) < 1e-6)) continue;
-      // de fora: a face cuja calota o pedacinho toca; senão (ponta arredondada) a mais próxima
-      let face = SPHERES.findIndex((sp) => Math.abs(dot(n, fc) - dot(n, sp.O) - sp.rho) < 1e-6 && facets.has(SPHERES.indexOf(sp)));
-      if (face < 0) face = [...facets.keys()].sort((x, y) => dot(n, SPHERES[y].n) - dot(n, SPHERES[x].n))[0];
-      facets.get(face)!.push(f.map(shrink));
+      // de fora: a face cuja calota o pedacinho toca
+      const face = SPHERES.findIndex((sp, i) => facets.has(i) && Math.abs(dot(n, fc) - dot(n, sp.O) - sp.rho) < 1e-6);
+      if (face >= 0) {
+        facets.get(face)!.push(f.map(shrink));
+        continue;
+      }
+      // ponta arredondada: dividida pelos planos que contêm as arestas curvas (onde duas
+      // calotas se encontram), então as cores da ponta se juntam num ponto, como no puzzle
+      for (const i of facets.keys()) {
+        let part = f;
+        for (const j of facets.keys()) if (j !== i) part = clipPolygon(part, sub(SPHERES[i].n, SPHERES[j].n));
+        if (part.length >= 3) facets.get(i)!.push(part.map(shrink));
+      }
     }
     for (const st of mine) {
       const fsx = facets.get(st.face)!;
