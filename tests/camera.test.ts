@@ -287,7 +287,7 @@ describe('câmera — lote 2 (nov/2026)', () => {
   it('nunca recusa o centro certo; face trocada só no par vermelho × laranja', () => {
     const wrongs: string[] = [];
     const accepted: string[] = [];
-    for (const p of batch2.filter((x) => x.puzzle !== 'pyraminx')) {
+    for (const p of batch2.filter((x) => x.puzzle !== 'pyraminx' && x.puzzle !== 'mastermorphix')) {
       const colors = p.puzzle === 'megaminx' ? MEGA_COLORS : CUBE3_COLORS;
       const model = new ColorModel(colors, p.puzzle === 'megaminx' ? 'nearest' : 'hue6');
       for (const q of batch2.filter((x) => x.puzzle === p.puzzle && x.light === p.light && x !== p)) {
@@ -304,4 +304,23 @@ describe('câmera — lote 2 (nov/2026)', () => {
     // ficam ambíguos — aparece na revisão, e o resultado final (9 de cada cor) acerta
     expect(accepted.every((a) => /(L aceito como R|R aceito como L)/.test(a))).toBe(true);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Mastermorphix (nov/2026): as mesmas 4 cores do Pyraminx, 10 de cada nas 4 faces.
+describe('câmera — Mastermorphix com fotos reais', () => {
+  for (const light of ['escuro', 'claro'])
+    it(`${light}: as 4 faces lidas sem erro no resultado final`, async () => {
+      const { PYRA_COLORS } = await import('../src/puzzles/pyraminx/colors');
+      const ps = all.filter((p) => p.puzzle === 'mastermorphix' && p.light === light);
+      expect(ps).toHaveLength(4);
+      const model = new ColorModel(PYRA_COLORS, 'hue6');
+      const cells = ps.flatMap((p) => p.cells);
+      const live = cells.filter((c) => model.classify(c.rgb) === c.truth).length;
+      const final = assignAll(model, cells.map((c) => c.rgb), 10, new Map());
+      const ok = final.filter((k, i) => k === cells[i].truth).length;
+      console.log(`mastermorphix ${light}: ao vivo ${live}/${cells.length}, final ${ok}/${cells.length}`);
+      expect(live).toBeGreaterThanOrEqual(cells.length - 2);
+      expect(ok).toBe(cells.length);
+    });
 });

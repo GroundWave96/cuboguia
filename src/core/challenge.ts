@@ -64,6 +64,7 @@ export const PREVIEW_NAMES: Record<string, string> = {
   pyraminx: 'Pyraminx',
   skewb: 'Skewb',
   megaminx: 'Megaminx',
+  mastermorphix: 'Mastermorphix',
 };
 
 /** "12.34" ou "1:02.35" (igual ao cronômetro) */

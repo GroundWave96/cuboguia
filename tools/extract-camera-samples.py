@@ -166,6 +166,24 @@ MEGA_B = [
 ]
 
 
+# Mastermorphix (nov/2026): 10 regiões por face, marcadas no meio de cada uma (a face é
+# arredondada, então as bordas "incham" e o meio de cada região é marcado à mão).
+# Coordenadas na foto mostrada em 1500×2000 (× 1,44 = pixel da foto). Ordem das regiões:
+# ponta de cima, pipa de cima, meio da aresta esquerda, meio da aresta direita, centro,
+# pipa inf-esq, pipa inf-dir, ponta inf-esq, meio da aresta de baixo, ponta inf-dir.
+# Cores: G verde, Y amarelo, R vermelho, B azul (mesmas chaves do Pyraminx).
+MORPH = [
+    ('IMG_6334', 'escuro', [(760, 640), (770, 840), (545, 880), (1000, 860), (790, 1030), (610, 1140), (960, 1110), (480, 1180), (790, 1250), (1120, 1150)], 'GRBGYRYGRG'),
+    ('IMG_6335', 'escuro', [(700, 670), (720, 850), (470, 880), (950, 880), (720, 1040), (560, 1150), (880, 1150), (430, 1230), (710, 1265), (1020, 1230)], 'RRRBBYBRGR'),
+    ('IMG_6336', 'escuro', [(710, 560), (710, 750), (500, 790), (950, 790), (720, 960), (550, 1080), (900, 1050), (430, 1150), (720, 1210), (1030, 1150)], 'YYGRGGBYYY'),
+    ('IMG_6337', 'escuro', [(850, 620), (860, 800), (620, 820), (1090, 820), (850, 1000), (690, 1100), (1030, 1080), (560, 1150), (830, 1180), (1130, 1150)], 'BGYBRGBBYB'),
+    ('IMG_6338', 'claro', [(700, 830), (720, 1040), (440, 1100), (1010, 1060), (740, 1300), (520, 1430), (1000, 1430), (330, 1560), (740, 1590), (1140, 1570)], 'YRYBRRGRBG'),
+    ('IMG_6339', 'claro', [(680, 680), (680, 920), (380, 960), (950, 960), (660, 1170), (450, 1300), (870, 1300), (250, 1400), (660, 1470), (1030, 1450)], 'RBGYGBGBGG'),
+    ('IMG_6340', 'claro', [(820, 760), (800, 960), (520, 1000), (1100, 1020), (780, 1210), (580, 1340), (1010, 1370), (420, 1470), (770, 1490), (1150, 1490)], 'BBGBBYGYYG'),
+    ('IMG_6341', 'claro', [(840, 560), (850, 760), (540, 850), (1110, 880), (810, 1060), (590, 1180), (1020, 1200), (400, 1290), (780, 1340), (1170, 1320)], 'RYRRYYRYRB'),
+]
+
+
 def find(folder, name):
     d = os.path.join(IMG, folder)
     return os.path.join(d, next(f for f in os.listdir(d) if f.split('.')[0] == name))
@@ -291,6 +309,28 @@ def pyra_b():
     return out
 
 
+def morph():
+    """Mastermorphix: pontos soltos no meio de cada região; o 5º de cada face é o triângulo do centro"""
+    out = []
+    for name, light, pts, colors in MORPH:
+        path = find('mastermorphix', name)
+        im = load(path)
+        P = [(x * 1.44, y * 1.44) for x, y in pts]
+        # reduz como a câmera: a face (~1060 px na foto mostrada) ocupa ~80% de 360 px
+        k = (0.8 * 360) / (1060 * 1.44)
+        small = im.resize((int(im.width * k), int(im.height * k)), Image.BILINEAR)
+        cells, marks = [], []
+        for i, ((x, y), lab) in enumerate(zip(P, colors)):
+            cell = {'rgb': median_rgb(small, x * k, y * k, 7), 'truth': PYRA_KEYS[lab]}
+            if i == 4:
+                cell['center'] = True
+            cells.append(cell)
+            marks.append((x, y, lab))
+        out.append({'photo': f'mastermorphix/{name}', 'puzzle': 'mastermorphix', 'light': light, 'batch': 2, 'cells': cells})
+        CHECK.append((path, marks))
+    return out
+
+
 def hue(rgb):
     h, s, v = colorsys.rgb_to_hsv(*[c / 255 for c in rgb])
     return h * 360, s, v
@@ -363,7 +403,7 @@ def draw_checks(dst):
 if __name__ == '__main__':
     data = cube_faces('3x3', FACES3, 3) + cube_faces('2x2', FACES2, 2) + mega() + pyra()
     CHECK.clear()  # as imagens de conferência são só do lote novo
-    data += cube_faces('3x3', FACES3_B, 3, batch=2) + cube_faces('5x5', FACES5, 5, batch=2) + pyra_b() + mega_b()
+    data += cube_faces('3x3', FACES3_B, 3, batch=2) + cube_faces('5x5', FACES5, 5, batch=2) + pyra_b() + mega_b() + morph()
     if '--check' in sys.argv:
         draw_checks(sys.argv[sys.argv.index('--check') + 1])
     dst = os.path.join(ROOT, 'fixtures', 'camera-samples.json')

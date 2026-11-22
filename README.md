@@ -96,6 +96,26 @@ tests/             testes (vitest)
 
 A interface (pintura, câmera e tutorial) funciona com qualquer puzzle que implemente essas interfaces.
 
+## Mastermorphix
+
+Por dentro é um 3x3; por fora, um tetraedro de 4 cores (`src/puzzles/mastermorphix/`). Cada face
+tem 10 adesivos: 3 pontas (cantos do 3x3 nos vértices), 3 pipas (arestas), 3 meios de aresta
+(centros do 3x3, que só giram no lugar e por isso dizem a cor de cada face) e o triângulo do
+centro (os outros 4 cantos).
+
+- Girar ¼ de volta muda a forma. O estado tem dois formatos (`model.ts`): "pirâmide" (as 40
+  cores, para pintar e para a câmera) e "peças" (a rotação de cada uma das 26 peças), que vale
+  para qualquer forma e volta a ser "pirâmide" quando a forma volta.
+- As cores viram um 3x3 (as pipas da mesma cor são iguais e o giro dos triângulos não aparece:
+  escolhe a combinação que forma um 3x3 de verdade), que é resolvido pelo método de camadas ou
+  pelo CFOP do 3x3. No fim, algoritmos que só giram centros acertam os meios de aresta
+  (`centerFix` em `solver.ts`, conferidos nos testes).
+- O 3D é o `PolyView` com o modo `morph`: cada peça leva o próprio formato e as próprias cores.
+- O site resolve a partir da forma de pirâmide; o embaralho do site (e do cronômetro) usa só
+  meias voltas para não deformar.
+- As fotos de `tests/cube images/mastermorphix` treinam a câmera (`tools/extract-camera-samples.py`)
+  e, montadas, formam estados que os testes resolvem (`tests/mastermorphix.test.ts`).
+
 ## Treino da câmera
 
 As cores da câmera são testadas com amostras reais (`tests/fixtures/`):

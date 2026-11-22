@@ -135,6 +135,33 @@ export function pyraminxIcon(): string {
 }
 
 // ---------------------------------------------------------------------------
+// Mastermorphix: a mesma pirâmide do Pyraminx, com as 10 peças arredondadas de cada face
+export function mastermorphixIcon(): string {
+  const apex: P = [60, 4], left: P = [6, 98], right: P = [114, 98], front: P = [60, 124];
+  const at = (A: P, B: P, C: P) => (a: number, b: number, c: number): P => [a * A[0] + b * B[0] + c * C[0], a * A[1] + b * B[1] + c * C[1]];
+  function face(A: P, B: P, C: P, color: string): string[] {
+    const p = at(A, B, C);
+    const E = 0.33, K = 0.76, T = 0.42;
+    const vA = p(1, 0, 0), vB = p(0, 1, 0), vC = p(0, 0, 1);
+    const abA = p(1 - E, E, 0), abB = p(E, 1 - E, 0), bcB = p(0, 1 - E, E), bcC = p(0, E, 1 - E), caC = p(E, 0, 1 - E), caA = p(1 - E, 0, E);
+    const kA = p(K, (1 - K) / 2, (1 - K) / 2), kB = p((1 - K) / 2, K, (1 - K) / 2), kC = p((1 - K) / 2, (1 - K) / 2, K);
+    const tAB = p(T, T, 1 - 2 * T), tBC = p(1 - 2 * T, T, T), tCA = p(T, 1 - 2 * T, T);
+    const regions: P[][] = [
+      [vA, abA, kA, caA], [kA, abA, tAB, tCA, caA], [abA, abB, tAB], [caC, caA, tCA], [tAB, tBC, tCA],
+      [kB, bcB, tBC, tAB, abB], [kC, caC, tCA, tBC, bcC], [vB, bcB, kB, abB], [bcB, bcC, tBC], [vC, caC, kC, bcC],
+    ];
+    return regions.map((r) => sticker(shrink(r, 0.84), color, 2.6));
+  }
+  const out: string[] = [];
+  out.push(body([apex, left, front, right], 8));
+  out.push(...face(apex, left, front, '#00a651'));
+  out.push(...face(apex, front, right, '#0a5bd6'));
+  out.push(shade([apex, front, right], '#00102a', 0.2));
+  out.push(shade([apex, left, front], '#ffffff', 0.05));
+  return wrap(out.join(''));
+}
+
+// ---------------------------------------------------------------------------
 // Skewb: o mesmo cubo isométrico, cada face com o losango do meio e 4 triângulos
 export function skewbIcon(): string {
   const proj = (x: number, y: number, z: number): P => [60 + (x - y) * 47, 8 + (x + y) * 27 + (1 - z) * 54];

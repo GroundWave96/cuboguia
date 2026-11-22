@@ -37,6 +37,7 @@ export const META_PUZZLES: Record<string, { slug: string; pt: string; en: string
   pyraminx: { slug: 'pyraminx', pt: 'Pyraminx', en: 'Pyraminx', short: 'Pyraminx' },
   skewb: { slug: 'skewb', pt: 'Skewb', en: 'Skewb', short: 'Skewb' },
   megaminx: { slug: 'megaminx', pt: 'Megaminx', en: 'Megaminx', short: 'Megaminx' },
+  mastermorphix: { slug: 'mastermorphix', pt: 'Mastermorphix', en: 'Mastermorphix', short: 'Mastermorphix' },
 };
 const ALG_IDS = ['cube3', 'cube2', 'pyraminx'];
 const NOTATION_IDS = ['cube3', 'cube5', 'pyraminx', 'skewb', 'megaminx'];

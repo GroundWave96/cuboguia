@@ -17,6 +17,7 @@ const SHOW: Record<string, { scramble: number; ms: number }> = {
   pyraminx: { scramble: 9, ms: 220 },
   skewb: { scramble: 9, ms: 230 },
   megaminx: { scramble: 14, ms: 200 },
+  mastermorphix: { scramble: 10, ms: 240 },
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

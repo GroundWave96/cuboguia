@@ -38,6 +38,16 @@ export interface PolyViewOptions {
   stickerRound?: number;
   /** raio do arredondamento das quinas das peças (como as peças dos cubos) */
   pieceRound?: number;
+  /**
+   * Puzzles que mudam de forma (Mastermorphix): cada peça leva o próprio formato e as
+   * próprias cores. `layout` devolve a rotação de cada peça (matriz 3x3, linha a linha) e a
+   * cor de cada adesivo — ou null quando o estado está na forma de casa (cores do estado).
+   * `moving` diz quais peças giram no movimento.
+   */
+  morph?: {
+    layout(state: PuzzleState): { rots: number[][]; colors: string[] } | null;
+    moving(state: PuzzleState, move: string): number[];
+  };
 }
 
 const UNKNOWN_HEX = '#3b4152';
@@ -129,6 +139,9 @@ export class PolyView implements PuzzleView {
   private arrow = new MoveArrow();
   private hintMove: string | null = null;
   private camWaiters: (() => void)[] = [];
+  /** só nos puzzles que mudam de forma: cor de cada adesivo pelo dono e rotação de cada peça */
+  private morphColors: string[] | null = null;
+  private pieceQuats: THREE.Quaternion[] = [];
 
   constructor(container: HTMLElement, private o: PolyViewOptions) {
     this.state = [...o.solved];
@@ -305,8 +318,9 @@ export class PolyView implements PuzzleView {
   private refreshColors() {
     this.dirty = 2;
     const dim = this.highlight.size > 0;
+    const colors = this.morphColors ?? this.state;
     this.stickerMeshes.forEach((m, i) => {
-      m.material.color.set(this.o.palette[this.state[i]] ?? UNKNOWN_HEX);
+      m.material.color.set(this.o.palette[colors[i]] ?? UNKNOWN_HEX);
       m.material.emissive.setRGB(0, 0, 0);
       if (dim && !this.highlight.has(i)) m.material.color.multiplyScalar(0.33);
       if (i === this.hovered) m.material.emissive.setRGB(0.25, 0.25, 0.25);
@@ -315,7 +329,29 @@ export class PolyView implements PuzzleView {
 
   setState(state: PuzzleState) {
     this.state = [...state];
+    this.applyMorph();
     this.refreshColors();
+  }
+
+  /** puzzles que mudam de forma: coloca cada peça (e seus adesivos) na rotação do estado */
+  private applyMorph() {
+    if (!this.o.morph) return;
+    const L = this.o.morph.layout(this.state);
+    this.morphColors = L?.colors ?? null;
+    this.pieceQuats = this.pieceMeshes.map((pm, pi) => {
+      const r = L?.rots[pi];
+      const q = r ? new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().set(r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1)) : new THREE.Quaternion();
+      const h = this.pieceHomes[pi];
+      pm.position.copy(h.pos).applyQuaternion(q);
+      pm.quaternion.copy(q).multiply(h.quat);
+      return q;
+    });
+    this.pieceOfSticker.forEach((pi, i) => {
+      const m = this.stickerMeshes[i], h = this.homes[i], q = this.pieceQuats[pi];
+      if (!m || !q) return;
+      m.position.copy(h.pos).applyQuaternion(q);
+      m.quaternion.copy(q).multiply(h.quat);
+    });
   }
   getState() {
     return [...this.state];
@@ -394,13 +430,25 @@ export class PolyView implements PuzzleView {
     this.hintMove = move;
     if (!move) return this.arrow.set(null, this.camera.position);
     const info = this.o.moveInfo(move);
-    const inLayer = new Set(info.layer);
-    const layer = this.o.stickers
-      .filter((s) => inLayer.has(s.index))
-      .map((s) => ({
-        pos: s.poly.reduce((a, p) => a.add(v3(p)), new THREE.Vector3()).multiplyScalar(1 / s.poly.length),
-        normal: v3(s.normal).normalize(),
-      }));
+    let layer: { pos: THREE.Vector3; normal: THREE.Vector3 }[];
+    if (this.o.morph) {
+      const moving = new Set(this.o.morph.moving(this.state, move));
+      layer = this.o.stickers
+        .filter((s) => moving.has(this.pieceOfSticker.get(s.index)!))
+        .map((s) => {
+          const q = this.pieceQuats[this.pieceOfSticker.get(s.index)!] ?? new THREE.Quaternion();
+          const c = s.poly.reduce((a, p) => a.add(v3(p)), new THREE.Vector3()).multiplyScalar(1 / s.poly.length);
+          return { pos: c.applyQuaternion(q), normal: v3(s.normal).normalize().applyQuaternion(q) };
+        });
+    } else {
+      const inLayer = new Set(info.layer);
+      layer = this.o.stickers
+        .filter((s) => inLayer.has(s.index))
+        .map((s) => ({
+          pos: s.poly.reduce((a, p) => a.add(v3(p)), new THREE.Vector3()).multiplyScalar(1 / s.poly.length),
+          normal: v3(s.normal).normalize(),
+        }));
+    }
     const view = this.camTween ? this.camTween.to : this.camera.position;
     this.arrow.set(arrowFor(v3(info.axis), info.angle, layer, this.o.radius), view);
   }
@@ -417,6 +465,7 @@ export class PolyView implements PuzzleView {
       const map = this.o.locationMap(move);
       this.state = this.o.apply(this.state, move);
       this.highlight = new Set([...this.highlight].map((i) => map[i]));
+      this.applyMorph();
       this.refreshColors();
     };
     if (durationMs <= 0) {
@@ -427,9 +476,17 @@ export class PolyView implements PuzzleView {
     const axis = v3(info.axis).normalize();
     const pivot = new THREE.Group();
     this.root.add(pivot);
-    const layer = info.layer.map((i) => this.stickerMeshes[i]);
     const usePieces = this.pieceMeshes.length > 0;
-    const movingPieces = usePieces ? [...new Set(info.layer.map((i) => this.pieceOfSticker.get(i)!))].map((pi) => this.pieceMeshes[pi]) : [];
+    // puzzles que mudam de forma: giram as peças que estão na camada agora (com seus adesivos)
+    const morphMoving = this.o.morph ? new Set(this.o.morph.moving(this.state, move)) : null;
+    const layer = morphMoving
+      ? this.stickerMeshes.filter((m) => morphMoving.has(this.pieceOfSticker.get(m.userData.index as number)!))
+      : info.layer.map((i) => this.stickerMeshes[i]);
+    const movingPieces = morphMoving
+      ? [...morphMoving].map((pi) => this.pieceMeshes[pi])
+      : usePieces
+        ? [...new Set(info.layer.map((i) => this.pieceOfSticker.get(i)!))].map((pi) => this.pieceMeshes[pi])
+        : [];
     let cap: THREE.Mesh | null = null, rest: THREE.Mesh | null = null;
     if (usePieces) for (const pm of movingPieces) pivot.attach(pm);
     else {
