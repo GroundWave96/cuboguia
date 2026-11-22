@@ -1,6 +1,6 @@
 import { tr } from './i18n';
 import type { PuzzleDefinition, PuzzleImpl } from './types';
-import { cubeIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
+import { cubeIcon, mastermorphixIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
 
 export const PUZZLES: PuzzleDefinition[] = [
   {
@@ -137,6 +137,21 @@ export const PUZZLES: PuzzleDefinition[] = [
     methods: 2,
     icon: megaminxIcon(),
     load: () => import('../puzzles/megaminx').then((m) => m.default as PuzzleImpl),
+  },
+  {
+    id: 'mastermorphix',
+    slug: 'mastermorphix',
+    get name() {
+      return tr('Mastermorphix', 'Mastermorphix', 'Mastermorphix');
+    },
+    short: 'Mastermorphix',
+    get subtitle() {
+      return tr('Pirâmide com um 3x3 por dentro. Muda de forma ao girar.', 'A pyramid with a 3x3 inside. Changes shape as you turn it.', 'Pirámide con un 3x3 por dentro. Cambia de forma al girar.');
+    },
+    available: true,
+    methods: 2,
+    icon: mastermorphixIcon(),
+    load: () => import('../puzzles/mastermorphix').then((m) => m.default as PuzzleImpl),
   },
 ];
 

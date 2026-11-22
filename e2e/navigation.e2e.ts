@@ -74,7 +74,7 @@ test('tela inicial: soma os métodos sem carregar os puzzles', async ({ page }) 
   });
   await page.goto('/');
   await page.locator('#stat-methods').scrollIntoViewIfNeeded();
-  await expect(page.locator('#stat-methods')).toHaveText('18');
+  await expect(page.locator('#stat-methods')).toHaveText('20');
   await page.waitForTimeout(1500);
   // só a vitrine carrega um puzzle (e o próximo dela), não os 9
   expect(new Set(loaded).size).toBeLessThanOrEqual(2);

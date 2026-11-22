@@ -77,6 +77,12 @@ const scrambleHold = (puzzle: string) =>
     ? tr('com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo', 'with the <b>green</b> face toward you and the <b>yellow</b> one on the bottom', 'con la cara <b>verde</b> hacia ti y la <b>amarilla</b> abajo')
     : puzzle === 'megaminx'
       ? tr('com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você', 'with <b>gray</b> on top and <b>light green</b> facing you', 'con el <b>gris</b> arriba y el <b>verde claro</b> hacia ti')
+      : puzzle === 'mastermorphix'
+        ? tr(
+            'com a aresta entre o <b>verde</b> e o <b>azul</b> deitada em cima e a aresta entre o <b>verde</b> e o <b>vermelho</b> de frente para você (como no desenho 3D)',
+            'with the edge between <b>green</b> and <b>blue</b> lying flat on top and the edge between <b>green</b> and <b>red</b> facing you (like the 3D drawing)',
+            'con la arista entre el <b>verde</b> y el <b>azul</b> horizontal arriba y la arista entre el <b>verde</b> y el <b>rojo</b> hacia ti (como en el dibujo 3D)',
+          )
       : tr('com o <b>amarelo</b> em cima e o <b>verde</b> de frente para você', 'with <b>yellow</b> on top and <b>green</b> facing you', 'con el <b>amarillo</b> arriba y el <b>verde</b> hacia ti');
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 function loadName(): string {
