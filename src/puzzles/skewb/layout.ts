@@ -98,8 +98,11 @@ export function buildSkewbScan(): ScanFace[] {
       return { poly: poly.map(([x, y]) => [cx + (x - cx) * 0.9, cy + (y - cy) * 0.9] as P), center: [cx, cy] as P };
     });
     const corners3 = geo.bodyFaces[f];
+    const n = FACE_FRAME[fk].n as V3;
     return {
       face: fk,
+      // para o giro animado entre as faces
+      pose: { right: r as V3, up: [-d[0], -d[1], -d[2]] as V3, out: n, center: [0.5, 0.5] as [number, number], scale: box / (2 * H), origin: [n[0] * H, n[1] * H, n[2] * H] as V3 },
       grid: [[0, 1, 2, 3, 4].map((k) => f * 5 + k)],
       get title() {
         return TITLE[fk];

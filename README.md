@@ -98,6 +98,13 @@ tests/             testes (vitest)
 
 A interface (pintura, câmera e tutorial) funciona com qualquer puzzle que implemente essas interfaces.
 
+Na câmera, cada molde (`ScanFace`) tem uma `pose`: as direções do puzzle que aparecem à
+direita, para cima e para a câmera (e, nas faces poligonais, onde a face fica no quadro). Ao
+capturar uma face, o puzzle aparece em 3D com as cores já lidas e gira até a próxima face
+(`src/ui/scanturn.ts`): 1 ou 2 movimentos, primeiro em volta do "eixo de cima" (o topo do cubo,
+o cinza do Megaminx, a ponta de cima do Pyraminx) e depois inclinando. O botão "Ver o giro"
+repete a animação; quem pediu menos movimento no aparelho não a vê.
+
 ## Mastermorphix
 
 Por dentro é um 3x3; por fora, um tetraedro de 4 cores (`src/puzzles/mastermorphix/`). Cada face

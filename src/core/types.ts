@@ -104,7 +104,24 @@ export interface ScanFace {
    * direita, para cima e apontando para a câmera. Com ela, a câmera anima o giro do puzzle
    * entre uma face e a próxima (o "cubinho" girando).
    */
-  pose?: { right: [number, number, number]; up: [number, number, number]; out: [number, number, number] };
+  pose?: ScanPose;
+}
+
+type Vec = [number, number, number];
+export interface ScanPose {
+  right: Vec;
+  up: Vec;
+  out: Vec;
+  /** eixo que fica parado ao girar para o lado (topo do cubo, ponta de cima...); padrão +y */
+  spin?: Vec;
+  /**
+   * Faces com `cells` (polígonos): onde o ponto `origin` (no puzzle) cai no quadro 0..1 e
+   * quantas unidades do quadro vale uma unidade do puzzle. Grades quadradas usam o padrão:
+   * cubo de lado 2 (origin = out), centro do quadro e a grade da câmera.
+   */
+  center?: [number, number];
+  scale?: number;
+  origin?: Vec;
 }
 
 export interface PuzzleView {

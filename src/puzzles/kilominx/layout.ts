@@ -196,6 +196,8 @@ export function buildKiloScan(): ScanFace[] {
     const isUpper = UPPER.includes(fk);
     return {
       face: fk,
+      // para o giro animado entre as faces (o eixo que fica parado é o do topo, +y)
+      pose: { right, up, out: n, center: [0.5, 0.54] as [number, number], scale, origin: c },
       grid: [Array.from({ length: 5 }, (_, k) => f * 5 + k)],
       get title() {
         return tr(...TITLES[fk]);

@@ -112,6 +112,18 @@ export function buildPyraScan(_colors: ColorInfo[]): ScanFace[] {
     const R = Math.hypot(V[0][0] - cx, V[0][1] - cy);
     const k = 0.4 / R;
     const toBox = (p: P): [number, number] => [0.5 + (p[0] - cx) * k, 0.56 - (p[1] - cy) * k];
+    // para o giro animado: as mesmas direções do faceFrame e o centro da face em 3D
+    const n = geo.normals[f];
+    const upv = norm(sub(upHint, [n[0] * dot(upHint, n), n[1] * dot(upHint, n), n[2] * dot(upHint, n)]));
+    const fv3 = geo.faceVerts[f].map((v) => geo.vertices[v]);
+    const pose = {
+      right: cross([-n[0], -n[1], -n[2]], upv),
+      up: upv,
+      out: n,
+      center: [0.5, 0.56] as [number, number],
+      scale: k,
+      origin: [0, 1, 2].map((i) => (fv3[0][i] + fv3[1][i] + fv3[2][i]) / 3) as V3,
+    };
     const cells = stickerTris(toBox(V[0]), toBox(V[1]), toBox(V[2])).map((poly) => ({
       poly,
       center: [(poly[0][0] + poly[1][0] + poly[2][0]) / 3, (poly[0][1] + poly[1][1] + poly[2][1]) / 3] as [number, number],
@@ -124,6 +136,7 @@ export function buildPyraScan(_colors: ColorInfo[]): ScanFace[] {
     ];
     return {
       face: fk,
+      pose,
       grid: [Array.from({ length: 9 }, (_, s) => f * 9 + s)],
       get title() {
         return tr(['1ª face', '2ª face', '3ª face', 'Base'][i], ['1st face', '2nd face', '3rd face', 'Bottom'][i], ['1.ª cara', '2.ª cara', '3.ª cara', 'Base'][i]);

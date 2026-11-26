@@ -5,7 +5,7 @@ import { rgbToHsv, type RGB } from '../core/color';
 import { cellNeighbors, isFlat, puzzleInView } from '../core/scanpresence';
 import { icon } from './icons';
 import { clearFaceEdits, compose, isComplete, resetSession, type ScanSession } from './scansession';
-import { apply, poseMatrix, turnDuration, turnMatrix, turnSteps, type M3, type Pose, type TurnStep, type V3 } from './scanturn';
+import { apply, poseMatrix, turnDuration, turnMatrix, turnProgress, turnSteps, type M3, type Pose, type TurnStep, type V3 } from './scanturn';
 
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
@@ -16,8 +16,8 @@ const COUNT_MS = 1500;
 /** giro entre as faces: some as faixas, o cubinho gira, as faixas voltam (ms) */
 const TURN_FADE_OUT = 240;
 const TURN_FADE_IN = 380;
-/** distância da câmera virtual (em meias-faces): perspectiva suave */
-const TURN_CAM = 6;
+/** distância da câmera virtual (em raios do puzzle): perspectiva suave */
+const TURN_CAM = 3.5;
 const BODY_HEX = '#11141c';
 const AUTO_KEY = 'cuboguia.autoCapture';
 function loadAuto(): boolean {
@@ -560,7 +560,7 @@ export class CameraScanner {
     ctx.clearRect(0, 0, dw, dh);
     const M = Math.min(dw, dh), OX = (dw - M) / 2, OY = (dh - M) / 2;
     const P = (p: Pt): Pt => [OX + p[0] * M, OY + p[1] * M];
-    if (this.turn) return this.drawTurn(ctx, dw, dh, M, OX, OY, P);
+    if (this.turn) return this.drawTurn(ctx, dw, dh, P);
     const face = this.impl.scan[this.current];
     const cells = this.cellsOf();
     const outline = this.dimOutside(ctx, this.current, dw, dh, P);
@@ -725,13 +725,41 @@ export class CameraScanner {
 
   // ---- giro animado entre as faces
 
-  /** dá para animar o giro entre estas duas faces? (as duas com pose, molde em grade) */
+  /** dá para animar o giro entre estas duas faces? (as duas com pose) */
   private turnable(a: number, b: number): boolean {
     const fa = this.impl.scan[a], fb = this.impl.scan[b];
-    return !!fa?.pose && !!fb?.pose && !fa.cells && !fb.cells && a !== b;
+    const ok = (f: typeof fa) => !!f?.pose && (!f.cells || (!!f.pose.center && !!f.pose.scale && !!f.pose.origin));
+    return ok(fa) && ok(fb) && a !== b;
   }
   private canReplay(): boolean {
     return this.mode === 'scan' && this.current > 0 && this.turnable(this.current - 1, this.current);
+  }
+
+  /** pose completa de uma face (as grades quadradas usam o encaixe padrão do cubo) */
+  private fullPose(fi: number) {
+    const p = this.impl.scan[fi].pose!;
+    return { ...p, center: p.center ?? ([0.5, 0.5] as Pt), scale: p.scale ?? GRID_FRACTION / 2, origin: (p.origin ?? p.out) as V3 };
+  }
+
+  /** o puzzle simplificado: cada face do molde vira um polígono 3D (contorno e células) */
+  private solidCache: { faces: { fi: number; outline: V3[]; cells: V3[][] }[]; radius: number } | null = null;
+  private solid() {
+    if (this.solidCache) return this.solidCache;
+    let radius = 0;
+    const faces = this.impl.scan.flatMap((f, fi) => {
+      if (!f.pose) return [];
+      const p = this.fullPose(fi);
+      // quadro 0..1 → ponto no plano da face
+      const to3 = ([x, y]: Pt): V3 => {
+        const u = (x - p.center[0]) / p.scale, w = -(y - p.center[1]) / p.scale;
+        const q: V3 = [p.origin[0] + p.right[0] * u + p.up[0] * w, p.origin[1] + p.right[1] * u + p.up[1] * w, p.origin[2] + p.right[2] * u + p.up[2] * w];
+        radius = Math.max(radius, Math.hypot(...q));
+        return q;
+      };
+      const cells = this.cellsOf(fi);
+      return [{ fi, outline: hull(cells.flatMap((c) => c.poly)).map(to3), cells: cells.map((c) => c.poly.map(to3)) }];
+    });
+    return (this.solidCache = { faces, radius });
   }
 
   /** anima o puzzle girando da face `from` para a face `to` (o movimento que a pessoa faz) */
@@ -761,67 +789,85 @@ export class CameraScanner {
   }
 
   /**
-   * Um quadro do giro: (1) as faixas da face lida somem e a grade vira o cubinho, com as cores
-   * capturadas; (2) o cubinho gira até a próxima face ficar de frente; (3) o cubinho some e as
+   * Um quadro do giro: (1) as faixas da face lida somem e a grade vira o puzzle em 3D, com as
+   * cores capturadas; (2) ele gira até a próxima face ficar de frente; (3) o corpo some e as
    * faixas da nova face aparecem — daí em diante é a tela normal.
    */
-  private drawTurn(ctx: CanvasRenderingContext2D, dw: number, dh: number, M: number, OX: number, OY: number, P: (p: Pt) => Pt) {
+  private drawTurn(ctx: CanvasRenderingContext2D, dw: number, dh: number, P: (p: Pt) => Pt) {
     const T = this.turn!;
     const t = performance.now() - T.start;
     const rotMs = turnDuration(T.steps);
-    const from = this.impl.scan[T.from].pose as Pose, to = this.impl.scan[T.to].pose as Pose;
-    const view = { k: (GRID_FRACTION * M) / 2, cx: OX + M / 2, cy: OY + M / 2 };
+    const from = this.fullPose(T.from), to = this.fullPose(T.to);
     if (t < TURN_FADE_OUT) {
       const a = t / TURN_FADE_OUT;
       this.dimOutside(ctx, T.from, dw, dh, P);
-      this.drawCube(ctx, poseMatrix(from), a, view);
+      this.drawSolid(ctx, poseMatrix(from), a, from, P);
       this.drawStrips(ctx, T.from, 1 - a, dw, dh, P);
     } else if (t < TURN_FADE_OUT + rotMs) {
       ctx.fillStyle = 'rgba(5,8,18,0.5)';
       ctx.fillRect(0, 0, dw, dh);
-      this.drawCube(ctx, turnMatrix(from, T.steps, t - TURN_FADE_OUT), 1, view);
+      // posição e tamanho no quadro acompanham o giro (quando as faces têm encaixes diferentes)
+      const k = turnProgress(T.steps, t - TURN_FADE_OUT);
+      const mix = (x: number, y: number) => x + (y - x) * k;
+      const frame = {
+        center: [mix(from.center[0], to.center[0]), mix(from.center[1], to.center[1])] as Pt,
+        scale: mix(from.scale, to.scale),
+        depth: mix(this.depthOf(from), this.depthOf(to)),
+      };
+      this.drawSolid(ctx, turnMatrix(from, T.steps, t - TURN_FADE_OUT), 1, frame, P);
     } else {
       const a = Math.min(1, (t - TURN_FADE_OUT - rotMs) / TURN_FADE_IN);
       this.dimOutside(ctx, T.to, dw, dh, P);
-      this.drawCube(ctx, poseMatrix(to), 1 - a, view);
+      this.drawSolid(ctx, poseMatrix(to), 1 - a, to, P);
       this.drawStrips(ctx, T.to, a, dw, dh, P);
     }
   }
 
-  /** o cubinho: cada face do molde com o corpo escuro e as cores já lidas (ou só o contorno) */
-  private drawCube(ctx: CanvasRenderingContext2D, R: M3, bodyAlpha: number, view: { k: number; cx: number; cy: number }) {
-    // tela: a face da frente fica em z = 1 e é desenhada do tamanho exato da grade
-    const proj = (p: V3): Pt => {
-      const v = apply(R, p);
-      const s = TURN_CAM / (TURN_CAM - (v[2] - 1));
-      return [view.cx + v[0] * view.k * s, view.cy - v[1] * view.k * s];
+  /** distância do plano da face ao centro do puzzle */
+  private depthOf(p: { origin: V3; out: V3 }) {
+    return p.origin[0] * p.out[0] + p.origin[1] * p.out[1] + p.origin[2] * p.out[2];
+  }
+
+  /**
+   * O puzzle em 3D: cada face do molde com o corpo escuro e as cores já lidas (ou a cor fixa do
+   * centro, ou só o contorno). `frame` diz onde fica a face da frente no quadro e em que escala.
+   */
+  private drawSolid(ctx: CanvasRenderingContext2D, R: M3, bodyAlpha: number, frame: { center: Pt; scale: number; depth?: number; origin?: V3; out?: V3 }, P: (p: Pt) => Pt) {
+    const { faces, radius } = this.solid();
+    // a face da frente fica no plano z = depth, do tamanho exato do molde; a câmera virtual fica
+    // a algumas vezes o raio do puzzle (perspectiva suave)
+    const depth = frame.depth ?? this.depthOf(frame as { origin: V3; out: V3 });
+    const camDist = TURN_CAM * radius;
+    const camZ = depth + camDist;
+    const proj = (q: V3): Pt => {
+      const v = apply(R, q);
+      const s = camDist / (camZ - v[2]);
+      return P([frame.center[0] + v[0] * frame.scale * s, frame.center[1] - v[1] * frame.scale * s]);
     };
-    const at = (f: Pose, u: number, w: number): V3 => [f.out[0] + f.right[0] * u + f.up[0] * w, f.out[1] + f.right[1] * u + f.up[1] * w, f.out[2] + f.right[2] * u + f.up[2] * w];
     const light: V3 = [-0.35, 0.55, 0.76];
-    const faces = this.impl.scan
-      .map((f, fi) => ({ f, fi, pose: f.pose as Pose | undefined }))
-      .filter((x): x is { f: (typeof x)['f']; fi: number; pose: Pose } => !!x.pose)
-      .map((x) => {
-        const n = apply(R, x.pose.out);
-        // visível se aponta para a câmera (que fica em z = 1 + TURN_CAM)
-        const facing = n[0] * -n[0] + n[1] * -n[1] + n[2] * (1 + TURN_CAM - n[2]);
-        return { ...x, n, facing };
+    const visible = faces
+      .map((f) => {
+        const n = apply(R, this.impl.scan[f.fi].pose!.out);
+        const c = apply(R, f.outline.reduce((a, q) => [a[0] + q[0] / f.outline.length, a[1] + q[1] / f.outline.length, a[2] + q[2] / f.outline.length] as V3, [0, 0, 0] as V3));
+        // visível se aponta para a câmera
+        const facing = -n[0] * c[0] - n[1] * c[1] + n[2] * (camZ - c[2]);
+        return { ...f, n, c, facing };
       })
-      .filter((x) => x.facing > 1e-3)
-      .sort((a, b) => a.n[2] - b.n[2]);
-    for (const { f, fi, pose, n } of faces) {
-      const lum = 0.55 + 0.45 * Math.max(0, n[0] * light[0] + n[1] * light[1] + n[2] * light[2]);
+      .filter((f) => f.facing > 1e-4)
+      .sort((a, b) => a.c[2] - b.c[2]);
+    const path = (pts: Pt[]) => {
+      ctx.beginPath();
+      pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+      ctx.closePath();
+    };
+    for (const f of visible) {
+      const face = this.impl.scan[f.fi];
+      const lum = 0.55 + 0.45 * Math.max(0, f.n[0] * light[0] + f.n[1] * light[1] + f.n[2] * light[2]);
       const shade = (1 - lum) * 0.85;
-      const quad = (pts: Pt[]) => {
-        ctx.beginPath();
-        pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
-        ctx.closePath();
-      };
-      // corpo
       if (bodyAlpha > 0) {
         ctx.save();
         ctx.globalAlpha = bodyAlpha;
-        quad([at(pose, -1, 1), at(pose, 1, 1), at(pose, 1, -1), at(pose, -1, -1)].map(proj));
+        path(f.outline.map(proj));
         ctx.fillStyle = BODY_HEX;
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.22)';
@@ -830,17 +876,13 @@ export class CameraScanner {
         ctx.stroke();
         ctx.restore();
       }
-      // adesivos (mesmo recuo das células da grade)
-      const n2 = f.grid.length;
-      const e = 0.06 * (2 / n2);
-      f.grid.flat().forEach((_, cell) => {
-        const r = Math.floor(cell / n2), c = cell % n2;
-        const u0 = -1 + (2 * c) / n2 + e, u1 = -1 + (2 * (c + 1)) / n2 - e;
-        const w0 = 1 - (2 * r) / n2 - e, w1 = 1 - (2 * (r + 1)) / n2 + e;
-        quad([at(pose, u0, w0), at(pose, u1, w0), at(pose, u1, w1), at(pose, u0, w1)].map(proj));
-        const rgb = this.captured[fi]?.[cell];
-        if (rgb) {
-          ctx.fillStyle = this.hex(f.fixedCells.find((x) => x.cell === cell)?.color ?? this.classify(rgb));
+      const fixedAt = new Map(face.fixedCells.map((x) => [x.cell, x.color]));
+      f.cells.forEach((poly, cell) => {
+        path(poly.map(proj));
+        const rgb = this.captured[f.fi]?.[cell];
+        const known = fixedAt.get(cell) ?? (rgb ? this.classify(rgb) : null);
+        if (known) {
+          ctx.fillStyle = this.hex(known);
           ctx.fill();
           if (shade > 0.01) {
             ctx.fillStyle = `rgba(0,0,0,${shade.toFixed(3)})`;

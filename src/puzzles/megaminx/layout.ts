@@ -152,6 +152,8 @@ export function buildMegaScan(colors: ColorInfo[]): ScanFace[] {
               : tr(`Branco para a câmera, ${name('F')} em cima`, `White toward the camera, ${name('F')} on top`, `Blanco hacia la cámara, ${name('F')} arriba`);
     return {
       face: fk,
+      // para o giro animado entre as faces (o eixo que fica parado é o do cinza, +y)
+      pose: { right, up, out: n, center: [0.5, 0.54] as [number, number], scale, origin: c },
       grid: [Array.from({ length: 11 }, (_, s) => f * 11 + s)],
       get title() {
         return tr(`Face ${name(fk)}`, `${name(fk)[0].toUpperCase()}${name(fk).slice(1)} face`, `Cara ${name(fk)}`);

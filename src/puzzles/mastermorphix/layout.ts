@@ -284,6 +284,19 @@ export function buildMorphScan(): ScanFace[] {
     const k = 0.4 / R;
     const toBox = (p: P): [number, number] => [0.5 + (p[0] - cx) * k, 0.56 - (p[1] - cy) * k];
     const Vb = V.map(toBox);
+    // para o giro animado: as direções do faceFrame, o centro da face e a ponta de cima parada
+    const nf = norm(NORMALS[f]);
+    const upv = norm(sub(upHint, scale(nf, dot(upHint, nf))));
+    const fv3 = FACE_VERTS[f].map((v) => TV[v]);
+    const pose = {
+      right: cross(scale(nf, -1), upv),
+      up: upv,
+      out: nf,
+      spin: UP,
+      center: [0.5, 0.56] as [number, number],
+      scale: k,
+      origin: [0, 1, 2].map((j) => (fv3[0][j] + fv3[1][j] + fv3[2][j]) / 3) as V3,
+    };
     const cells = faceRegions(Vb[0], Vb[1], Vb[2]).map((r) => ({ poly: r.poly as [number, number][], center: r.sample as [number, number] }));
     // a aresta incha para fora: as marcas das faces vizinhas ficam além da curva
     const side = Math.hypot(Vb[0][0] - Vb[1][0], Vb[0][1] - Vb[1][1]);
@@ -295,6 +308,7 @@ export function buildMorphScan(): ScanFace[] {
     ];
     return {
       face: String(f),
+      pose,
       grid: [Array.from({ length: 10 }, (_, s) => f * 10 + s)],
       get title() {
         return tr(['1ª face', '2ª face', '3ª face', 'Base'][i], ['1st face', '2nd face', '3rd face', 'Bottom'][i], ['1.ª cara', '2.ª cara', '3.ª cara', 'Base'][i]);
