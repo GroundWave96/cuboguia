@@ -1,7 +1,7 @@
 import { getPuzzle, loadPuzzle } from '../core/registry';
 import { decodeState, encodeState, loadSpeed, loadState, saveMethod, saveSpeed } from '../core/store';
 import { PATTERN_PUZZLES_R, navigate, patternsPath, puzzlePath, solvePath } from '../core/router';
-import { plural, tr } from '../core/i18n';
+import { fitText, plural, tr } from '../core/i18n';
 import type { PuzzleImpl, PuzzleState, PuzzleView, Solution } from '../core/types';
 import { icon } from './icons';
 import { toast } from './toast';
@@ -66,7 +66,8 @@ export async function renderSolve(app: HTMLElement, puzzleId: string, params: UR
   }
 
   const faceText = Object.fromEntries(impl.notationHelp.map((h) => [h.move, h.text]));
-  const describeMove = (m: string) => {
+  const describeMove = (m: string) => fitText(describeRaw(m));
+  const describeRaw = (m: string) => {
     if (impl.describeMove) return impl.describeMove(m);
     const wide = m[0] !== m[0].toUpperCase() || m.includes('w');
     const f = (faceText[m[0].toUpperCase()] ?? m[0]) + (wide ? tr(' + meio (2 camadas)', ' + middle (2 layers)', ' + medio (2 capas)') : '');

@@ -125,7 +125,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
         })();
     body.innerHTML = `
       <div class="scan-card-host"></div>
-      <div class="palette" role="radiogroup" aria-label="${tr('Cor do pincel', 'Brush color', 'Color del pincel')}">
+      <div class="palette ${impl.colors.length > 6 ? 'many' : ''}" role="radiogroup" aria-label="${tr('Cor do pincel', 'Brush color', 'Color del pincel')}">
         ${impl.colors
           .map(
             (c, i) => `<button class="swatch" role="radio" data-color="${c.key}" title="${c.name} (${tr('tecla', 'key', 'tecla')} ${i + 1})">

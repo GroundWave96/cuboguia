@@ -20,6 +20,12 @@ export function setLang(l: Lang) {
   if (typeof document !== 'undefined') document.documentElement.lang = LOCALE[l];
 }
 
+/**
+ * Texto curto para caixas estreitas: a setinha ↻/↺ não fica sozinha na linha de baixo e
+ * "counterclockwise" pode quebrar como "counter-/clockwise" (hífen só aparece se quebrar).
+ */
+export const fitText = (s: string) => s.replace(/ ([↻↺])/g, '\u00a0$1').replace(/(counter)(clockwise)/gi, '$1\u00ad$2');
+
 /** o texto no idioma atual */
 export const tr = (pt: string, en: string, es: string) => (lang === 'en' ? en : lang === 'es' ? es : pt);
 

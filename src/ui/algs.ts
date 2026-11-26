@@ -6,7 +6,7 @@
  *    o algoritmo, o 3D animado e como montar o caso no puzzle de verdade
  *  - "Aprendido" fica guardado no aparelho; o treino sorteia casos (de preferência os que faltam)
  */
-import { tr } from '../core/i18n';
+import { fitText, tr } from '../core/i18n';
 import { loadPuzzle } from '../core/registry';
 import { algsPath } from '../core/router';
 import { loadSpeed } from '../core/store';
@@ -265,7 +265,7 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
               <article class="al-card ${learned.has(c.id) ? 'learned' : ''}" data-case="${c.id}">
                 <button class="al-pic" data-open="${c.id}" aria-label="${tr(`Ver o caso ${caseName(c)} em 3D`, `See the ${caseName(c)} case in 3D`, `Ver el caso ${caseName(c)} en 3D`)}">${caseSvg(pz, impl, pz.caseState(c.alg), style)}<span class="al-play">${icon('play')}</span></button>
                 <div class="al-info">
-                  <h3>${caseName(c)}</h3>
+                  <h3>${fitText(caseName(c))}</h3>
                   <div class="al-alg">${algHtml(c.alg)}</div>
                   ${c.alt ? `<div class="al-alt"><span>${tr('ou', 'or', 'o')}</span> ${c.alt}</div>` : ''}
                   ${learnBtn(c)}
@@ -314,7 +314,7 @@ export async function renderAlgs(app: HTMLElement, puzzleId = 'cube3') {
             <p class="al-train-q">${tr(`Caso ${train.seen} · qual é este caso (${set.name()})?`, `Case ${train.seen} · which case is this (${set.name()})?`, `Caso ${train.seen} · ¿qué caso es este (${set.name()})?`)}</p>
             ${
               train.revealed
-                ? `<h3>${caseName(c)}</h3>
+                ? `<h3>${fitText(caseName(c))}</h3>
                    ${fix ? `<p class="al-auf">${tr(`Antes, ajuste o topo: <b>${fix}</b> (ou olhe de outro lado)`, `First adjust the top: <b>${fix}</b> (or look from another side)`, `Primero ajusta la parte de arriba: <b>${fix}</b> (o míralo desde otro lado)`)}</p>` : ''}
                    <div class="al-alg big">${algHtml(c.alg)}</div>
                    <div class="row-actions">${learnBtn(c)}<button class="btn ghost sm" data-open="${c.id}">${icon('play')}${tr('Ver em 3D', 'See in 3D', 'Ver en 3D')}</button></div>`

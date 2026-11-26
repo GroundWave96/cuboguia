@@ -2,7 +2,7 @@
  * Página "Aprenda a notação" (/notacao, /en/notation): o que quer dizer cada letra dos tutoriais
  * e algoritmos. Cada movimento é um cartão; tocar no cartão mostra a seta e anima o giro no 3D.
  */
-import { tr } from '../core/i18n';
+import { fitText, tr } from '../core/i18n';
 import { PUZZLES, loadPuzzle } from '../core/registry';
 import { NOTATION_PUZZLES, algsPath, notationPath, puzzlePath } from '../core/router';
 import type { PuzzleImpl, PuzzleView } from '../core/types';
@@ -131,7 +131,7 @@ export async function renderNotation(app: HTMLElement, puzzleId = 'cube3') {
   const impl = await loadPuzzle(id);
   const def = PUZZLES.find((p) => p.id === id)!;
   const cube = id === 'cube3' || id === 'cube5';
-  const describe = (m: string) => (cube ? describeNxNMove(m, true) : (impl.describeMove?.(m) ?? m));
+  const describe = (m: string) => fitText(cube ? describeNxNMove(m, true) : (impl.describeMove?.(m) ?? m));
   const groups = groupsFor(id, impl);
   let alive = true;
   let busy = false;
