@@ -84,14 +84,24 @@ export function setupApp() {
 
   // o service worker só existe no site publicado (no `npm run dev` ele atrapalharia)
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  // a pessoa já mexeu na página? (tocou, clicou, digitou) — antes disso, atualizar é seguro
+  let touched = false;
+  for (const ev of ['pointerdown', 'keydown', 'touchstart'])
+    window.addEventListener(ev, () => (touched = true), { once: true, passive: true, capture: true });
   window.addEventListener('load', async () => {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js');
       let hasController = !!navigator.serviceWorker.controller;
-      // versão nova esperando: oferece atualizar (nunca recarrega sozinho no meio de uma resolução)
+      // versão nova esperando: se a página acabou de abrir e ninguém mexeu nela, atualiza na
+      // hora (senão a versão velha, guardada para funcionar offline, fica até tocar em
+      // "Atualizar"); se já estiver em uso, só oferece — nunca recarrega no meio de uma resolução
       const watch = (w: ServiceWorker | null) => {
         if (!w) return;
-        const check = () => w.state === 'installed' && navigator.serviceWorker.controller && updateBanner(w);
+        const check = () => {
+          if (w.state !== 'installed' || !navigator.serviceWorker.controller) return;
+          if (!touched && document.visibilityState === 'visible') w.postMessage('SKIP_WAITING');
+          else updateBanner(w);
+        };
         check();
         w.addEventListener('statechange', check);
       };
