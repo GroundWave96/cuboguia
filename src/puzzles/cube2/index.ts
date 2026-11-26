@@ -60,6 +60,7 @@ const validate2 = makeValidate2(geo);
 /** sem canto fixo na câmera: começa por qualquer face e o site acha a posição no fim */
 const SCAN = buildScan(geo, CUBE3_COLORS, {
   hints: ANY_FACE_HINTS,
+  turns: true,
 });
 
 /** gira a imagem 2x2 de uma face ¼ de volta (sentido horário na tela) */

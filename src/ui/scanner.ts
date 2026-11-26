@@ -5,6 +5,7 @@ import { rgbToHsv, type RGB } from '../core/color';
 import { cellNeighbors, isFlat, puzzleInView } from '../core/scanpresence';
 import { icon } from './icons';
 import { clearFaceEdits, compose, isComplete, resetSession, type ScanSession } from './scansession';
+import { apply, poseMatrix, turnDuration, turnMatrix, turnSteps, type M3, type Pose, type TurnStep, type V3 } from './scanturn';
 
 /** Fração do menor lado do vídeo ocupada pela grade (o CSS do rótulo "em cima" usa o mesmo valor). */
 const GRID_FRACTION = 0.66;
@@ -12,6 +13,12 @@ const GRID_FRACTION = 0.66;
 /** captura automática: cores paradas por STABLE_MS, depois contagem de COUNT_MS */
 const STABLE_MS = 500;
 const COUNT_MS = 1500;
+/** giro entre as faces: some as faixas, o cubinho gira, as faixas voltam (ms) */
+const TURN_FADE_OUT = 240;
+const TURN_FADE_IN = 380;
+/** distância da câmera virtual (em meias-faces): perspectiva suave */
+const TURN_CAM = 6;
+const BODY_HEX = '#11141c';
 const AUTO_KEY = 'cuboguia.autoCapture';
 function loadAuto(): boolean {
   try {
@@ -132,6 +139,10 @@ export class CameraScanner {
   private presence: boolean[] = [];
   private pairsCache = new Map<number, [number, number][]>();
 
+  // ---- giro animado entre uma face e a próxima (o "cubinho")
+  private turn: { from: number; to: number; steps: TurnStep[]; start: number } | null = null;
+  private turnRaf = 0;
+
   constructor(
     container: HTMLElement,
     private impl: PuzzleImpl,
@@ -210,6 +221,7 @@ export class CameraScanner {
         <div class="up-label ${this.running ? '' : 'hidden'}" style="--up:${upHex}">
           <span class="arrow">${face.arrow ?? '▲'}</span>${face.upLabel}
         </div>
+        <button class="turn-replay ${this.running && this.canReplay() ? '' : 'hidden'}" data-act="replay" title="${tr('Mostrar de novo como girar o puzzle até esta face', 'Show again how to turn the puzzle to this face', 'Mostrar otra vez cómo girar el puzzle hasta esta cara')}">${icon('resetView')}<span>${tr('Ver o giro', 'Show the turn', 'Ver el giro')}</span></button>
         <div class="scan-warn" aria-live="polite"></div>
         <div class="scan-auto ${this.running && this.auto ? '' : 'hidden'}"></div>
         <div class="scan-placeholder ${this.running ? 'hidden' : ''}">
@@ -251,6 +263,7 @@ export class CameraScanner {
     }
     this.root.querySelector('[data-act="start"]')?.addEventListener('click', () => this.start());
     this.root.querySelector('[data-act="capture"]')?.addEventListener('click', () => this.capture());
+    this.root.querySelector('[data-act="replay"]')?.addEventListener('click', () => this.startTurn(this.current - 1, this.current));
     this.root.querySelector('[data-act="switch"]')?.addEventListener('click', () => this.switchCamera());
     this.root.querySelector('[data-act="review"]')?.addEventListener('click', () => this.showReview());
     this.root.querySelector('[data-act="auto"]')?.addEventListener('click', () => {
@@ -263,6 +276,7 @@ export class CameraScanner {
     this.root.querySelectorAll<HTMLButtonElement>('[data-face]').forEach((b) =>
       b.addEventListener('click', () => {
         this.current = Number(b.dataset.face);
+        this.stopTurn();
         // escolheu a face na mão: pode capturar sozinho de novo
         this.armed = true;
         this.countStart = 0;
@@ -452,6 +466,12 @@ export class CameraScanner {
   }
 
   private updateAuto() {
+    if (this.turn) {
+      // durante o giro animado não conta (a espera de 2 s começa quando ele termina)
+      this.countStart = 0;
+      this.stableSince = performance.now();
+      return this.setAutoMsg('');
+    }
     if (!this.auto || !this.running || this.live.length !== this.cellsOf().length) {
       this.countStart = 0;
       return this.setAutoMsg('');
@@ -540,84 +560,11 @@ export class CameraScanner {
     ctx.clearRect(0, 0, dw, dh);
     const M = Math.min(dw, dh), OX = (dw - M) / 2, OY = (dh - M) / 2;
     const P = (p: Pt): Pt => [OX + p[0] * M, OY + p[1] * M];
+    if (this.turn) return this.drawTurn(ctx, dw, dh, M, OX, OY, P);
     const face = this.impl.scan[this.current];
     const cells = this.cellsOf();
-    // escurece fora da face
-    const outline = hull(cells.flatMap((c) => c.poly)).map(P);
-    ctx.fillStyle = 'rgba(5,8,18,0.45)';
-    ctx.beginPath();
-    ctx.rect(0, 0, dw, dh);
-    outline.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
-    ctx.closePath();
-    ctx.fill('evenodd');
-    const bar = (key: string, x: number, y: number, w: number, h: number) => {
-      ctx.fillStyle = this.hex(key);
-      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(x, y, w, h, Math.min(w, h) / 2);
-      ctx.fill();
-      ctx.stroke();
-    };
-    if (face.marks) {
-      // faces poligonais: por fora de cada aresta, as cores já capturadas da face vizinha
-      // (quando houver) ou um traço com a cor do centro vizinho
-      const seen = (face.neighborMarks ?? []).map((m) => ({ ...m, key: this.capturedKey(m.sticker) }));
-      const edgesWithColors = new Set(seen.filter((m) => m.key).map((m) => m.edge));
-      for (const m of seen) {
-        if (!m.key) continue;
-        const a = P(m.a), b = P(m.b);
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-        ctx.lineWidth = 12;
-        ctx.beginPath();
-        ctx.moveTo(a[0], a[1]);
-        ctx.lineTo(b[0], b[1]);
-        ctx.stroke();
-        ctx.strokeStyle = this.hex(m.key);
-        ctx.lineWidth = 9;
-        ctx.stroke();
-      }
-      face.marks.forEach((mk, i) => {
-        if (edgesWithColors.has(i)) return;
-        const a = P(mk.a), b = P(mk.b);
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-        ctx.lineWidth = mk.primary ? 15 : 11;
-        ctx.beginPath();
-        ctx.moveTo(a[0], a[1]);
-        ctx.lineTo(b[0], b[1]);
-        ctx.stroke();
-        ctx.strokeStyle = this.hex(mk.color);
-        ctx.lineWidth = mk.primary ? 12 : 8;
-        ctx.stroke();
-      });
-    } else {
-      const g = this.gridRect(dw, dh);
-      const n = face.grid.length;
-      const cell = g.side / n;
-      const gap = 6, thick = 12, thin = 7, inset = cell * 0.2;
-      const nb = face.neighbors;
-      // as cores JÁ capturadas que encostam em cada borda (a fileira da face vizinha)
-      const seg = (stickers: number[], horizontal: boolean, x0: number, y0: number, t: number) =>
-        stickers.forEach((st, k) => {
-          const key = this.capturedKey(st);
-          if (!key) return;
-          const a = k * cell + cell * 0.12, len = cell * 0.76;
-          if (horizontal) bar(key, x0 + a, y0, len, t);
-          else bar(key, x0, y0 + a, t, len);
-        });
-      const has = (stickers: number[]) => stickers.some((st) => this.capturedKey(st));
-      // cubos com centro: enquanto a vizinha não foi lida, a barra tem a cor do centro dela
-      if (has(face.edges.up)) seg(face.edges.up, true, g.x, g.y - gap - thick, thick);
-      else if (nb) bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
-      if (has(face.edges.down)) seg(face.edges.down, true, g.x, g.y + g.side + gap, thin + 3);
-      else if (nb) bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
-      if (has(face.edges.left)) seg(face.edges.left, false, g.x - gap - thin - 3, g.y, thin + 3);
-      else if (nb) bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
-      if (has(face.edges.right)) seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
-      else if (nb) bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
-    }
+    const outline = this.dimOutside(ctx, this.current, dw, dh, P);
+    this.drawStrips(ctx, this.current, 1, dw, dh, P);
     if (this.countStart) {
       // anel de progresso da contagem, sobre o contorno da face
       const k = Math.min(1, (performance.now() - this.countStart) / COUNT_MS);
@@ -687,6 +634,233 @@ export class CameraScanner {
     });
   }
 
+  /** escurece o vídeo fora da face (devolve o contorno da face na tela) */
+  private dimOutside(ctx: CanvasRenderingContext2D, fi: number, dw: number, dh: number, P: (p: Pt) => Pt): Pt[] {
+    const outline = hull(this.cellsOf(fi).flatMap((c) => c.poly)).map(P);
+    ctx.fillStyle = 'rgba(5,8,18,0.45)';
+    ctx.beginPath();
+    ctx.rect(0, 0, dw, dh);
+    outline.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+    ctx.closePath();
+    ctx.fill('evenodd');
+    return outline;
+  }
+
+  /** as faixas por fora das bordas: as cores já lidas das faces vizinhas (ou a cor do centro) */
+  private drawStrips(ctx: CanvasRenderingContext2D, fi: number, alpha: number, dw: number, dh: number, P: (p: Pt) => Pt) {
+    if (alpha <= 0) return;
+    const face = this.impl.scan[fi];
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const bar = (key: string, x: number, y: number, w: number, h: number) => {
+      ctx.fillStyle = this.hex(key);
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, Math.min(w, h) / 2);
+      ctx.fill();
+      ctx.stroke();
+    };
+    if (face.marks) {
+      // faces poligonais: por fora de cada aresta, as cores já capturadas da face vizinha
+      // (quando houver) ou um traço com a cor do centro vizinho
+      const seen = (face.neighborMarks ?? []).map((m) => ({ ...m, key: this.capturedKey(m.sticker) }));
+      const edgesWithColors = new Set(seen.filter((m) => m.key).map((m) => m.edge));
+      for (const m of seen) {
+        if (!m.key) continue;
+        const a = P(m.a), b = P(m.b);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+        ctx.strokeStyle = this.hex(m.key);
+        ctx.lineWidth = 9;
+        ctx.stroke();
+      }
+      face.marks.forEach((mk, i) => {
+        if (edgesWithColors.has(i)) return;
+        const a = P(mk.a), b = P(mk.b);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = mk.primary ? 15 : 11;
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+        ctx.strokeStyle = this.hex(mk.color);
+        ctx.lineWidth = mk.primary ? 12 : 8;
+        ctx.stroke();
+      });
+    } else {
+      const g = this.gridRect(dw, dh);
+      const n = face.grid.length;
+      const cell = g.side / n;
+      const gap = 6, thick = 12, thin = 7, inset = cell * 0.2;
+      const nb = face.neighbors;
+      // as cores JÁ capturadas que encostam em cada borda (a fileira da face vizinha)
+      const seg = (stickers: number[], horizontal: boolean, x0: number, y0: number, t: number) =>
+        stickers.forEach((st, k) => {
+          const key = this.capturedKey(st);
+          if (!key) return;
+          const a = k * cell + cell * 0.12, len = cell * 0.76;
+          if (horizontal) bar(key, x0 + a, y0, len, t);
+          else bar(key, x0, y0 + a, t, len);
+        });
+      const has = (stickers: number[]) => stickers.some((st) => this.capturedKey(st));
+      // cubos com centro: enquanto a vizinha não foi lida, a barra tem a cor do centro dela
+      if (has(face.edges.up)) seg(face.edges.up, true, g.x, g.y - gap - thick, thick);
+      else if (nb) bar(nb.up, g.x + inset, g.y - gap - thick, g.side - 2 * inset, thick);
+      if (has(face.edges.down)) seg(face.edges.down, true, g.x, g.y + g.side + gap, thin + 3);
+      else if (nb) bar(nb.down, g.x + inset, g.y + g.side + gap, g.side - 2 * inset, thin);
+      if (has(face.edges.left)) seg(face.edges.left, false, g.x - gap - thin - 3, g.y, thin + 3);
+      else if (nb) bar(nb.left, g.x - gap - thin, g.y + inset, thin, g.side - 2 * inset);
+      if (has(face.edges.right)) seg(face.edges.right, false, g.x + g.side + gap, g.y, thin + 3);
+      else if (nb) bar(nb.right, g.x + g.side + gap, g.y + inset, thin, g.side - 2 * inset);
+    }
+    ctx.restore();
+  }
+
+  // ---- giro animado entre as faces
+
+  /** dá para animar o giro entre estas duas faces? (as duas com pose, molde em grade) */
+  private turnable(a: number, b: number): boolean {
+    const fa = this.impl.scan[a], fb = this.impl.scan[b];
+    return !!fa?.pose && !!fb?.pose && !fa.cells && !fb.cells && a !== b;
+  }
+  private canReplay(): boolean {
+    return this.mode === 'scan' && this.current > 0 && this.turnable(this.current - 1, this.current);
+  }
+
+  /** anima o puzzle girando da face `from` para a face `to` (o movimento que a pessoa faz) */
+  private startTurn(from: number, to: number) {
+    if (!this.turnable(from, to) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const steps = turnSteps(this.impl.scan[from].pose as Pose, this.impl.scan[to].pose as Pose);
+    if (!steps?.length) return;
+    this.turn = { from, to, steps, start: performance.now() };
+    this.countStart = 0;
+    cancelAnimationFrame(this.turnRaf);
+    const total = TURN_FADE_OUT + turnDuration(steps) + TURN_FADE_IN;
+    const tick = () => {
+      if (!this.turn) return;
+      if (performance.now() - this.turn.start >= total) {
+        this.turn = null;
+        this.stableSince = performance.now();
+      }
+      if (this.video?.isConnected) this.drawOverlay();
+      if (this.turn) this.turnRaf = requestAnimationFrame(tick);
+    };
+    this.turnRaf = requestAnimationFrame(tick);
+  }
+
+  private stopTurn() {
+    this.turn = null;
+    cancelAnimationFrame(this.turnRaf);
+  }
+
+  /**
+   * Um quadro do giro: (1) as faixas da face lida somem e a grade vira o cubinho, com as cores
+   * capturadas; (2) o cubinho gira até a próxima face ficar de frente; (3) o cubinho some e as
+   * faixas da nova face aparecem — daí em diante é a tela normal.
+   */
+  private drawTurn(ctx: CanvasRenderingContext2D, dw: number, dh: number, M: number, OX: number, OY: number, P: (p: Pt) => Pt) {
+    const T = this.turn!;
+    const t = performance.now() - T.start;
+    const rotMs = turnDuration(T.steps);
+    const from = this.impl.scan[T.from].pose as Pose, to = this.impl.scan[T.to].pose as Pose;
+    const view = { k: (GRID_FRACTION * M) / 2, cx: OX + M / 2, cy: OY + M / 2 };
+    if (t < TURN_FADE_OUT) {
+      const a = t / TURN_FADE_OUT;
+      this.dimOutside(ctx, T.from, dw, dh, P);
+      this.drawCube(ctx, poseMatrix(from), a, view);
+      this.drawStrips(ctx, T.from, 1 - a, dw, dh, P);
+    } else if (t < TURN_FADE_OUT + rotMs) {
+      ctx.fillStyle = 'rgba(5,8,18,0.5)';
+      ctx.fillRect(0, 0, dw, dh);
+      this.drawCube(ctx, turnMatrix(from, T.steps, t - TURN_FADE_OUT), 1, view);
+    } else {
+      const a = Math.min(1, (t - TURN_FADE_OUT - rotMs) / TURN_FADE_IN);
+      this.dimOutside(ctx, T.to, dw, dh, P);
+      this.drawCube(ctx, poseMatrix(to), 1 - a, view);
+      this.drawStrips(ctx, T.to, a, dw, dh, P);
+    }
+  }
+
+  /** o cubinho: cada face do molde com o corpo escuro e as cores já lidas (ou só o contorno) */
+  private drawCube(ctx: CanvasRenderingContext2D, R: M3, bodyAlpha: number, view: { k: number; cx: number; cy: number }) {
+    // tela: a face da frente fica em z = 1 e é desenhada do tamanho exato da grade
+    const proj = (p: V3): Pt => {
+      const v = apply(R, p);
+      const s = TURN_CAM / (TURN_CAM - (v[2] - 1));
+      return [view.cx + v[0] * view.k * s, view.cy - v[1] * view.k * s];
+    };
+    const at = (f: Pose, u: number, w: number): V3 => [f.out[0] + f.right[0] * u + f.up[0] * w, f.out[1] + f.right[1] * u + f.up[1] * w, f.out[2] + f.right[2] * u + f.up[2] * w];
+    const light: V3 = [-0.35, 0.55, 0.76];
+    const faces = this.impl.scan
+      .map((f, fi) => ({ f, fi, pose: f.pose as Pose | undefined }))
+      .filter((x): x is { f: (typeof x)['f']; fi: number; pose: Pose } => !!x.pose)
+      .map((x) => {
+        const n = apply(R, x.pose.out);
+        // visível se aponta para a câmera (que fica em z = 1 + TURN_CAM)
+        const facing = n[0] * -n[0] + n[1] * -n[1] + n[2] * (1 + TURN_CAM - n[2]);
+        return { ...x, n, facing };
+      })
+      .filter((x) => x.facing > 1e-3)
+      .sort((a, b) => a.n[2] - b.n[2]);
+    for (const { f, fi, pose, n } of faces) {
+      const lum = 0.55 + 0.45 * Math.max(0, n[0] * light[0] + n[1] * light[1] + n[2] * light[2]);
+      const shade = (1 - lum) * 0.85;
+      const quad = (pts: Pt[]) => {
+        ctx.beginPath();
+        pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+        ctx.closePath();
+      };
+      // corpo
+      if (bodyAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = bodyAlpha;
+        quad([at(pose, -1, 1), at(pose, 1, 1), at(pose, 1, -1), at(pose, -1, -1)].map(proj));
+        ctx.fillStyle = BODY_HEX;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 1.5;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.restore();
+      }
+      // adesivos (mesmo recuo das células da grade)
+      const n2 = f.grid.length;
+      const e = 0.06 * (2 / n2);
+      f.grid.flat().forEach((_, cell) => {
+        const r = Math.floor(cell / n2), c = cell % n2;
+        const u0 = -1 + (2 * c) / n2 + e, u1 = -1 + (2 * (c + 1)) / n2 - e;
+        const w0 = 1 - (2 * r) / n2 - e, w1 = 1 - (2 * (r + 1)) / n2 + e;
+        quad([at(pose, u0, w0), at(pose, u1, w0), at(pose, u1, w1), at(pose, u0, w1)].map(proj));
+        const rgb = this.captured[fi]?.[cell];
+        if (rgb) {
+          ctx.fillStyle = this.hex(f.fixedCells.find((x) => x.cell === cell)?.color ?? this.classify(rgb));
+          ctx.fill();
+          if (shade > 0.01) {
+            ctx.fillStyle = `rgba(0,0,0,${shade.toFixed(3)})`;
+            ctx.fill();
+          }
+          ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = `rgba(255,255,255,${(0.06 * bodyAlpha).toFixed(3)})`;
+          ctx.fill();
+          ctx.strokeStyle = `rgba(255,255,255,${(0.85 - shade * 0.5).toFixed(3)})`;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        }
+      });
+    }
+  }
+
   /** Mediana, por adesivo e canal, dos últimos quadros. */
   private stableSample(): RGB[] {
     const frames = this.history.length ? this.history : [this.live];
@@ -724,13 +898,17 @@ export class CameraScanner {
       setTimeout(() => this.showReview(), 180);
       return;
     }
+    const prev = this.current;
     this.current = next >= 0 ? next : anyMissing;
+    // mostra o movimento até a próxima face (o cubinho girando)
+    this.startTurn(prev, this.current);
     setTimeout(() => this.render(), 180);
   }
 
   // ---- revisão: todas as faces lidas
 
   private showReview() {
+    this.stopTurn();
     this.mode = 'review';
     clearInterval(this.timer); // a câmera continua aberta, mas sem ler (volta ao refazer uma face)
     this.countStart = 0;
@@ -810,6 +988,7 @@ export class CameraScanner {
   }
 
   stop() {
+    this.stopTurn();
     clearInterval(this.timer);
     this.stopStream();
     this.running = false;

@@ -99,6 +99,12 @@ export interface ScanFace {
   neighborMarks?: { sticker: number; edge: number; a: [number, number]; b: [number, number] }[];
   /** seta do rótulo de orientação (padrão ▲) */
   arrow?: string;
+  /**
+   * Como a face aparece na câmera: as direções do puzzle (no referencial dele) que ficam à
+   * direita, para cima e apontando para a câmera. Com ela, a câmera anima o giro do puzzle
+   * entre uma face e a próxima (o "cubinho" girando).
+   */
+  pose?: { right: [number, number, number]; up: [number, number, number]; out: [number, number, number] };
 }
 
 export interface PuzzleView {

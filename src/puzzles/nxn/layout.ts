@@ -58,6 +58,8 @@ export interface ScanOptions {
   fixed?: Map<number, string>;
   /** dica curta por face, para cubos sem centro (no idioma atual: use getters ou i18nMap) */
   hints?: Partial<Record<FaceId, string>>;
+  /** liga a animação do giro entre as faces (cada molde ganha a pose da face) */
+  turns?: boolean;
 }
 
 /**
@@ -85,6 +87,8 @@ export function buildScan(geo: NxNGeometry, colors: ColorInfo[], opts: ScanOptio
       right: along(grid.map((row) => row[n - 1]), r),
     };
     const fixedCells = grid.flat().flatMap((st, cell) => (fixed.has(st) ? [{ cell, color: fixed.get(st)! }] : []));
+    // na câmera: direita = r, para cima = -d (a grade desce em d), para a câmera = n
+    const pose = opts.turns ? { pose: { right: [...r] as Vec3, up: neg(d), out: [...FACE_FRAME[face].n] as Vec3 } } : {};
     if (odd) {
       const nb = faceNeighbors(face);
       const up = color(nb.up);
@@ -105,6 +109,7 @@ export function buildScan(geo: NxNGeometry, colors: ColorInfo[], opts: ScanOptio
         neighbors: nb,
         edges,
         fixedCells,
+        ...pose,
       };
     }
     return {
@@ -122,6 +127,7 @@ export function buildScan(geo: NxNGeometry, colors: ColorInfo[], opts: ScanOptio
       },
       edges,
       fixedCells,
+      ...pose,
     };
   };
   return (['F', 'R', 'B', 'L', 'U', 'D'] as FaceId[]).map(build);
