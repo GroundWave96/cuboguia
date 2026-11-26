@@ -185,7 +185,11 @@ const norm = (a: V3): V3 => {
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
-export function megaminxIcon(): string {
+export const megaminxIcon = () => dodecaIcon(false);
+/** Kilominx: o mesmo dodecaedro, com 5 cantos grandes em volta de uma estrela preta */
+export const kilominxIcon = () => dodecaIcon(true);
+
+function dodecaIcon(kilo: boolean): string {
   const phi = (1 + Math.sqrt(5)) / 2;
   const ip = 1 / phi;
   const verts: V3[] = [];
@@ -255,13 +259,19 @@ export function megaminxIcon(): string {
     const inner = V.map((v) => lerp(C, v, 0.47));
     const e = (i: number, j: number) => lerp(V[i], V[j], 0.31); // ponto na aresta i→j
     const lit = Math.max(0, f.n[2]); // faces de lado ficam mais escuras
-    const stickers: P[][] = [inner];
-    for (let i = 0; i < 5; i++) {
-      const j = (i + 1) % 5, k = (i + 4) % 5;
-      stickers.push([V[i], e(i, j), inner[i], e(i, k)]); // canto
-      stickers.push([e(i, j), e(j, i), inner[j], inner[i]]); // aresta
+    if (kilo) {
+      // pipas do vértice até o meio das arestas e, por dentro, até perto do centro (KITE_TIP)
+      const tip = V.map((v) => lerp(C, v, 0.2));
+      for (let i = 0; i < 5; i++) out.push(sticker(shrink([V[i], lerp(V[i], V[(i + 1) % 5], 0.5), tip[i], lerp(V[i], V[(i + 4) % 5], 0.5)], 0.87), f.color, 3.2));
+    } else {
+      const stickers: P[][] = [inner];
+      for (let i = 0; i < 5; i++) {
+        const j = (i + 1) % 5, k = (i + 4) % 5;
+        stickers.push([V[i], e(i, j), inner[i], e(i, k)]); // canto
+        stickers.push([e(i, j), e(j, i), inner[j], inner[i]]); // aresta
+      }
+      for (const st of stickers) out.push(sticker(shrink(st, 0.8), f.color, 2));
     }
-    for (const st of stickers) out.push(sticker(shrink(st, 0.8), f.color, 2));
     if (lit < 0.85) out.push(shade(V, '#000000', Math.min(0.45, (0.9 - lit) * 0.5)));
   }
   return wrap(out.join(''));

@@ -2,7 +2,7 @@
 import { expect, test } from '@playwright/test';
 import { openRandomTutorial, trackErrors } from './helpers';
 
-const SLUGS = ['2x2', '3x3', '4x4', '5x5', '6x6', '7x7', 'pyraminx', 'skewb', 'megaminx', 'mastermorphix'];
+const SLUGS = ['2x2', '3x3', '4x4', '5x5', '6x6', '7x7', 'pyraminx', 'skewb', 'megaminx', 'kilominx', 'mastermorphix'];
 /** tutoriais longos (40 a 60 passos): no GitHub o 3D é desenhado sem placa de vídeo e demora */
 const LONG = ['4x4', '5x5', '6x6', '7x7', 'megaminx'];
 

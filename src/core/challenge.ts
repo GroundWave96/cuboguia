@@ -64,6 +64,7 @@ export const PREVIEW_NAMES: Record<string, string> = {
   pyraminx: 'Pyraminx',
   skewb: 'Skewb',
   megaminx: 'Megaminx',
+  kilominx: 'Kilominx',
   mastermorphix: 'Mastermorphix',
 };
 

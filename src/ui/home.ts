@@ -17,12 +17,13 @@ const SHOW: Record<string, { scramble: number; ms: number }> = {
   pyraminx: { scramble: 9, ms: 220 },
   skewb: { scramble: 9, ms: 230 },
   megaminx: { scramble: 14, ms: 200 },
+  kilominx: { scramble: 10, ms: 220 },
   mastermorphix: { scramble: 10, ms: 240 },
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** os mais pesados de montar em 3D: ficam fora da vitrine em aparelho fraco */
-const HEAVY = new Set(['cube6', 'cube7', 'megaminx']);
+const HEAVY = new Set(['cube6', 'cube7', 'megaminx', 'kilominx']);
 
 /** aparelho com pouco processador ou memória */
 export function weakDevice(nav: { hardwareConcurrency?: number; deviceMemory?: number } = navigator): boolean {

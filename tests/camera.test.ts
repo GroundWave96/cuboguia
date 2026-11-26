@@ -287,7 +287,8 @@ describe('câmera — lote 2 (nov/2026)', () => {
   it('nunca recusa o centro certo; face trocada só no par vermelho × laranja', () => {
     const wrongs: string[] = [];
     const accepted: string[] = [];
-    for (const p of batch2.filter((x) => x.puzzle !== 'pyraminx' && x.puzzle !== 'mastermorphix')) {
+    // (só puzzles com centro: Pyraminx, Mastermorphix e Kilominx não têm)
+    for (const p of batch2.filter((x) => !['pyraminx', 'mastermorphix', 'kilominx'].includes(x.puzzle))) {
       const colors = p.puzzle === 'megaminx' ? MEGA_COLORS : CUBE3_COLORS;
       const model = new ColorModel(colors, p.puzzle === 'megaminx' ? 'nearest' : 'hue6');
       for (const q of batch2.filter((x) => x.puzzle === p.puzzle && x.light === p.light && x !== p)) {

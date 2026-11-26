@@ -104,6 +104,7 @@ export async function renderInput(app: HTMLElement, puzzleId: string, params = n
     const net = impl.net;
     const netHtml = impl.netSvg
       ? `<svg class="net-svg" viewBox="${impl.netSvg.viewBox}" role="group" aria-label="${tr('Planificação', 'Flat layout', 'Plano')}">
+          ${impl.netSvg.decor ? `<g aria-hidden="true" pointer-events="none">${impl.netSvg.decor}</g>` : ''}
           ${impl.netSvg.stickers
             .map((s) => `<polygon class="st ${impl.fixedStickers.includes(s.index) ? 'fixed' : ''}" data-i="${s.index}" points="${s.points}"/>`)
             .join('')}

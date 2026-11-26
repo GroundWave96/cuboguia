@@ -1,6 +1,6 @@
 import { tr } from './i18n';
 import type { PuzzleDefinition, PuzzleImpl } from './types';
-import { cubeIcon, mastermorphixIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
+import { cubeIcon, kilominxIcon, mastermorphixIcon, megaminxIcon, pyraminxIcon, skewbIcon } from './icons';
 
 export const PUZZLES: PuzzleDefinition[] = [
   {
@@ -137,6 +137,21 @@ export const PUZZLES: PuzzleDefinition[] = [
     methods: 2,
     icon: megaminxIcon(),
     load: () => import('../puzzles/megaminx').then((m) => m.default as PuzzleImpl),
+  },
+  {
+    id: 'kilominx',
+    slug: 'kilominx',
+    get name() {
+      return tr('Kilominx', 'Kilominx', 'Kilominx');
+    },
+    short: 'Kilominx',
+    get subtitle() {
+      return tr('O “megaminx 2x2”: 20 cantos, sem centros.', 'The “2x2 Megaminx”: 20 corners, no centers.', 'El “megaminx 2x2”: 20 esquinas, sin centros.');
+    },
+    available: true,
+    methods: 2,
+    icon: kilominxIcon(),
+    load: () => import('../puzzles/kilominx').then((m) => m.default as PuzzleImpl),
   },
   {
     id: 'mastermorphix',

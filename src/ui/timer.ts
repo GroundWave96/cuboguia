@@ -71,11 +71,13 @@ function saveSolves(puzzle: string, solves: Solve[], session = MAIN) {
 }
 
 
+/** puzzles cuja planificação não é a cruz dos cubos */
+const NOT_CROSS = ['pyraminx', 'megaminx', 'kilominx', 'mastermorphix'];
 /** como segurar o puzzle resolvido antes de embaralhar (a posição do desenho) */
 const scrambleHold = (puzzle: string) =>
   puzzle === 'pyraminx'
     ? tr('com a face <b>verde</b> de frente para você e a <b>amarela</b> embaixo', 'with the <b>green</b> face toward you and the <b>yellow</b> one on the bottom', 'con la cara <b>verde</b> hacia ti y la <b>amarilla</b> abajo')
-    : puzzle === 'megaminx'
+    : puzzle === 'megaminx' || puzzle === 'kilominx'
       ? tr('com o <b>cinza</b> em cima e o <b>verde-claro</b> de frente para você', 'with <b>gray</b> on top and <b>light green</b> facing you', 'con el <b>gris</b> arriba y el <b>verde claro</b> hacia ti')
       : puzzle === 'mastermorphix'
         ? tr(
@@ -836,8 +838,8 @@ export async function renderTimer(app: HTMLElement, params = new URLSearchParams
             <li>${tr(`Comece com o ${puzzleName()} <b>resolvido</b>, ${scrambleHold(cfg.puzzle)}.`, `Start with the ${puzzleName()} <b>solved</b>, ${scrambleHold(cfg.puzzle)}.`, `Empieza con el ${puzzleName()} <b>resuelto</b>, ${scrambleHold(cfg.puzzle)}.`)}</li>
             <li>${tr('Faça os giros na ordem, da esquerda para a direita, <b>sem virar o puzzle na mão</b> no meio do caminho.', 'Do the turns in order, left to right, <b>without rotating the whole puzzle</b> along the way.', 'Haz los giros en orden, de izquierda a derecha, <b>sin girar el puzzle entero</b> por el camino.')}</li>
             <li>${tr(
-              `Confira com o desenho${cfg.preview ? '' : ' (ligue a opção "Desenho")'}: ele mostra como o puzzle deve ter ficado, visto ${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? 'aberto' : 'aberto em cruz (a face de cima no alto, a da frente no meio)'}.`,
-              `Check it against the preview${cfg.preview ? '' : ' (turn on the "Preview" option)'}: it shows how the puzzle should look, unfolded${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? '' : ' as a cross (top face at the top, front face in the middle)'}.`, `Compáralo con la vista previa${cfg.preview ? '' : ' (activa la opción "Vista previa")'}: muestra cómo debería quedar el puzzle, desplegado${cfg.puzzle === 'pyraminx' || cfg.puzzle === 'megaminx' ? '' : ' en forma de cruz (la cara de arriba arriba y la del frente en el medio)'}.`,
+              `Confira com o desenho${cfg.preview ? '' : ' (ligue a opção "Desenho")'}: ele mostra como o puzzle deve ter ficado, visto ${NOT_CROSS.includes(cfg.puzzle) ? 'aberto' : 'aberto em cruz (a face de cima no alto, a da frente no meio)'}.`,
+              `Check it against the preview${cfg.preview ? '' : ' (turn on the "Preview" option)'}: it shows how the puzzle should look, unfolded${NOT_CROSS.includes(cfg.puzzle) ? '' : ' as a cross (top face at the top, front face in the middle)'}.`, `Compáralo con la vista previa${cfg.preview ? '' : ' (activa la opción "Vista previa")'}: muestra cómo debería quedar el puzzle, desplegado${NOT_CROSS.includes(cfg.puzzle) ? '' : ' en forma de cruz (la cara de arriba arriba y la del frente en el medio)'}.`,
             )}</li>
           </ol>
         </div>

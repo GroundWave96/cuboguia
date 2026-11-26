@@ -144,7 +144,13 @@ export interface PuzzleImpl {
   createView(container: HTMLElement): PuzzleView;
   net: NetFace[];
   /** rede 2D desenhada com polígonos (puzzles que não são grades quadradas) */
-  netSvg?: { viewBox: string; stickers: { index: number; points: string }[]; labels?: { x: number; y: number; text: string }[] };
+  netSvg?: {
+    viewBox: string;
+    stickers: { index: number; points: string }[];
+    labels?: { x: number; y: number; text: string }[];
+    /** SVG desenhado por baixo dos adesivos (ex.: o corpo preto das faces do Kilominx) */
+    decor?: string;
+  };
   scan: ScanFace[];
   /** texto da tela da câmera, se diferente do holdHint */
   scanHint?: string;

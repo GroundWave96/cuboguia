@@ -2,7 +2,7 @@
 
 > Site gratuito, em português, inglês e espanhol, que ensina a resolver cubos mágicos e outros puzzles. A pessoa informa as cores do próprio puzzle (pintando num modelo 3D ou apontando a câmera) e recebe um tutorial animado, passo a passo, com o método para iniciantes ou o CFOP. Funciona no navegador, sem cadastro, e também sem internet (app instalável).
 
-Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb, Megaminx e Mastermorphix.
+Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb, Megaminx, Kilominx e Mastermorphix.
 
 ## Resolver um puzzle
 
@@ -15,6 +15,7 @@ Puzzles: cubos 2x2, 3x3, 4x4, 5x5, 6x6 e 7x7, Pyraminx, Skewb, Megaminx e Master
 - [Pyraminx](https://cuboguia.pages.dev/pyraminx)
 - [Skewb](https://cuboguia.pages.dev/skewb)
 - [Megaminx](https://cuboguia.pages.dev/megaminx)
+- [Kilominx](https://cuboguia.pages.dev/kilominx): o "megaminx 2x2", só com os 20 cantos (sem centros)
 - [Mastermorphix](https://cuboguia.pages.dev/mastermorphix): pirâmide com um 3x3 por dentro (resolve a partir da forma de pirâmide)
 
 ## Aprender e treinar

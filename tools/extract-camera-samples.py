@@ -183,6 +183,20 @@ MORPH = [
     ('IMG_6341', 'claro', [(840, 560), (850, 760), (540, 850), (1110, 880), (810, 1060), (590, 1180), (1020, 1200), (400, 1290), (780, 1340), (1170, 1320)], 'RYRRYYRYRB'),
 ]
 
+# Kilominx (nov/2026): as 5 pipas da face de frente, marcadas no meio de cada uma (pixel da
+# foto, já de pé). Chaves = as do Megaminx: U cinza, F verde-claro, R rosa, BR bege,
+# BL azul-claro, L laranja, DR azul, DBR vermelho, B verde, DBL roxo, DL amarelo, D branco.
+KILO = [
+    ('IMG_6372', [((1177, 1206), 'BR'), ((869, 1433), 'D'), ((1436, 1449), 'R'), ((918, 1822), 'DL'), ((1291, 1822), 'DR')]),
+    ('IMG_6373', [((967, 1287), 'DBL'), ((1210, 1562), 'DBR'), ((1080, 1886), 'U'), ((675, 1822), 'DL'), ((643, 1433), 'BR')]),
+    ('IMG_6374', [((1129, 1271), 'B'), ((1436, 1465), 'BR'), ((1323, 1822), 'F'), ((950, 1838), 'L'), ((837, 1481), 'DR')]),
+    ('IMG_6375', [((1112, 1530), 'B'), ((1436, 1822), 'D'), ((1307, 2178), 'L'), ((886, 2146), 'U'), ((756, 1773), 'DBL')]),
+    ('IMG_6376', [((1075, 1440), 'BL'), ((1450, 1640), 'D'), ((1330, 2100), 'F'), ((870, 2140), 'R'), ((780, 1680), 'DBL')]),
+    ('IMG_6377', [((886, 1400), 'F'), ((1210, 1417), 'B'), ((1323, 1822), 'U'), ((1048, 2048), 'DL'), ((789, 1789), 'L')]),
+    ('IMG_6378', [((1015, 1384), 'DR'), ((1323, 1627), 'BR'), ((1145, 1984), 'BL'), ((740, 1951), 'DL'), ((659, 1562), 'BR')]),
+    ('IMG_6379', [((1080, 1336), 'B'), ((1307, 1595), 'DBR'), ((1177, 1919), 'U'), ((788, 1886), 'BL'), ((740, 1498), 'D')]),
+]
+
 
 def find(folder, name):
     d = os.path.join(IMG, folder)
@@ -331,6 +345,21 @@ def morph():
     return out
 
 
+def kilo():
+    """Kilominx: as 5 pipas da face de frente de cada foto"""
+    out = []
+    for name, pts in KILO:
+        path = find('kibiminx', name)
+        im = load(path)
+        # reduz como a câmera: a face (~1050 px na foto) ocupa ~80% de 360 px
+        k = (0.8 * 360) / 1050
+        small = im.resize((int(im.width * k), int(im.height * k)), Image.BILINEAR)
+        cells = [{'rgb': median_rgb(small, x * k, y * k, 6), 'truth': key} for (x, y), key in pts]
+        out.append({'photo': f'kibiminx/{name}', 'puzzle': 'kilominx', 'light': 'claro', 'batch': 2, 'cells': cells})
+        CHECK.append((path, [(x, y, key) for (x, y), key in pts]))
+    return out
+
+
 def hue(rgb):
     h, s, v = colorsys.rgb_to_hsv(*[c / 255 for c in rgb])
     return h * 360, s, v
@@ -403,7 +432,7 @@ def draw_checks(dst):
 if __name__ == '__main__':
     data = cube_faces('3x3', FACES3, 3) + cube_faces('2x2', FACES2, 2) + mega() + pyra()
     CHECK.clear()  # as imagens de conferência são só do lote novo
-    data += cube_faces('3x3', FACES3_B, 3, batch=2) + cube_faces('5x5', FACES5, 5, batch=2) + pyra_b() + mega_b() + morph()
+    data += cube_faces('3x3', FACES3_B, 3, batch=2) + cube_faces('5x5', FACES5, 5, batch=2) + pyra_b() + mega_b() + morph() + kilo()
     if '--check' in sys.argv:
         draw_checks(sys.argv[sys.argv.index('--check') + 1])
     dst = os.path.join(ROOT, 'fixtures', 'camera-samples.json')

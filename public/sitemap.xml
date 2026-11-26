@@ -432,4 +432,22 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/mastermorphix"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/mastermorphix"/>
   </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/kilominx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/kilominx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/kilominx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/kilominx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/en/kilominx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/kilominx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/kilominx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/kilominx"/>
+  </url>
+  <url>
+    <loc>https://cuboguia.pages.dev/es/kilominx</loc>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://cuboguia.pages.dev/kilominx"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cuboguia.pages.dev/en/kilominx"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cuboguia.pages.dev/es/kilominx"/>
+  </url>
 </urlset>

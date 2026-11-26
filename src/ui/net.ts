@@ -4,7 +4,7 @@ import type { PuzzleImpl, PuzzleState } from '../core/types';
 export function netSvg(impl: PuzzleImpl, state: PuzzleState, cls = 'net-mini'): string {
   const hex = (k: string) => impl.colors.find((c) => c.key === k)?.hex ?? '#2a2f3d';
   if (impl.netSvg)
-    return `<svg class="${cls}" viewBox="${impl.netSvg.viewBox}" aria-hidden="true">${impl.netSvg.stickers
+    return `<svg class="${cls}" viewBox="${impl.netSvg.viewBox}" aria-hidden="true">${impl.netSvg.decor ?? ''}${impl.netSvg.stickers
       .map((s) => `<polygon points="${s.points}" fill="${hex(state[s.index])}"/>`)
       .join('')}</svg>`;
   // cubos: rede em cruz, cada face uma grade n×n

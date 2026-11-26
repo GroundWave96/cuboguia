@@ -15,6 +15,7 @@ animado, passo a passo.
 | Pyraminx | Iniciante (pontas, centros, base, topo) · Solução ótima (≤ 11 + pontas) |
 | Skewb | Iniciante (face branca, cantos de cima, centros) · Solução ótima (≤ 11 movimentos) |
 | Megaminx | Iniciante (camadas, ~300 mov.) · Avançado (F2L/S2L em pares, última face em 2 olhares, ~250 mov.) |
+| Kilominx | Iniciante (camadas + R′ D′ R D, ~80 mov.) · Avançado (2 cantos de cada vez, última face em 2 olhares, ~60 mov.) |
 
 No 2x2 (sem centros) a referência é o canto branco-azul-vermelho, sempre
 atrás-embaixo-esquerda; os solucionadores só usam U, R e F para não movê-lo.
@@ -82,6 +83,7 @@ src/
     pyraminx/      Pyraminx: tetraedro, peças 3D, rede triangular e solucionadores
     skewb/         Skewb: cubo cortado pelos cantos, rede em cruz e solucionadores
     megaminx/      Megaminx: geometria do dodecaedro, rede em duas flores, câmera e solucionador
+    kilominx/      Kilominx: os cantos do Megaminx, sem centros (rotação livre), peças sem adesivo
     poly/          visual 3D genérico de poliedros (corta o corpo na animação do giro)
   ui/              páginas: início, entrada de cores (pintura/câmera), tutorial
 tests/             testes (vitest)
@@ -118,6 +120,28 @@ centro (os outros 4 cantos).
 - As fotos de `tests/cube images/mastermorphix` treinam a câmera (`tools/extract-camera-samples.py`)
   e, montadas, formam estados que os testes resolvem (`tests/mastermorphix.test.ts`).
 
+## Kilominx
+
+O "megaminx 2x2" (`src/puzzles/kilominx/`): só os 20 cantos do Megaminx, 60 adesivos (5 por
+face, índice `face * 5 + vértice`), com os mesmos giros e o mesmo esquema de 12 cores.
+
+- Sem centros, o puzzle pode ficar pronto em qualquer uma das 60 rotações do dodecaedro
+  (`ROTATIONS` em `model.ts`). O solucionador põe o branco embaixo e, das 5 rotações em volta
+  dele, usa a que dá a solução mais curta: cada adesivo ganha o rótulo da face onde a cor dele
+  termina, e a busca trabalha com os rótulos.
+- Validação: 5 de cada cor, cantos que existem (com as cores no sentido certo), paridade par
+  e soma dos giros dos cantos múltipla de 3 — nenhuma das duas muda com giros nem rotações.
+- Iniciante: face branca, 2ª e 3ª camadas (um canto de cada vez, com gatilhos), ciclos de 3
+  cantos para posicioná-los e `R' D' R D` para girá-los, como no 3x3. Avançado: as camadas
+  planejando 2 cantos juntos e a última face em 2 olhares (tabelas de todos os estados dos 5
+  cantos, montadas na primeira vez).
+- O 3D corta o dodecaedro pelos planos dos giros, que passam pelo meio das arestas. Os cantos
+  são de plástico colorido (cada face é uma "pipa" até perto do centro, com as paredes da cor
+  da face); o resto é o miolo preto, que gira junto com a camada e fica afundado.
+- A câmera não tem centro para se guiar: começa por qualquer face e segue as setas; as cores já
+  lidas aparecem nas bordas. Se uma face for lida girada, `repairScan` tenta girá-la de volta.
+  As fotos de `tests/cube images/kibiminx` calibram as cores (`tests/kilominx.test.ts`).
+
 ## Treino da câmera
 
 As cores da câmera são testadas com amostras reais (`tests/fixtures/`):
@@ -146,7 +170,7 @@ Sem `#` (bons para o Google e para a contagem de visitas) — `src/core/router.t
 | Endereço | Página |
 |---|---|
 | `/` | início |
-| `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/6x6`, `/7x7`, `/pyraminx`, `/skewb`, `/megaminx` | informar as cores |
+| `/3x3`, `/2x2`, `/4x4`, `/5x5`, `/6x6`, `/7x7`, `/pyraminx`, `/skewb`, `/megaminx`, `/kilominx`, `/mastermorphix` | informar as cores |
 | `/notacao`, `/notacao/5x5` (e `/pyraminx`, `/skewb`, `/megaminx`) | notação com cada movimento animado (`/en/notation`) |
 | `/3x3/tutorial?m=método&s=estado` | tutorial |
 | `/cronometro?p=&e=&t=&n=` | cronômetro (com desafio opcional) |
@@ -205,7 +229,7 @@ A tela inicial só baixa o próprio código: as outras páginas (`src/ui/input.t
 do registro (`methods` em `src/core/registry.ts`, conferido em `tests/sessions.test.ts`) e a
 vitrine 3D só começa depois do evento `load`; com economia de dados, 2G ou sem placa de vídeo
 (o 3D desenhado no processador, como no teste do PageSpeed) ela fica num desenho parado. Ela
-começa sempre pelo 3x3 e, em aparelho fraco (até 4 núcleos ou 4 GB), pula 6x6, 7x7 e Megaminx.
+começa sempre pelo 3x3 e, em aparelho fraco (até 4 núcleos ou 4 GB), pula 6x6, 7x7, Megaminx e Kilominx.
 
 O 3D (`NxNView`, `PolyView`) só redesenha quando algo muda: cubo parado não gasta bateria.
 Os ícones dos puzzles juntam os adesivos da mesma cor num só desenho (`mergePaths` em

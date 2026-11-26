@@ -4,7 +4,7 @@ import { newRecords, rollingAverage, type Solve } from '../src/core/timerstats';
 import { ImportError, exportJson, mergeSolves, parseImport } from '../src/core/timerio';
 
 const S = (ms: number, pen: Solve['pen'] = 0, at = ms): Solve => ({ ms, pen, scramble: 'R U', at });
-const PUZZLES = ['cube2', 'cube3', 'cube4', 'cube5', 'cube6', 'cube7', 'pyraminx', 'skewb', 'megaminx', 'mastermorphix'];
+const PUZZLES = ['cube2', 'cube3', 'cube4', 'cube5', 'cube6', 'cube7', 'pyraminx', 'skewb', 'megaminx', 'kilominx', 'mastermorphix'];
 
 describe('recordes', () => {
   it('o primeiro tempo não comemora; um tempo melhor comemora', () => {

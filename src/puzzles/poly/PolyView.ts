@@ -14,6 +14,8 @@ export interface PolyMoveInfo {
   layer: number[];
   /** o plano de corte é dot(p, axis) = cut */
   cut: number;
+  /** peças sem adesivo que giram junto (o miolo preto do Kilominx), índices em `pieces` */
+  pieces?: number[];
 }
 
 export interface PolyViewOptions {
@@ -22,7 +24,7 @@ export interface PolyViewOptions {
    * pedacinhos planos que formam a superfície (desenhados com sombreado suave) e `walls`, as
    * paredes de corte da peça na mesma cor (peças de plástico colorido, sem adesivo)
    */
-  stickers: { index: number; poly: V3[]; normal: V3; facets?: V3[][]; walls?: V3[][] }[];
+  stickers: { index: number; poly: V3[]; normal: V3; facets?: V3[][]; walls?: V3[][]; normals?: V3[][] }[];
   bodyFaces: V3[][];
   palette: Record<string, string>;
   solved: PuzzleState;
@@ -99,6 +101,24 @@ function curvedGeometry(facets: V3[][], lift: number, walls: V3[][] = []): THREE
   out.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
   out.setAttribute('normal', new THREE.Float32BufferAttribute(sn, 3));
   return out;
+}
+
+/** superfície com as normais já calculadas (peças arredondadas): cada vértice com a sua */
+function shadedGeometry(facets: V3[][], normals: V3[][], lift: number): THREE.BufferGeometry {
+  const pos: number[] = [], nrm: number[] = [];
+  facets.forEach((f, k) => {
+    const ns = normals[k];
+    for (let i = 1; i < f.length - 1; i++)
+      for (const j of [0, i, i + 1]) {
+        const p = f[j], n = ns[j];
+        pos.push(p[0] + n[0] * lift, p[1] + n[1] * lift, p[2] + n[2] * lift);
+        nrm.push(n[0], n[1], n[2]);
+      }
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  return g;
 }
 
 /** adesivo com cantos arredondados, desenhado no plano da face (frame u, w, n) */
@@ -232,7 +252,9 @@ export class PolyView implements PuzzleView {
       const pts = st.poly.map(v3);
       const mat = new THREE.MeshStandardMaterial({ color: UNKNOWN_HEX, roughness: 0.32, metalness: 0.02, side: THREE.DoubleSide });
       let mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
-      if (st.facets) {
+      if (st.facets && st.normals) {
+        mesh = new THREE.Mesh(shadedGeometry(st.facets, st.normals, o.radius * 0.003), mat);
+      } else if (st.facets) {
         // superfície curva: os pedacinhos juntos, com os vértices compartilhados (sombra suave)
         mesh = new THREE.Mesh(curvedGeometry(st.facets, o.radius * 0.004, st.walls), mat);
       } else if (o.stickerRound) {
@@ -525,7 +547,7 @@ export class PolyView implements PuzzleView {
     const movingPieces = morphMoving
       ? [...morphMoving].map((pi) => this.pieceMeshes[pi])
       : usePieces
-        ? [...new Set(info.layer.map((i) => this.pieceOfSticker.get(i)!))].map((pi) => this.pieceMeshes[pi])
+        ? [...new Set([...info.layer.map((i) => this.pieceOfSticker.get(i)!), ...(info.pieces ?? [])])].map((pi) => this.pieceMeshes[pi])
         : [];
     let cap: THREE.Mesh | null = null, rest: THREE.Mesh | null = null;
     if (usePieces) for (const pm of movingPieces) pivot.attach(pm);

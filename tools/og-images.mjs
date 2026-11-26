@@ -37,7 +37,7 @@ await page.setContent(
   shell(`<div style="position:absolute;left:84px;top:110px">
       <div class="brand">${logo}<span class="word">Cubo<b>Guia</b></span></div>
       <div style="width:520px;height:6px;border-radius:6px;margin:34px 0 52px;background:linear-gradient(90deg,#ffd500,#ff6a13,#d0192d,#00a651,#0a5bd6)"></div>
-      <div class="row" style="gap:14px">${Object.keys(icons).map((k) => icons[k].replace('<svg', '<svg style="width:64px;height:64px"')).join('')}</div>
+      <div class="row" style="gap:12px">${Object.keys(icons).map((k) => icons[k].replace('<svg', '<svg style="width:58px;height:58px"')).join('')}</div>
     </div>
     <div style="position:absolute;right:-40px;top:70px;transform:rotate(-8deg)">${icons['3x3'].replace('<svg', '<svg style="width:400px;height:400px;filter:drop-shadow(0 30px 40px rgba(0,0,0,.55))"')}</div>`),
 );
@@ -62,7 +62,7 @@ await page.setContent(
 await page.waitForTimeout(300);
 await page.screenshot({ path: 'public/og-desafio.png' });
 // ---- um por puzzle: o nome grande e o ícone dele (a página do puzzle e o tutorial)
-const NAMES = { pyraminx: 'Pyraminx', skewb: 'Skewb', megaminx: 'Megaminx', mastermorphix: 'Mastermorphix' };
+const NAMES = { pyraminx: 'Pyraminx', skewb: 'Skewb', megaminx: 'Megaminx', kilominx: 'Kilominx', mastermorphix: 'Mastermorphix' };
 const { mkdirSync } = await import('fs');
 mkdirSync('public/og', { recursive: true });
 for (const [slug, svg] of Object.entries(icons)) {
