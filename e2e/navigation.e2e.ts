@@ -178,6 +178,18 @@ test('prévia dos links: cada página com o título e o idioma dela', async ({ r
   expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(['Home', 'Skewb', 'Tutorial']);
 });
 
+test('menu de puzzles aberto: o topo continua o mesmo (não vira o menu de celular)', async ({ page }, info) => {
+  test.skip(info.project.name === 'celular', 'no celular o menu já é o ☰');
+  await page.goto('/');
+  const bar = page.locator('.topbar-inner');
+  const before = await bar.getAttribute('class');
+  await page.click('.nav-dd-btn');
+  await expect(page.locator('.mega')).toBeVisible();
+  await expect(page.locator('#main-nav')).toBeVisible();
+  await expect(page.locator('.menu-btn')).toBeHidden();
+  expect(await bar.getAttribute('class')).toBe(before);
+});
+
 test('tema claro: segue a escolha, fica guardado e troca pelo menu', async ({ page }, info) => {
   const check = trackErrors(page);
   const theme = () => page.evaluate(() => document.documentElement.dataset.theme);

@@ -35,11 +35,16 @@ export function fitTopbar() {
   const bar = document.querySelector<HTMLElement>('.topbar-inner');
   if (!bar) return;
   const levels = ['fit-1', 'fit-3', 'fit-4'];
+  // o painel de puzzles aberto sai de dentro do menu (é flutuante): não conta na medida
+  const mega = bar.querySelector<HTMLElement>('.mega');
+  const display = mega?.style.display ?? '';
+  if (mega) mega.style.display = 'none';
   bar.classList.remove(...levels);
   for (const l of levels) {
-    if (!topbarOverflows(bar)) return;
+    if (!topbarOverflows(bar)) break;
     bar.classList.add(l);
   }
+  if (mega) mega.style.display = display;
 }
 
 export function mountHeader() {
